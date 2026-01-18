@@ -25,7 +25,7 @@ end, { type = "regex" })
 --
 -- Make it so that
 --
--- setpl 1
+-- setpl1
 --
 -- Stores "1" as the planet you're tracking and later on,
 --
@@ -33,7 +33,7 @@ end, { type = "regex" })
 -- orbpl -> orb 1
 --
 local storedPlanet = 1
-createAlias("^setpl (\\d+)$", function(matches)
+createAlias("^setpl(\\d+)$", function(matches)
     storedPlanet = tonumber(matches[2])
     echo("Stored Planet: " .. storedPlanet)
 end, { type = "regex" })

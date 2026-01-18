@@ -15,4 +15,18 @@ createAlias("^scapl(\\d+)$", function(matches)
     send("sca pl " .. planetToScan)
 end, { type = "regex" })
 
+local storedPlanet = 1
+createAlias("^setpl (\\d+)$", function(matches)
+    storedPlanet = tonumber(matches[2])
+    echo("Stored Planet: " .. storedPlanet)
+end, { type = "regex" })
+
+createAlias("^scapl$", function()
+    send("sca pl " .. storedPlanet)
+end, { type = "regex" })
+
+createAlias("^orbpl$", function()
+    send("orb " .. storedPlanet)
+end, { type = "regex" })
+
 echo("Finishing reading ge-main.lua")

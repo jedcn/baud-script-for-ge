@@ -35,6 +35,13 @@ gePackage.constants = {
 
 local debug = true;
 
+--
+--  need to better define cecho
+--
+function cecho(s)
+    echo("todo: " .. s)
+end
+
 function log(s)
   if debug then
     cecho("\n<red>" .. s .. "<red>")
@@ -191,7 +198,6 @@ function doMaint()
 end
 
 
-
 --
 -- Make it so that..
 --
@@ -244,14 +250,10 @@ end, { type = "regex" })
 --
 -- auto orbit
 --
--- When you see:
---
--- ^In gravity pull of planet (\d+), Helm compensating, Sir!$
---
--- Then:
--- 
--- send("orbit " .. matches[2])
---
+createTrigger("^In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)
+    send("orbit " .. matches[2])
+end, { type = "regex" })
+
 
 
 --

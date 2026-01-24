@@ -280,13 +280,11 @@ createTrigger("^Galactic Pos. Xsect:(-?\\d+)\\s+Ysect:(-?\\d+)$", function(match
     setSectorXY(xSector, ySector)
 end, { type = "regex" })
 
---
--- ^Sector Pos. X:(\d+) Y:(\d+)$ ->
---
--- local xSectorPosition = matches[2]
--- local ySectorPosition = matches[3]
--- setSectorPositionXY(xSectorPosition, ySectorPosition)
---
+createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
+    local xSectorPosition = matches[2]
+    local ySectorPosition = matches[3]
+    setSectorPositionXY(xSectorPosition, ySectorPosition)
+end, { type = "regex" })
 
 --
 --

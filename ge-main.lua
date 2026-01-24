@@ -288,104 +288,113 @@ createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
     setSectorPositionXY(xSectorPosition, ySectorPosition)
 end, { type = "regex" })
 
---
---
--- Orbiting Planet........  (\d+)
---
--- setOrbitingPlanet(matches[2])
+-- sets orbiting planet from status display
+createTrigger("^Orbiting Planet........  (\\d+)$", function(matches)
+    local planetNumber = matches[2]
+    setOrbitingPlanet(planetNumber)
+end, { type = "regex" })
 
---
---  Galactic Heading.......  (-?\d+)
---
--- 
--- setShipHeading(matches[2])
+-- sets ship heading from status display
+createTrigger("^Galactic Heading.......  (-?\\d+)$", function(matches)
+    local heading = matches[2]
+    setShipHeading(heading)
+end, { type = "regex" })
 
--- 
--- Helm reports we are now heading (-?\d+) degrees.
--- 
--- setShipHeading(matches[2])
+-- sets ship heading from helm message
+createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(matches)
+    local heading = matches[2]
+    setShipHeading(heading)
+end, { type = "regex" })
 
---
--- Fighters..................\s*(\d+)
---
--- if not getScanningPlanet() then
---   setShipInventory("Fighters", matches[2])
--- end
+-- sets fighter count (only when not scanning a planet)
+createTrigger("^Fighters..................\\s*(\\d+)$", function(matches)
+    local fighterCount = matches[2]
+    if not getScanningPlanet() then
+        setShipInventory("Fighters", fighterCount)
+    end
+end, { type = "regex" })
 
--- 
--- Total Cargo Weight... 0 Tons
--- 
--- clearShipInventory()
+-- clears ship inventory when cargo is 0
+createTrigger("^Total Cargo Weight... 0 Tons$", function(matches)
+    clearShipInventory()
+end, { type = "regex" })
 
---
--- Helm reports speed is now Warp (\d+\.\d+), Sir!
---
--- setWarpSpeed(matches[2])
+-- sets warp speed from helm message
+createTrigger("^Helm reports speed is now Warp (\\d+\\.\\d+), Sir!$", function(matches)
+    local warpSpeed = matches[2]
+    setWarpSpeed(warpSpeed)
+end, { type = "regex" })
 
---
--- Helm reports we are at a dead stop, Sir!
---
--- setWarpSpeed(0)
+-- sets warp speed to 0
+createTrigger("^Helm reports we are at a dead stop, Sir!$", function(matches)
+    setWarpSpeed(0)
+end, { type = "regex" })
 
--- 
--- Navigating SS# (-?\d+) (-?\d+)
--- 
--- local xSector = matches[2]
--- local ySector = matches[3]
--- setSectorXY(xSector, ySector)
+-- sets sector X/Y coordinates
+createTrigger("^Navigating SS# (-?\\d+) (-?\\d+)$", function(matches)
+    local xSector = matches[2]
+    local ySector = matches[3]
+    setSectorXY(xSector, ySector)
+end, { type = "regex" })
 
---
--- ^Speed..................Warp (\d+\.\d+)$
---
--- setWarpSpeed(matches[2])
+-- sets warp speed from status display
+createTrigger("^Speed..................Warp (\\d+\\.\\d+)$", function(matches)
+    local warpSpeed = matches[2]
+    setWarpSpeed(warpSpeed)
+end, { type = "regex" })
 
--- 
--- Flux pods..................\s*(\d+)
--- 
--- if not getScanningPlanet() then
---   setIShipnventory("Flux pods", matches[2])
--- end
+-- sets flux pod count (only when not scanning a planet)
+createTrigger("^Flux pods..................\\s*(\\d+)$", function(matches)
+    local fluxPodCount = matches[2]
+    if not getScanningPlanet() then
+        setShipInventory("Flux pods", fluxPodCount)
+    end
+end, { type = "regex" })
 
--- 
--- Neutron Flux............ (\d+)
--- 
--- setShipNeutronFlux(matches[2])
+-- sets neutron flux level
+createTrigger("^Neutron Flux............ (\\d+)$", function(matches)
+    local neutronFlux = matches[2]
+    setShipNeutronFlux(neutronFlux)
+end, { type = "regex" })
 
 --
 -- STATE MACHINE
 -- 
 
 
---
--- ^--------------------------------------$
---
--- toggleDashes() (should be called startingOrStoppingScan?)
---
+-- toggles the state machine for scan parsing
+createTrigger("^--------------------------------------$", function(matches)
+    toggleDashes()
+end, { type = "regex" })
 
---
--- Scanning Planet (\d+)\s*(.*)
---
--- local planetNumber = matches[2]
--- local planetName = matches[3]
--- setScanningPlanet(true)
--- setScanningPlanetNumber(planetNumber)
--- setScanningPlanetName(planetName)
+-- sets up planet scanning state
+createTrigger("^Scanning Planet (\\d+)\\s*(.*)$", function(matches)
+    local planetNumber = matches[2]
+    local planetName = matches[3]
+    setScanningPlanet(true)
+    setScanningPlanetNumber(planetNumber)
+    setScanningPlanetName(planetName)
+end, { type = "regex" })
 
---
--- Systems Report -> echo("Systems Report")
---
+-- echoes report type
+createTrigger("^Systems Report$", function(matches)
+    echo("Systems Report")
+end, { type = "regex" })
 
---
--- Inventory Report -> echo("Inventory Report")
---
+-- echoes report type
+createTrigger("^Inventory Report$", function(matches)
+    echo("Inventory Report")
+end, { type = "regex" })
 
---
--- Accounting Division report -> echo("Accounting Division report")
---
+-- echoes report type
+createTrigger("^Accounting Division report$", function(matches)
+    echo("Accounting Division report")
+end, { type = "regex" })
 
---
--- Navigational Report -> echo("Navigational Report")
---
+-- echoes report type
+createTrigger("^Navigational Report$", function(matches)
+    echo("Navigational Report")
+end, { type = "regex" })
 
 
 echo("Finishing reading ge-main.lua")

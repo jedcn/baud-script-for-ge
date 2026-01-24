@@ -46,4 +46,17 @@ createAlias("^orbpl$", function()
     send("orb " .. storedPlanet)
 end, { type = "regex" })
 
+--
+-- When you see:
+--
+-- (N)onstop, (Q)uit, or (C)ontinue
+--
+-- You should send "N" and gag it?
+--
+-- This is not working right now.
+--
+createTrigger("^\\(N\\)onstop, \\(Q\\)uit, or \\(C\\)ontinue\\?$", function(matches)
+    send("n")
+end, { type = "regex" })
+
 echo("Finishing reading ge-main.lua")

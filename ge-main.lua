@@ -266,12 +266,13 @@ end, { type = "regex" })
 --
 -- Storage Management
 --
--- 
--- ^Leaving orbit Sir!$ -> clearOrbitingPlanet()
+createTrigger("^Leaving orbit Sir!$", function(matches)
+    clearOrbitingPlanet()
+end, { type = "regex" })
 
---
--- We are now in stationary orbit around planet (\d+) -> setOrbitingPlanet(matches[2])
---
+createTrigger("^We are now in stationary orbit around planet (\\d+)$", function(matches)
+    setOrbitingPlanet(matches[2])
+end, { type = "regex" })
 
 --
 -- ^Galactic Pos. Xsect:(-?\d+)\s+Ysect:(-?\d+)$ ->

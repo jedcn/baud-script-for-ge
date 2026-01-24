@@ -274,13 +274,11 @@ createTrigger("^We are now in stationary orbit around planet (\\d+)$", function(
     setOrbitingPlanet(matches[2])
 end, { type = "regex" })
 
---
--- ^Galactic Pos. Xsect:(-?\d+)\s+Ysect:(-?\d+)$ ->
---
--- local xSector = matches[2]
--- local ySector = matches[3]
--- setSectorXY(xSector, ySector)
---
+createTrigger("^Galactic Pos. Xsect:(-?\\d+)\\s+Ysect:(-?\\d+)$", function(matches)
+    local xSector = matches[2]
+    local ySector = matches[3]
+    setSectorXY(xSector, ySector)
+end, { type = "regex" })
 
 --
 -- ^Sector Pos. X:(\d+) Y:(\d+)$ ->

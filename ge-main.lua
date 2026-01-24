@@ -259,14 +259,9 @@ end, { type = "regex" })
 --
 -- auto shields
 --
--- When you see:
---
--- HELM reports we are leaving HYPERSPACE now, Sir!
---
--- Then:
--- 
--- send("shi up")
---
+createTrigger("^HELM reports we are leaving HYPERSPACE now, Sir!$", function(matches)
+    send("shi up")
+end, { type = "regex" })
 
 --
 -- Storage Management

@@ -251,7 +251,8 @@ end, { type = "regex" })
 -- auto orbit
 --
 createTrigger("^In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)
-    send("orbit " .. matches[2])
+    local planetNumber = matches[2]
+    send("orbit " .. planetNumber)
 end, { type = "regex" })
 
 
@@ -271,7 +272,8 @@ createTrigger("^Leaving orbit Sir!$", function(matches)
 end, { type = "regex" })
 
 createTrigger("^We are now in stationary orbit around planet (\\d+)$", function(matches)
-    setOrbitingPlanet(matches[2])
+    local planetNumber = matches[2]
+    setOrbitingPlanet(planetNumber)
 end, { type = "regex" })
 
 createTrigger("^Galactic Pos. Xsect:(-?\\d+)\\s+Ysect:(-?\\d+)$", function(matches)

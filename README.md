@@ -2,57 +2,15 @@
 
 Lua scripts for playing Galactic Empire via [baud](https://github.com/jedcn/baud).
 
-## Development Setup
-
-### Prerequisites
-
-1. **Lua** (5.1 or later)
-   ```bash
-   # macOS
-   brew install lua
-
-   # Ubuntu/Debian
-   sudo apt-get install lua5.4
-   ```
-
-2. **LuaRocks** (Lua package manager)
-   ```bash
-   # macOS
-   brew install luarocks
-
-   # Ubuntu/Debian
-   sudo apt-get install luarocks
-   ```
-
-3. **Busted** (testing framework)
-   ```bash
-   luarocks install busted
-   ```
-
-## Running Tests
-
-Run all tests:
-```bash
-busted test/
-```
-
-Run tests with verbose output:
-```bash
-busted test/ --verbose
-```
-
-Run a specific test file:
-```bash
-busted test/ge_triggers_spec.lua
-```
+This scripts have tests. Run them with `busted test`
 
 ## Project Structure
 
 ```
-baud-ge/
+baud-scripts-for-ge/
 ├── README.md                 -- This file
 ├── main.lua                  -- Entry point, loads other files
-├── core.lua                  -- State management functions
+├── core.lua                  -- Core functions
 ├── aliases.lua               -- Command aliases
 ├── triggers.lua              -- Pattern-matching triggers
 ├── examples.lua              -- Example triggers and aliases
@@ -62,3 +20,11 @@ baud-ge/
     ├── test_helper.lua       -- Mocks for Baud framework functions
     └── ge_triggers_spec.lua  -- Trigger tests
 ```
+
+## Prerequisites for Running Tests
+
+   ```bash
+   brew install lua
+   brew install luarocks
+   luarocks install busted
+   ```

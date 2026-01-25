@@ -9,12 +9,14 @@ Lua scripts for playing Galactic Empire (GE) via [Baud](https://github.com/jedcn
 
 ## File Structure
 
+Update this section and README.md when files are added, removed, or renamed.
+
 - `main.lua` - Entry point, loads other files via `dofile()`
 - `core.lua` - State management functions (setSectorXY, setOrbitingPlanet, setShipHeading, etc.)
 - `triggers.lua` - Pattern-matching triggers that fire on game output
 - `aliases.lua` - Command aliases (shortcuts like `scapl1` -> `sca pl 1`)
 - `test/test_helper.lua` - Mocks Baud framework for testing
-- `test/ge_triggers_spec.lua` - Trigger tests using Busted framework
+- `test/main_spec.lua` - Trigger tests using Busted framework
 
 ## Conventions
 

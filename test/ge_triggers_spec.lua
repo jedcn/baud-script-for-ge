@@ -330,4 +330,23 @@ describe("GE Triggers", function()
 
     end)
 
+    -- =========================================================================
+    -- Shield triggers (1)
+    -- =========================================================================
+
+    describe("Shield triggers", function()
+
+        it("calls setShieldCharge with shield percentage", function()
+            local called_with = nil
+            local original = setShieldCharge
+            _G.setShieldCharge = function(charge) called_with = charge end
+
+            helper.simulateLine("Shields are at 75 percent charge, Sir!")
+
+            assert.equal("75", called_with)
+            _G.setShieldCharge = original
+        end)
+
+    end)
+
 end)

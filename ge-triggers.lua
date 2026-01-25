@@ -1,6 +1,4 @@
 --
--- ge-triggers.lua
---
 -- All triggers for GE
 --
 

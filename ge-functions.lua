@@ -1,13 +1,3 @@
---
--- ge-functions.lua
---
--- State management functions for GE
---
-
---
--- Core Script and Functions for Playing GE
---
-
 if not gePackage then
   gePackage = {}
 end

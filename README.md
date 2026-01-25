@@ -6,6 +6,8 @@ This scripts have tests. Run them with `busted test`
 
 ## Project Structure
 
+Keep this section up to date when files are renamed, added, or deleted.
+
 ```
 baud-scripts-for-ge/
 ├── README.md                 -- This file
@@ -13,12 +15,11 @@ baud-scripts-for-ge/
 ├── core.lua                  -- Core functions
 ├── aliases.lua               -- Command aliases
 ├── triggers.lua              -- Pattern-matching triggers
-├── examples.lua              -- Example triggers and aliases
 ├── plan/
 │   └── testing-plan.md       -- Implementation plan for tests
 └── test/
     ├── test_helper.lua       -- Mocks for Baud framework functions
-    └── ge_triggers_spec.lua  -- Trigger tests
+    └── main_spec.lua         -- Trigger tests
 ```
 
 ## Prerequisites for Running Tests

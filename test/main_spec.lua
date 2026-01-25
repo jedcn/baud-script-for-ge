@@ -1,4 +1,4 @@
--- ge_triggers_spec.lua
+-- main_spec.lua
 -- Comprehensive tests for all triggers in main.lua
 
 local helper = require("test.test_helper")

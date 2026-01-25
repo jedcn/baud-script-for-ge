@@ -1,5 +1,5 @@
 -- ge_triggers_spec.lua
--- Comprehensive tests for all triggers in ge-main.lua
+-- Comprehensive tests for all triggers in main.lua
 
 local helper = require("test.test_helper")
 
@@ -8,7 +8,7 @@ describe("GE Triggers", function()
     before_each(function()
         helper.resetAll()
         -- Load the main file (this registers all triggers)
-        dofile("ge-main.lua")
+        dofile("main.lua")
     end)
 
     -- =========================================================================

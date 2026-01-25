@@ -51,10 +51,10 @@ busted test/ge_triggers_spec.lua
 ```
 baud-ge/
 ├── README.md                 -- This file
-├── ge-main.lua               -- Entry point, loads other files
-├── ge-functions.lua          -- State management functions
-├── ge-aliases.lua            -- Command aliases
-├── ge-triggers.lua           -- Pattern-matching triggers
+├── main.lua                  -- Entry point, loads other files
+├── core.lua                  -- State management functions
+├── aliases.lua               -- Command aliases
+├── triggers.lua              -- Pattern-matching triggers
 ├── examples.lua              -- Example triggers and aliases
 ├── plan/
 │   └── testing-plan.md       -- Implementation plan for tests

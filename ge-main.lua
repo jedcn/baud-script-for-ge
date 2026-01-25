@@ -144,6 +144,13 @@ function setWarpSpeed(newWarpSpeed)
   gePackage.warpSpeed = tonumber(newWarpSpeed)
 end
 
+function setShieldCharge(newShieldCharge)
+  log("setShieldCharge(" .. newShieldCharge .. ")")
+  initializeStateIfNeeded()
+  gePackage.shieldCharge = tonumber(newShieldCharge)
+end
+
+
 function setParseState(stateName, newBoolean)
   log("setParseState(" .. stateName .. ", " .. newBoolean .. ")")
   initializeStateIfNeeded()
@@ -396,5 +403,10 @@ createTrigger("^Navigational Report$", function(matches)
     echo("Navigational Report")
 end, { type = "regex" })
 
+-- set shield strength
+createTrigger("^Shields are at (\\d+) percent charge, Sir!", function(matches)
+    local shieldCharge = matches[2]
+    setShieldCharge(shieldCharge)
+end, { type="regex" })
 
 echo("Finishing reading ge-main.lua")

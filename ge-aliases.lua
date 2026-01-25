@@ -1,4 +1,10 @@
 --
+-- This file contains Baud aliases.
+--
+-- They are [defined here](https://github.com/jedcn/baud?tab=readme-ov-file#createaliaspattern-callback-options)
+--
+
+--
 -- Make it so that..
 --
 --   scapl1 -> sca pl 1
@@ -33,3 +39,4 @@ end, { type = "regex" })
 createAlias("^orbpl$", function()
     send("orb " .. storedPlanet)
 end, { type = "regex" })
+

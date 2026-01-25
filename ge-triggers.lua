@@ -1,5 +1,7 @@
 --
--- All triggers for GE
+-- This file contains Baud triggers.
+--
+-- They are [defined here](https://github.com/jedcn/baud?tab=readme-ov-file#createtriggerpattern-callback-options)
 --
 
 --

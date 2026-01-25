@@ -1,3 +1,6 @@
+--
+-- This file contains lua functions that will be available for ge-aliases.lua and ge-triggers.lua
+--
 if not gePackage then
   gePackage = {}
 end

@@ -1,6 +1,9 @@
 -- test_helper.lua
 -- Mock Baud framework functions for testing triggers
 
+-- Set SCRIPT_DIR for tests (Baud sets this automatically, tests run from project root)
+SCRIPT_DIR = "./"
+
 local M = {}
 
 -- Storage for registered triggers and aliases

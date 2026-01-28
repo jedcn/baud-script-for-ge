@@ -158,6 +158,7 @@ end
 
 function setScanningPlanet(newBoolean)
   --log("setScanningPlanet(" .. tostring(newBoolean) .. ")")
+  initializeStateIfNeeded()
   gePackage.stateMachine.scanningPlanet = newBoolean
   if not newBoolean then
     gePackage.stateMachine.scanningPlanetNumber = nil

@@ -90,7 +90,6 @@ function setShipHeading(newHeading)
 end
 
 function getShipHeading()
-  log("getShipHeading()");
   initializeStateIfNeeded()
   return gePackage.ship.heading
 end
@@ -126,9 +125,13 @@ function clearShipInventory()
 end
 
 function setWarpSpeed(newWarpSpeed)
-  log("setWarpSpeed(" .. newWarpSpeed .. ")")
   initializeStateIfNeeded()
   gePackage.warpSpeed = tonumber(newWarpSpeed)
+end
+
+function getWarpSpeed()
+  initializeStateIfNeeded()
+  return gePackage.warpSpeed
 end
 
 function setShieldCharge(newShieldCharge)

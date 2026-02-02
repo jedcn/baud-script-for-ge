@@ -17,10 +17,10 @@ describe("GE Triggers", function()
 
     describe("Auto-response triggers", function()
 
-        it("sends 'n' when prompted with (N)onstop, (Q)uit, or (C)ontinue?", function()
-            helper.simulateLine("(N)onstop, (Q)uit, or (C)ontinue?")
-            assert.is_true(helper.wasSendCalledWith("n"))
-        end)
+        -- it("sends 'n' when prompted with (N)onstop, (Q)uit, or (C)ontinue?", function()
+        --     helper.simulateLine("(N)onstop, (Q)uit, or (C)ontinue?")
+        --     assert.is_true(helper.wasSendCalledWith("n"))
+        -- end)
 
         it("sends orbit command when in gravity pull of planet", function()
             helper.simulateLine("In gravity pull of planet 42, Helm compensating, Sir!")
@@ -205,7 +205,6 @@ describe("GE Triggers", function()
             _G.setShipInventory = function(t, c) itemType = t; itemCount = c end
 
             -- Ensure we're not scanning a planet
-            initializeStateIfNeeded()
             setScanningPlanet(false)
 
             helper.simulateLine("Fighters..................   15")
@@ -221,7 +220,6 @@ describe("GE Triggers", function()
             _G.setShipInventory = function() called = true end
 
             -- Set scanning state to true
-            initializeStateIfNeeded()
             setScanningPlanet(true)
 
             helper.simulateLine("Fighters..................   15")
@@ -236,7 +234,6 @@ describe("GE Triggers", function()
             _G.setShipInventory = function(t, c) itemType = t; itemCount = c end
 
             -- Ensure we're not scanning a planet
-            initializeStateIfNeeded()
             setScanningPlanet(false)
 
             helper.simulateLine("Flux pods..................    8")

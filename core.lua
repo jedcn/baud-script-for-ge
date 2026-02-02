@@ -3,6 +3,12 @@
 --
 if not gePackage then
   gePackage = {}
+  gePackage.position = {}
+  gePackage.ship = {}
+  gePackage.ship.inventory = {}
+  gePackage.stateMachine = {}
+  gePackage.stateMachine.inbetweenDashes = false
+  gePackage.stateMachine.scanningPlanet = false
 end
 
 gePackage.constants = {
@@ -35,121 +41,83 @@ function log(s)
   end
 end
 
-function initializeStateIfNeeded()
-
-  if not gePackage.position then
-    gePackage.position = {}
-  end
-
-  if not gePackage.ship then
-    gePackage.ship = {}
-  end
-
-  if not gePackage.ship.inventory then
-    gePackage.ship.inventory = {}
-  end
-
-  if not gePackage.stateMachine then
-    gePackage.stateMachine = {}
-    gePackage.stateMachine.inbetweenDashes = false
-    gePackage.stateMachine.scanningPlanet = false
-  end
-
-end
 
 function setSectorXY(newX, newY)
   log("setSectorXY(" .. newX .. ", " .. newY .. ")")
-  initializeStateIfNeeded()
   gePackage.position.xSector = tonumber(newX)
   gePackage.position.ySector = tonumber(newY)
 end
 
 function setSectorPositionXY(newX, newY)
   log("setSectorPositionXY(" .. newX .. ", " .. newY .. ")")
-  initializeStateIfNeeded()
   gePackage.position.xSectorPosition = tonumber(newX)
   gePackage.position.ySectorPosition = tonumber(newY)
 end
 
 function clearOrbitingPlanet()
   log("clearOrbitingPlanet()")
-  initializeStateIfNeeded()
   gePackage.position.orbitingPlanet = nil
 end
 
 function setOrbitingPlanet(newPlanetNumber)
   log("setOrbitingPlanet(" .. newPlanetNumber .. ")");
-  initializeStateIfNeeded()
   gePackage.position.orbitingPlanet = tonumber(newPlanetNumber)
 end
 
 function setShipHeading(newHeading)
   log("setHeading(" .. newHeading .. ")");
-  initializeStateIfNeeded()
   gePackage.ship.heading = tonumber(newHeading)
 end
 
 function getShipHeading()
-  initializeStateIfNeeded()
   return gePackage.ship.heading
 end
 
 function setShipNeutronFlux(newFluxAmount)
   log("setShipNeutronFlux(" .. newFluxAmount .. ")");
-  initializeStateIfNeeded()
   gePackage.ship.neutronFlux = tonumber(newFluxAmount)
 end
 
 function getShipNeutronFlux()
   log("getShipNeutronFlux()");
-  initializeStateIfNeeded()
   return gePackage.ship.neutronFlux
 end
 
 function setShipInventory(itemType, itemCount)
   log("setShipInventory(" .. itemType .. ", " .. itemCount .. ")")
-  initializeStateIfNeeded()
   gePackage.ship.inventory[itemType] = tonumber(itemCount)
 end
 
 function getShipInventory(itemType)
   log("getShipInventory(" .. itemType .. ")")
-  initializeStateIfNeeded()
   return gePackage.ship.inventory[itemType] or 0
 end
 
 function clearShipInventory()
   log("clearShipInventory()")
-  initializeStateIfNeeded()
   gePackage.ship.inventory = {}
 end
 
 function setWarpSpeed(newWarpSpeed)
-  initializeStateIfNeeded()
   gePackage.warpSpeed = tonumber(newWarpSpeed)
 end
 
 function getWarpSpeed()
-  initializeStateIfNeeded()
   return gePackage.warpSpeed
 end
 
 function setShieldCharge(newShieldCharge)
   log("setShieldCharge(" .. newShieldCharge .. ")")
-  initializeStateIfNeeded()
   gePackage.shieldCharge = tonumber(newShieldCharge)
 end
 
-
 function setParseState(stateName, newBoolean)
   log("setParseState(" .. stateName .. ", " .. newBoolean .. ")")
-  initializeStateIfNeeded()
   gePackage.parseState.stateName = newBoolean
 end
 
 function toggleDashes()
   --log("toggleDashes()")
-  initializeStateIfNeeded()
   if gePackage.stateMachine.inbetweenDashes then
     gePackage.stateMachine.inbetweenDashes = false
     gePackage.stateMachine.reportType = nil
@@ -161,7 +129,6 @@ end
 
 function setScanningPlanet(newBoolean)
   --log("setScanningPlanet(" .. tostring(newBoolean) .. ")")
-  initializeStateIfNeeded()
   gePackage.stateMachine.scanningPlanet = newBoolean
   if not newBoolean then
     gePackage.stateMachine.scanningPlanetNumber = nil
@@ -186,7 +153,6 @@ end
 
 function setReportType(newReportName)
   log("setReportType(" .. newReportName .. ")")
-  initializeStateIfNeeded()
   gePackage.stateMachine.reportType = newReportName
 end
 

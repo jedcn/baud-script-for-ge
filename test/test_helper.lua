@@ -78,6 +78,10 @@ function createAlias(pattern, callback, options)
     })
 end
 
+-- Mock setStatus: no-op for testing
+function setStatus(segmentsOrFunction)
+end
+
 -- Mock send: records calls for verification
 function send(text)
     table.insert(M.sendCalls, text)

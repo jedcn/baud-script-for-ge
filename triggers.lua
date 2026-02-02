@@ -162,22 +162,22 @@ end, { type = "regex" })
 
 -- echoes report type
 createTrigger("^Systems Report$", function(matches)
-    echo("Systems Report")
+    cecho("#ff00ff", "Systems Report")
 end, { type = "regex" })
 
 -- echoes report type
 createTrigger("^Inventory Report$", function(matches)
-    echo("Inventory Report")
+    cecho("#ff00ff", "Inventory Report")
 end, { type = "regex" })
 
 -- echoes report type
 createTrigger("^Accounting Division report$", function(matches)
-    echo("Accounting Division report")
+    cecho("#ff00ff", "Accounting Division report")
 end, { type = "regex" })
 
 -- echoes report type
 createTrigger("^Navigational Report$", function(matches)
-    echo("Navigational Report")
+    cecho("#ff00ff", "Navigational Report")
 end, { type = "regex" })
 
 -- set shield strength

@@ -2,7 +2,7 @@
 
 Lua scripts for playing Galactic Empire via [baud](https://github.com/jedcn/baud).
 
-This scripts have tests. Run them with `busted test`
+These scripts have tests. Run tests with `busted test`
 
 ## Project Structure
 

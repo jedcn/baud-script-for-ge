@@ -3,6 +3,7 @@
 --
 if not gePackage then
   gePackage = {}
+  gePackage.debug = false
   gePackage.position = {}
   gePackage.ship = {}
   gePackage.ship.inventory = {}
@@ -26,18 +27,13 @@ gePackage.constants = {
   MINES = "Mines"
 }
 
-local debug = true;
-
---
---  need to better define cecho
---
-function cecho(s)
-    echo("todo: " .. s)
+function toggleDebug()
+  gePackage.debug = not gePackage.debug
 end
 
 function log(s)
-  if debug then
-    cecho("\n<red>" .. s .. "<red>")
+  if gePackage.debug then
+    cecho("gray", s)
   end
 end
 

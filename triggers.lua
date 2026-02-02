@@ -107,6 +107,11 @@ createTrigger("^Helm reports speed is now Warp (\\d+\\.\\d+), Sir!$", function(m
     setWarpSpeed(warpSpeed)
 end, { type = "regex" })
 
+createTrigger("^Speed..................Warp (\\d+\\.\\d+)$", function(matches)
+    local warpSpeed = matches[2]
+    setWarpSpeed(warpSpeed)
+end, { type = "regex" })
+
 -- sets warp speed to 0
 createTrigger("^Helm reports we are at a dead stop, Sir!$", function(matches)
     setWarpSpeed(0)

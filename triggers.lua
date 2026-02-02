@@ -13,9 +13,9 @@
 --
 -- This is not working right now.
 --
-createTrigger("^\\(N\\)onstop, \\(Q\\)uit, or \\(C\\)ontinue\\?$", function(matches)
-    send("n")
-end, { type = "regex" })
+-- createTrigger("^\\(N\\)onstop, \\(Q\\)uit, or \\(C\\)ontinue\\?$", function(matches)
+--    send("n")
+-- end, { type = "regex" })
 
 --
 -- auto orbit

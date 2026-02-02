@@ -107,6 +107,10 @@ function setShieldCharge(newShieldCharge)
   gePackage.shieldCharge = tonumber(newShieldCharge)
 end
 
+function getShieldCharge()
+  return gePackage.shieldCharge
+end
+
 function setParseState(stateName, newBoolean)
   log("setParseState(" .. stateName .. ", " .. newBoolean .. ")")
   gePackage.parseState.stateName = newBoolean
@@ -160,12 +164,14 @@ end
 function statusPrompt()
   local shipHeading = getShipHeading() or "?"
   local warpSpeed = getWarpSpeed() or "?"
+  local shieldCharge = getShieldCharge() or "?"
 
   local segments = {
     { text = "Sector: " .. gePackage.position.xSector .. "," .. gePackage.position.ySector},
-    { text = "(x,y): (" .. gePackage.position.xSectorPosition .. ", " .. gePackage.position.ySectorPosition .. ")"},
+    { text = "(x,y):(" .. gePackage.position.xSectorPosition .. ", " .. gePackage.position.ySectorPosition .. ")"},
     { text = "Heading: " .. shipHeading },
     { text = "Warp: " .. warpSpeed },
+    { text = "Shields: " .. shieldCharge },
   }
   return segments
 end

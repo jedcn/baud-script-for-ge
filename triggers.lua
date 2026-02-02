@@ -37,6 +37,18 @@ createTrigger("^Galactic Pos. Xsect:(-?\\d+)\\s+Ysect:(-?\\d+)$", function(match
     setSectorXY(xSector, ySector)
 end, { type = "regex" })
 
+createTrigger("Range Scan Dist:\\d+ \\(s:(-?\\d+) (-?\\d+)\\)$", function(matches)
+    local xSector = matches[2]
+    local ySector = matches[3]
+    setSectorXY(xSector, ySector)
+end, { type = "regex" })
+
+createTrigger("Sector Scan mag:1x \\(s:(-?\\d+) (-?\\d+)\\)$", function(matches)
+    local xSector = matches[2]
+    local ySector = matches[3]
+    setSectorXY(xSector, ySector)
+end, { type = "regex" })
+
 createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
     local xSectorPosition = matches[2]
     local ySectorPosition = matches[3]

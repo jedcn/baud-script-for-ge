@@ -174,6 +174,30 @@ describe("GE Triggers", function()
             _G.setWarpSpeed = original
         end)
 
+        it("calls setSectorXY from Range Scan message", function()
+            local x, y = nil, nil
+            local original = setSectorXY
+            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+
+            helper.simulateLine("Range Scan Dist:200000 (s:11 -10)")
+
+            assert.equal("11", x)
+            assert.equal("-10", y)
+            _G.setSectorXY = original
+        end)
+
+        it("calls setSectorXY from Sector Scan message", function()
+            local x, y = nil, nil
+            local original = setSectorXY
+            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+
+            helper.simulateLine("Sector Scan mag:1x (s:11 -10)")
+
+            assert.equal("11", x)
+            assert.equal("-10", y)
+            _G.setSectorXY = original
+        end)
+
         it("calls setSectorXY from Navigating SS# message", function()
             local x, y = nil, nil
             local original = setSectorXY

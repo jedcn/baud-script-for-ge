@@ -5,27 +5,12 @@
 --
 
 --
--- When you see:
---
--- (N)onstop, (Q)uit, or (C)ontinue
---
--- You should send "N" and gag it?
---
--- This is not working right now.
---
--- createTrigger("^\\(N\\)onstop, \\(Q\\)uit, or \\(C\\)ontinue\\?$", function(matches)
---    send("n")
--- end, { type = "regex" })
-
---
 -- auto orbit
 --
 createTrigger("^In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)
     local planetNumber = matches[2]
     send("orbit " .. planetNumber)
 end, { type = "regex" })
-
-
 
 --
 -- auto shields

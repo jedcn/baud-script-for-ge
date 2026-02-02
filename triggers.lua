@@ -70,6 +70,11 @@ createTrigger("^Galactic Heading.......  (-?\\d+)$", function(matches)
     setShipHeading(heading)
 end, { type = "regex" })
 
+createTrigger("^Heading.................... (-?\\d+)$", function(matches)
+    local heading = matches[2]
+    setShipHeading(heading)
+end, { type = "regex" })
+
 -- sets ship heading from helm message
 createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(matches)
     local heading = matches[2]
@@ -88,6 +93,13 @@ end, { type = "regex" })
 createTrigger("^Total Cargo Weight... 0 Tons$", function(matches)
     clearShipInventory()
 end, { type = "regex" })
+
+-- sets warp speed from interim helm message
+createTrigger("^Helm reports WARP (\\d+)$", function(matches)
+    local warpSpeed = matches[2]
+    setWarpSpeed(warpSpeed)
+end, { type = "regex" })
+
 
 -- sets warp speed from helm message
 createTrigger("^Helm reports speed is now Warp (\\d+\\.\\d+), Sir!$", function(matches)

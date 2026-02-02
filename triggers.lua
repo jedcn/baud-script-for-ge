@@ -160,26 +160,6 @@ createTrigger("^Scanning Planet (\\d+)\\s*(.*)$", function(matches)
     setScanningPlanetName(planetName)
 end, { type = "regex" })
 
--- echoes report type
-createTrigger("^Systems Report$", function(matches)
-    cecho("#ff00ff", "Systems Report")
-end, { type = "regex" })
-
--- echoes report type
-createTrigger("^Inventory Report$", function(matches)
-    cecho("#ff00ff", "Inventory Report")
-end, { type = "regex" })
-
--- echoes report type
-createTrigger("^Accounting Division report$", function(matches)
-    cecho("#ff00ff", "Accounting Division report")
-end, { type = "regex" })
-
--- echoes report type
-createTrigger("^Navigational Report$", function(matches)
-    cecho("#ff00ff", "Navigational Report")
-end, { type = "regex" })
-
 -- set shield strength
 createTrigger("^Shields are at (\\d+) percent charge, Sir!", function(matches)
     local shieldCharge = matches[2]

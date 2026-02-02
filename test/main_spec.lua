@@ -319,34 +319,6 @@ describe("GE Triggers", function()
     end)
 
     -- =========================================================================
-    -- Report Type triggers (4)
-    -- =========================================================================
-
-    describe("Report Type triggers", function()
-
-        it("echoes 'Systems Report' when Systems Report is encountered", function()
-            helper.simulateLine("Systems Report")
-            assert.is_true(helper.wasEchoCalledWith("Systems Report"))
-        end)
-
-        it("echoes 'Inventory Report' when Inventory Report is encountered", function()
-            helper.simulateLine("Inventory Report")
-            assert.is_true(helper.wasEchoCalledWith("Inventory Report"))
-        end)
-
-        it("echoes 'Accounting Division report' when encountered", function()
-            helper.simulateLine("Accounting Division report")
-            assert.is_true(helper.wasEchoCalledWith("Accounting Division report"))
-        end)
-
-        it("echoes 'Navigational Report' when Navigational Report is encountered", function()
-            helper.simulateLine("Navigational Report")
-            assert.is_true(helper.wasEchoCalledWith("Navigational Report"))
-        end)
-
-    end)
-
-    -- =========================================================================
     -- Shield triggers (1)
     -- =========================================================================
 
@@ -360,6 +332,28 @@ describe("GE Triggers", function()
             helper.simulateLine("Shields are at 75 percent charge, Sir!")
 
             assert.equal("75", called_with)
+            _G.setShieldCharge = original
+        end)
+
+        it("calls setShieldCharge from Shield Bank Charge line", function()
+            local called_with = nil
+            local original = setShieldCharge
+            _G.setShieldCharge = function(charge) called_with = charge end
+
+            helper.simulateLine("Shield Bank Charge .... 100")
+
+            assert.equal("100", called_with)
+            _G.setShieldCharge = original
+        end)
+
+        it("calls setShieldCharge with 0 when shields are down", function()
+            local called_with = nil
+            local original = setShieldCharge
+            _G.setShieldCharge = function(charge) called_with = charge end
+
+            helper.simulateLine("Shields are now down, Sir!")
+
+            assert.equal(0, called_with)
             _G.setShieldCharge = original
         end)
 

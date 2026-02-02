@@ -78,6 +78,10 @@ function createAlias(pattern, callback, options)
     })
 end
 
+-- Mock cecho: no-op for testing
+function cecho(color, text)
+end
+
 -- Mock setStatus: no-op for testing
 function setStatus(segmentsOrFunction)
 end

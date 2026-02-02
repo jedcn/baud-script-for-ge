@@ -33,7 +33,7 @@ end
 
 function log(s)
   if gePackage.debug then
-    cecho("gray", s)
+    cecho("#ff00ff", s)
   end
 end
 

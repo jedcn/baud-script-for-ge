@@ -185,3 +185,13 @@ createTrigger("^Shields are at (\\d+) percent charge, Sir!", function(matches)
     local shieldCharge = matches[2]
     setShieldCharge(shieldCharge)
 end, { type="regex" })
+
+-- set shield strength
+createTrigger("^Shield Bank Charge .... (\\d+)", function(matches)
+    local shieldCharge = matches[2]
+    setShieldCharge(shieldCharge)
+end, { type="regex" })
+
+createTrigger("^Shields are now down, Sir!", function()
+    setShieldCharge(0)
+end, { type="regex" })

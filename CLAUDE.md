@@ -12,7 +12,8 @@ Lua scripts for playing Galactic Empire (GE) via [Baud](https://github.com/jedcn
 Update this section and README.md when files are added, removed, or renamed.
 
 - `main.lua` - Entry point, loads other files via `dofile()`
-- `core.lua` - State management functions (setSectorXY, setOrbitingPlanet, setShipHeading, etc.)
+- `core.lua` - State management functions (setSector, setOrbitingPlanet, setShipHeading, etc.)
+- `status.lua` - Status bar display function
 - `triggers.lua` - Pattern-matching triggers that fire on game output
 - `aliases.lua` - Command aliases (shortcuts like `scapl1` -> `sca pl 1`)
 - `test/test_helper.lua` - Mocks Baud framework for testing
@@ -32,7 +33,7 @@ Use named variables for regex captures to clarify what each capture group repres
 createTrigger("^Galactic Pos. Xsect:(-?\\d+)\\s+Ysect:(-?\\d+)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 ```
 

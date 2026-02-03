@@ -57,28 +57,28 @@ describe("GE Triggers", function()
             _G.setOrbitingPlanet = original
         end)
 
-        it("calls setSectorXY with coordinates from Galactic Pos", function()
+        it("calls setSector with coordinates from Galactic Pos", function()
             local x, y = nil, nil
-            local original = setSectorXY
-            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+            local original = setSector
+            _G.setSector = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Galactic Pos. Xsect:-25  Ysect:100")
 
             assert.equal("-25", x)
             assert.equal("100", y)
-            _G.setSectorXY = original
+            _G.setSector = original
         end)
 
-        it("calls setSectorPositionXY with coordinates from Sector Pos", function()
+        it("calls setSectorPosition with coordinates from Sector Pos", function()
             local x, y = nil, nil
-            local original = setSectorPositionXY
-            _G.setSectorPositionXY = function(newX, newY) x, y = newX, newY end
+            local original = setSectorPosition
+            _G.setSectorPosition = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Sector Pos. X:50 Y:75")
 
             assert.equal("50", x)
             assert.equal("75", y)
-            _G.setSectorPositionXY = original
+            _G.setSectorPosition = original
         end)
 
     end)
@@ -174,40 +174,40 @@ describe("GE Triggers", function()
             _G.setWarpSpeed = original
         end)
 
-        it("calls setSectorXY from Range Scan message", function()
+        it("calls setSector from Range Scan message", function()
             local x, y = nil, nil
-            local original = setSectorXY
-            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+            local original = setSector
+            _G.setSector = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Range Scan Dist:200000 (s:11 -10)")
 
             assert.equal("11", x)
             assert.equal("-10", y)
-            _G.setSectorXY = original
+            _G.setSector = original
         end)
 
-        it("calls setSectorXY from Sector Scan message", function()
+        it("calls setSector from Sector Scan message", function()
             local x, y = nil, nil
-            local original = setSectorXY
-            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+            local original = setSector
+            _G.setSector = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Sector Scan mag:1x (s:11 -10)")
 
             assert.equal("11", x)
             assert.equal("-10", y)
-            _G.setSectorXY = original
+            _G.setSector = original
         end)
 
-        it("calls setSectorXY from Navigating SS# message", function()
+        it("calls setSector from Navigating SS# message", function()
             local x, y = nil, nil
-            local original = setSectorXY
-            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+            local original = setSector
+            _G.setSector = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Navigating SS# -10 20")
 
             assert.equal("-10", x)
             assert.equal("20", y)
-            _G.setSectorXY = original
+            _G.setSector = original
         end)
 
     end)

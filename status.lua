@@ -1,11 +1,14 @@
 function status()
+--   log("status()")
+  local sectorX, sectorY = getSector()
+  local sectorPositionX, sectorPositionY = getSectorPosition()
   local shipHeading = getShipHeading() or "?"
   local warpSpeed = getWarpSpeed() or "?"
   local shieldCharge = getShieldCharge() or "?"
 
   local segments = {
-    { text = "Sector: " .. gePackage.position.xSector .. "," .. gePackage.position.ySector},
-    { text = "(x,y):(" .. gePackage.position.xSectorPosition .. ", " .. gePackage.position.ySectorPosition .. ")"},
+    { text = "Sector: " .. sectorX .. "," .. sectorY},
+    { text = "(x,y):(" .. sectorPositionX .. ", " .. sectorPositionY .. ")"},
     { text = "Heading: " .. shipHeading },
     { text = "Warp: " .. warpSpeed },
     { text = "Shields: " .. shieldCharge },

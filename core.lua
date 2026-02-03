@@ -37,17 +37,24 @@ function log(s)
   end
 end
 
-
-function setSectorXY(newX, newY)
-  log("setSectorXY(" .. newX .. ", " .. newY .. ")")
-  gePackage.position.xSector = tonumber(newX)
-  gePackage.position.ySector = tonumber(newY)
+function setSector(newX, newY)
+  log("setSector(" .. newX .. ", " .. newY .. ")")
+  gePackage.position.sectorX = tonumber(newX)
+  gePackage.position.sectorY = tonumber(newY)
 end
 
-function setSectorPositionXY(newX, newY)
-  log("setSectorPositionXY(" .. newX .. ", " .. newY .. ")")
-  gePackage.position.xSectorPosition = tonumber(newX)
-  gePackage.position.ySectorPosition = tonumber(newY)
+function getSector()
+  return gePackage.position.sectorX, gePackage.position.sectorY
+end
+
+function setSectorPosition(newX, newY)
+  log("setSectorPosition(" .. newX .. ", " .. newY .. ")")
+  gePackage.position.sectorPositionX = tonumber(newX)
+  gePackage.position.sectorPositionY = tonumber(newY)
+end
+
+function getSectorPosition()
+  return gePackage.position.sectorPositionX, gePackage.position.sectorPositionY
 end
 
 function clearOrbitingPlanet()
@@ -58,6 +65,10 @@ end
 function setOrbitingPlanet(newPlanetNumber)
   log("setOrbitingPlanet(" .. newPlanetNumber .. ")");
   gePackage.position.orbitingPlanet = tonumber(newPlanetNumber)
+end
+
+function getOrbitingPlanet()
+  return gePackage.position.orbitingPlanet
 end
 
 function setShipHeading(newHeading)

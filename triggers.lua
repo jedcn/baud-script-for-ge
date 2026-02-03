@@ -34,25 +34,25 @@ end, { type = "regex" })
 createTrigger("^Galactic Pos. Xsect:(-?\\d+)\\s+Ysect:(-?\\d+)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 
 createTrigger("Range Scan Dist:\\d+ \\(s:(-?\\d+) (-?\\d+)\\)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 
 createTrigger("Sector Scan mag:1x \\(s:(-?\\d+) (-?\\d+)\\)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 
 createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
     local xSectorPosition = matches[2]
     local ySectorPosition = matches[3]
-    setSectorPositionXY(xSectorPosition, ySectorPosition)
+    setSectorPosition(xSectorPosition, ySectorPosition)
 end, { type = "regex" })
 
 -- sets orbiting planet from status display
@@ -118,7 +118,7 @@ end, { type = "regex" })
 createTrigger("^Navigating SS# (-?\\d+) (-?\\d+)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 
 -- sets warp speed from status display

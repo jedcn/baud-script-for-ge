@@ -34,25 +34,25 @@ end, { type = "regex" })
 createTrigger("^Galactic Pos. Xsect:(-?\\d+)\\s+Ysect:(-?\\d+)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 
 createTrigger("Range Scan Dist:\\d+ \\(s:(-?\\d+) (-?\\d+)\\)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 
 createTrigger("Sector Scan mag:1x \\(s:(-?\\d+) (-?\\d+)\\)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 
 createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
     local xSectorPosition = matches[2]
     local ySectorPosition = matches[3]
-    setSectorPositionXY(xSectorPosition, ySectorPosition)
+    setSectorPosition(xSectorPosition, ySectorPosition)
 end, { type = "regex" })
 
 -- sets orbiting planet from status display
@@ -118,7 +118,7 @@ end, { type = "regex" })
 createTrigger("^Navigating SS# (-?\\d+) (-?\\d+)$", function(matches)
     local xSector = matches[2]
     local ySector = matches[3]
-    setSectorXY(xSector, ySector)
+    setSector(xSector, ySector)
 end, { type = "regex" })
 
 -- sets warp speed from status display
@@ -160,28 +160,18 @@ createTrigger("^Scanning Planet (\\d+)\\s*(.*)$", function(matches)
     setScanningPlanetName(planetName)
 end, { type = "regex" })
 
--- echoes report type
-createTrigger("^Systems Report$", function(matches)
-    echo("Systems Report")
-end, { type = "regex" })
-
--- echoes report type
-createTrigger("^Inventory Report$", function(matches)
-    echo("Inventory Report")
-end, { type = "regex" })
-
--- echoes report type
-createTrigger("^Accounting Division report$", function(matches)
-    echo("Accounting Division report")
-end, { type = "regex" })
-
--- echoes report type
-createTrigger("^Navigational Report$", function(matches)
-    echo("Navigational Report")
-end, { type = "regex" })
-
 -- set shield strength
 createTrigger("^Shields are at (\\d+) percent charge, Sir!", function(matches)
     local shieldCharge = matches[2]
     setShieldCharge(shieldCharge)
+end, { type="regex" })
+
+-- set shield strength
+createTrigger("^Shield Bank Charge .... (\\d+)", function(matches)
+    local shieldCharge = matches[2]
+    setShieldCharge(shieldCharge)
+end, { type="regex" })
+
+createTrigger("^Shields are now down, Sir!", function()
+    setShieldCharge(0)
 end, { type="regex" })

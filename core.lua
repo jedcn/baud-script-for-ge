@@ -3,7 +3,7 @@
 --
 if not gePackage then
   gePackage = {}
-  gePackage.debug = false
+  gePackage.debug = true
   gePackage.position = {}
   gePackage.ship = {}
   gePackage.ship.inventory = {}
@@ -33,21 +33,28 @@ end
 
 function log(s)
   if gePackage.debug then
-    cecho("gray", s)
+    cecho("#ff00ff", s)
   end
 end
 
-
-function setSectorXY(newX, newY)
-  log("setSectorXY(" .. newX .. ", " .. newY .. ")")
-  gePackage.position.xSector = tonumber(newX)
-  gePackage.position.ySector = tonumber(newY)
+function setSector(newX, newY)
+  log("setSector(" .. newX .. ", " .. newY .. ")")
+  gePackage.position.sectorX = tonumber(newX)
+  gePackage.position.sectorY = tonumber(newY)
 end
 
-function setSectorPositionXY(newX, newY)
-  log("setSectorPositionXY(" .. newX .. ", " .. newY .. ")")
-  gePackage.position.xSectorPosition = tonumber(newX)
-  gePackage.position.ySectorPosition = tonumber(newY)
+function getSector()
+  return gePackage.position.sectorX, gePackage.position.sectorY
+end
+
+function setSectorPosition(newX, newY)
+  log("setSectorPosition(" .. newX .. ", " .. newY .. ")")
+  gePackage.position.sectorPositionX = tonumber(newX)
+  gePackage.position.sectorPositionY = tonumber(newY)
+end
+
+function getSectorPosition()
+  return gePackage.position.sectorPositionX, gePackage.position.sectorPositionY
 end
 
 function clearOrbitingPlanet()
@@ -58,6 +65,10 @@ end
 function setOrbitingPlanet(newPlanetNumber)
   log("setOrbitingPlanet(" .. newPlanetNumber .. ")");
   gePackage.position.orbitingPlanet = tonumber(newPlanetNumber)
+end
+
+function getOrbitingPlanet()
+  return gePackage.position.orbitingPlanet
 end
 
 function setShipHeading(newHeading)
@@ -105,6 +116,10 @@ end
 function setShieldCharge(newShieldCharge)
   log("setShieldCharge(" .. newShieldCharge .. ")")
   gePackage.shieldCharge = tonumber(newShieldCharge)
+end
+
+function getShieldCharge()
+  return gePackage.shieldCharge
 end
 
 function setParseState(stateName, newBoolean)
@@ -156,18 +171,3 @@ function doMaint()
   log("doMaint()");
   send("maint arbor123")
 end
-
-function statusPrompt()
-  local shipHeading = getShipHeading() or "?"
-  local warpSpeed = getWarpSpeed() or "?"
-
-  local segments = {
-    { text = "Sector: " .. gePackage.position.xSector .. "," .. gePackage.position.ySector},
-    { text = "(x,y): (" .. gePackage.position.xSectorPosition .. ", " .. gePackage.position.ySectorPosition .. ")"},
-    { text = "Heading: " .. shipHeading },
-    { text = "Warp: " .. warpSpeed },
-  }
-  return segments
-end
-
-setStatus(statusPrompt)

@@ -11,13 +11,12 @@ if not scriptDir then
   error("SCRIPT_DIR not set - are you running this through Baud?")
 end
 
--- Load state management functions
 dofile(scriptDir .. "core.lua")
 
--- Load aliases
 dofile(scriptDir .. "aliases.lua")
 
--- Load triggers
 dofile(scriptDir .. "triggers.lua")
+
+dofile(scriptDir .. "status.lua")
 
 echo("Finishing reading main.lua")

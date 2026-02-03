@@ -57,28 +57,28 @@ describe("GE Triggers", function()
             _G.setOrbitingPlanet = original
         end)
 
-        it("calls setSectorXY with coordinates from Galactic Pos", function()
+        it("calls setSector with coordinates from Galactic Pos", function()
             local x, y = nil, nil
-            local original = setSectorXY
-            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+            local original = setSector
+            _G.setSector = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Galactic Pos. Xsect:-25  Ysect:100")
 
             assert.equal("-25", x)
             assert.equal("100", y)
-            _G.setSectorXY = original
+            _G.setSector = original
         end)
 
-        it("calls setSectorPositionXY with coordinates from Sector Pos", function()
+        it("calls setSectorPosition with coordinates from Sector Pos", function()
             local x, y = nil, nil
-            local original = setSectorPositionXY
-            _G.setSectorPositionXY = function(newX, newY) x, y = newX, newY end
+            local original = setSectorPosition
+            _G.setSectorPosition = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Sector Pos. X:50 Y:75")
 
             assert.equal("50", x)
             assert.equal("75", y)
-            _G.setSectorPositionXY = original
+            _G.setSectorPosition = original
         end)
 
     end)
@@ -174,40 +174,40 @@ describe("GE Triggers", function()
             _G.setWarpSpeed = original
         end)
 
-        it("calls setSectorXY from Range Scan message", function()
+        it("calls setSector from Range Scan message", function()
             local x, y = nil, nil
-            local original = setSectorXY
-            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+            local original = setSector
+            _G.setSector = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Range Scan Dist:200000 (s:11 -10)")
 
             assert.equal("11", x)
             assert.equal("-10", y)
-            _G.setSectorXY = original
+            _G.setSector = original
         end)
 
-        it("calls setSectorXY from Sector Scan message", function()
+        it("calls setSector from Sector Scan message", function()
             local x, y = nil, nil
-            local original = setSectorXY
-            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+            local original = setSector
+            _G.setSector = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Sector Scan mag:1x (s:11 -10)")
 
             assert.equal("11", x)
             assert.equal("-10", y)
-            _G.setSectorXY = original
+            _G.setSector = original
         end)
 
-        it("calls setSectorXY from Navigating SS# message", function()
+        it("calls setSector from Navigating SS# message", function()
             local x, y = nil, nil
-            local original = setSectorXY
-            _G.setSectorXY = function(newX, newY) x, y = newX, newY end
+            local original = setSector
+            _G.setSector = function(newX, newY) x, y = newX, newY end
 
             helper.simulateLine("Navigating SS# -10 20")
 
             assert.equal("-10", x)
             assert.equal("20", y)
-            _G.setSectorXY = original
+            _G.setSector = original
         end)
 
     end)
@@ -319,34 +319,6 @@ describe("GE Triggers", function()
     end)
 
     -- =========================================================================
-    -- Report Type triggers (4)
-    -- =========================================================================
-
-    describe("Report Type triggers", function()
-
-        it("echoes 'Systems Report' when Systems Report is encountered", function()
-            helper.simulateLine("Systems Report")
-            assert.is_true(helper.wasEchoCalledWith("Systems Report"))
-        end)
-
-        it("echoes 'Inventory Report' when Inventory Report is encountered", function()
-            helper.simulateLine("Inventory Report")
-            assert.is_true(helper.wasEchoCalledWith("Inventory Report"))
-        end)
-
-        it("echoes 'Accounting Division report' when encountered", function()
-            helper.simulateLine("Accounting Division report")
-            assert.is_true(helper.wasEchoCalledWith("Accounting Division report"))
-        end)
-
-        it("echoes 'Navigational Report' when Navigational Report is encountered", function()
-            helper.simulateLine("Navigational Report")
-            assert.is_true(helper.wasEchoCalledWith("Navigational Report"))
-        end)
-
-    end)
-
-    -- =========================================================================
     -- Shield triggers (1)
     -- =========================================================================
 
@@ -360,6 +332,28 @@ describe("GE Triggers", function()
             helper.simulateLine("Shields are at 75 percent charge, Sir!")
 
             assert.equal("75", called_with)
+            _G.setShieldCharge = original
+        end)
+
+        it("calls setShieldCharge from Shield Bank Charge line", function()
+            local called_with = nil
+            local original = setShieldCharge
+            _G.setShieldCharge = function(charge) called_with = charge end
+
+            helper.simulateLine("Shield Bank Charge .... 100")
+
+            assert.equal("100", called_with)
+            _G.setShieldCharge = original
+        end)
+
+        it("calls setShieldCharge with 0 when shields are down", function()
+            local called_with = nil
+            local original = setShieldCharge
+            _G.setShieldCharge = function(charge) called_with = charge end
+
+            helper.simulateLine("Shields are now down, Sir!")
+
+            assert.equal(0, called_with)
             _G.setShieldCharge = original
         end)
 

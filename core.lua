@@ -110,6 +110,15 @@ function getWarpSpeed()
   return gePackage.warpSpeed
 end
 
+function setShieldStatus(newStatus)
+  log("setShieldStatus(" .. newStatus .. ")")
+  gePackage.shieldStatus = newStatus
+end
+
+function getShieldStatus()
+  return gePackage.shieldStatus
+end
+
 function setShieldCharge(newShieldCharge)
   log("setShieldCharge(" .. newShieldCharge .. ")")
   gePackage.shieldCharge = tonumber(newShieldCharge)

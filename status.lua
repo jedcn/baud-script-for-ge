@@ -4,14 +4,16 @@ function status()
   local sectorPositionX, sectorPositionY = getSectorPosition()
   local shipHeading = getShipHeading() or "?"
   local warpSpeed = getWarpSpeed() or "?"
+  local shieldStatus = getShieldStatus() or "?"
   local shieldCharge = getShieldCharge() or "?"
+  local shieldState = shieldStatus .. ":" .. shieldCharge
 
   local segments = {
-    { text = "Sector: " .. sectorX .. "," .. sectorY},
-    { text = "(x,y):(" .. sectorPositionX .. ", " .. sectorPositionY .. ")"},
-    { text = "Heading: " .. shipHeading },
-    { text = "Warp: " .. warpSpeed },
-    { text = "Shields: " .. shieldCharge },
+    { text = "Sector " .. sectorX .. "," .. sectorY},
+    { text = "(x,y) (" .. sectorPositionX .. ", " .. sectorPositionY .. ")"},
+    { text = "Heading " .. shipHeading },
+    { text = "Warp " .. warpSpeed },
+    { text = "Shields " .. shieldState },
   }
   return segments
 end

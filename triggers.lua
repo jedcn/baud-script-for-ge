@@ -172,6 +172,15 @@ createTrigger("^Shield Bank Charge .... (\\d+)", function(matches)
     setShieldCharge(shieldCharge)
 end, { type="regex" })
 
+createTrigger("^Shields energizing, Sir!", function()
+    setShieldStatus("UP");
+end, { type="regex" })
+
 createTrigger("^Shields are now down, Sir!", function()
-    setShieldCharge(0)
+    setShieldStatus("DOWN");
+end, { type="regex" })
+
+createTrigger("^Shields \\(Mark-\\d+\\)...... (\\w+)$", function(matches)
+    local status = matches[2]
+    setShieldStatus(status)
 end, { type="regex" })

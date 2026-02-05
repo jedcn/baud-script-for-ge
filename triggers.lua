@@ -184,3 +184,8 @@ createTrigger("^Shields \\(Mark-\\d+\\)...... (\\w+)$", function(matches)
     local status = matches[2]
     setShieldStatus(status)
 end, { type="regex" })
+
+createTrigger("^DCO reports............ (.+)$", function(matches)
+    local shipStatus = matches[2]
+    setShipStatus(shipStatus)
+end, { type="regex" })

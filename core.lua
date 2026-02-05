@@ -102,6 +102,15 @@ function clearShipInventory()
   gePackage.ship.inventory = {}
 end
 
+function setShipStatus(newStatus)
+  log("setShipSatus(" .. newStatus .. ")")
+  gePackage.ship.status = newStatus
+end
+
+function getShipStatus()
+  return gePackage.ship.status
+end
+
 function setWarpSpeed(newWarpSpeed)
   gePackage.warpSpeed = tonumber(newWarpSpeed)
 end

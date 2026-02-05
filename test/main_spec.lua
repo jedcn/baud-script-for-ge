@@ -27,6 +27,16 @@ describe("GE Triggers", function()
             assert.is_true(helper.wasSendCalledWith("shi up"))
         end)
 
+        it("sends 'rep sys' when hit by ion cannon", function()
+            helper.simulateLine("We have been hit with a Ion Cannon Burst Sir, the shield")
+            assert.is_true(helper.wasSendCalledWith("rep sys"))
+        end)
+
+        it("sends 'rep sys' when maintenance is completed", function()
+            helper.simulateLine("Repairs and general maintenance have been completed Sir!")
+            assert.is_true(helper.wasSendCalledWith("rep sys"))
+        end)
+
     end)
 
     -- =========================================================================

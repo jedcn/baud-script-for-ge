@@ -4,6 +4,10 @@
 -- They are [defined here](https://github.com/jedcn/baud?tab=readme-ov-file#createtriggerpattern-callback-options)
 --
 
+-- =========================================================================
+-- Auto-responses
+-- =========================================================================
+
 --
 -- auto orbit
 --
@@ -18,6 +22,20 @@ end, { type = "regex" })
 createTrigger("^HELM reports we are leaving HYPERSPACE now, Sir!$", function(matches)
     send("shi up")
 end, { type = "regex" })
+
+--
+-- auto rep sys on ion cannon shot
+--
+createTrigger("^We have been hit with a Ion Cannon Burst Sir, the shield$", function()
+    send("rep sys")
+end, { type = "regex" })
+
+--
+-- auto rep sys on maintenance complete
+--
+createTrigger("^Repairs and general maintenance have been completed Sir!$", function(matches)
+  send("rep sys")
+end, { type="regex" })
 
 --
 -- Storage Management

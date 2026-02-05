@@ -359,4 +359,36 @@ describe("GE Triggers", function()
 
     end)
 
+    -- =========================================================================
+    -- Navigation (4)
+    -- =========================================================================
+
+    describe("Navigation", function()
+
+        before_each(function()
+            setSectorPosition(4607, 6301)
+        end)
+
+        it("calculates 90 degrees when navigating due east", function()
+            navigateWithinSectorTo(10000, 6301)
+            assert.is_true(helper.wasEchoCalledWith("Navigate to heading: 90 degrees"))
+        end)
+
+        it("calculates 180 degrees when navigating due south", function()
+            navigateWithinSectorTo(4607, 10000)
+            assert.is_true(helper.wasEchoCalledWith("Navigate to heading: 180 degrees"))
+        end)
+
+        it("calculates 270 degrees when navigating due west", function()
+            navigateWithinSectorTo(0, 6301)
+            assert.is_true(helper.wasEchoCalledWith("Navigate to heading: 270 degrees"))
+        end)
+
+        it("calculates 0 degrees when navigating due north", function()
+            navigateWithinSectorTo(4607, 0)
+            assert.is_true(helper.wasEchoCalledWith("Navigate to heading: 0 degrees"))
+        end)
+
+    end)
+
 end)

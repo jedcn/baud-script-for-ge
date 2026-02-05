@@ -21,4 +21,6 @@ dofile(scriptDir .. "state-machine-core.lua")
 
 dofile(scriptDir .. "status.lua")
 
+dofile(scriptDir .. "navigate.lua")
+
 echo("Finishing reading main.lua")

@@ -346,15 +346,15 @@ describe("GE Triggers", function()
             _G.setShieldCharge = original
         end)
 
-        it("calls setShieldCharge with 0 when shields are down", function()
+        it("calls setShieldStatus with DOWN when shields are down", function()
             local called_with = nil
-            local original = setShieldCharge
-            _G.setShieldCharge = function(charge) called_with = charge end
+            local original = setShieldStatus
+            _G.setShieldStatus = function(status) called_with = status end
 
             helper.simulateLine("Shields are now down, Sir!")
 
-            assert.equal(0, called_with)
-            _G.setShieldCharge = original
+            assert.equal("DOWN", called_with)
+            _G.setShieldStatus = original
         end)
 
     end)

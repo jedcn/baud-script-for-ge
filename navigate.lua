@@ -63,6 +63,10 @@ end
 -- ============================================================================
 
 function navigateToCoordinates(x, y)
+  -- Convert to numbers first
+  x = tonumber(x)
+  y = tonumber(y)
+
   -- Validate coordinates (0-10000)
   if x < 0 or x > 10000 or y < 0 or y > 10000 then
     echo("ERROR: Invalid coordinates. Must be 0-10000.")
@@ -72,8 +76,8 @@ function navigateToCoordinates(x, y)
   -- Initialize navigation
   gePackage.navigation.active = true
   gePackage.navigation.phase = "coordinate"
-  gePackage.navigation.target.sectorPositionX = tonumber(x)
-  gePackage.navigation.target.sectorPositionY = tonumber(y)
+  gePackage.navigation.target.sectorPositionX = x
+  gePackage.navigation.target.sectorPositionY = y
   gePackage.navigation.state = "requesting_position"
   gePackage.navigation.lastPositionCheck = 0
   gePackage.navigation.lastPositionUpdate = 0

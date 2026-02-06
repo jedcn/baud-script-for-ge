@@ -22,7 +22,9 @@ end
 function calculateDistance(x1, y1, x2, y2)
   local dx = x2 - x1
   local dy = y2 - y1
-  return math.sqrt(dx * dx + dy * dy)
+  local distance = math.sqrt(dx * dx + dy * dy)
+  log("calculateDistance(" .. x1 .. ", " .. y1 .. ", " .. x2 .. ", " .. y2 .. ") = " .. distance)
+  return distance
 end
 
 function calculateHeading(x1, y1, x2, y2)
@@ -35,7 +37,9 @@ function calculateHeading(x1, y1, x2, y2)
     angleDegrees = angleDegrees + 360
   end
 
-  return math.floor(angleDegrees + 0.5)
+  local heading = math.floor(angleDegrees + 0.5)
+  log("calculateHeading(" .. x1 .. ", " .. y1 .. ", " .. x2 .. ", " .. y2 .. ") = " .. heading)
+  return heading
 end
 
 function calculateRotation(currentHeading, goalHeading)
@@ -50,10 +54,13 @@ function calculateRotation(currentHeading, goalHeading)
     diff = diff + 360  -- Rotate positive instead
   end
 
-  return math.floor(diff + 0.5)
+  local rotation = math.floor(diff + 0.5)
+  log("calculateRotation(current: " .. currentHeading .. ", goal: " .. goalHeading .. ") = " .. rotation)
+  return rotation
 end
 
 function sendNavigationCommand(command)
+  log("sendNavigationCommand: " .. command)
   gePackage.navigation.lastCommand = os.time()
   send(command)
 end
@@ -63,6 +70,8 @@ end
 -- ============================================================================
 
 function navigateToCoordinates(x, y)
+  log("navigateToCoordinates(" .. tostring(x) .. ", " .. tostring(y) .. ")")
+
   -- Convert to numbers first
   x = tonumber(x)
   y = tonumber(y)
@@ -82,11 +91,13 @@ function navigateToCoordinates(x, y)
   gePackage.navigation.lastPositionCheck = 0
   gePackage.navigation.lastPositionUpdate = 0
 
+  log("Navigation initialized: target=(" .. x .. ", " .. y .. "), state=" .. gePackage.navigation.state)
   echo("Navigation started to (" .. x .. ", " .. y .. ")")
   return true
 end
 
 function cancelNavigation()
+  log("cancelNavigation()")
   if not gePackage.navigation.active then
     echo("No navigation in progress")
     return
@@ -150,11 +161,16 @@ function navigationTick()
   local config = nav.config
   local state = nav.state
 
+  log("navigationTick: state=" .. state)
+
   -- State handler functions
   local actions = {
-    idle = function() end,
+    idle = function()
+      log("  [idle] No action")
+    end,
 
     requesting_position = function()
+      log("  [requesting_position] Sending 'rep nav'")
       sendNavigationCommand("rep nav")
       nav.state = "awaiting_position"
       nav.lastPositionCheck = os.time()
@@ -162,15 +178,18 @@ function navigationTick()
 
     awaiting_position = function()
       local timeSinceCheck = os.time() - nav.lastPositionCheck
+      log("  [awaiting_position] timeSinceCheck=" .. timeSinceCheck .. ", lastUpdate=" .. nav.lastPositionUpdate .. ", lastCheck=" .. nav.lastPositionCheck)
 
       -- Check timeout
       if timeSinceCheck > config.commandTimeout then
+        log("  [awaiting_position] TIMEOUT - moving to stuck state")
         nav.state = "stuck"
         return
       end
 
       -- Check if position was updated after we requested it
       if nav.lastPositionUpdate > nav.lastPositionCheck then
+        log("  [awaiting_position] Position updated, moving to calculating_route")
         nav.state = "calculating_route"
       end
     end,
@@ -179,14 +198,17 @@ function navigationTick()
       local currentX, currentY = getSectorPosition()
       local targetX = nav.target.sectorPositionX
       local targetY = nav.target.sectorPositionY
+      log("  [calculating_route] current=(" .. currentX .. ", " .. currentY .. "), target=(" .. targetX .. ", " .. targetY .. ")")
 
       local distance = calculateDistance(currentX, currentY, targetX, targetY)
 
       if distance < config.arrivalThreshold then
+        log("  [calculating_route] ARRIVED! distance=" .. distance .. " < threshold=" .. config.arrivalThreshold)
         nav.state = "arrived"
       else
         -- Calculate and store target heading for rotation
         nav.targetHeading = calculateHeading(currentX, currentY, targetX, targetY)
+        log("  [calculating_route] distance=" .. distance .. ", targetHeading=" .. nav.targetHeading .. ", moving to rotating_to_heading")
         nav.state = "rotating_to_heading"
       end
     end,
@@ -194,23 +216,27 @@ function navigationTick()
     rotating_to_heading = function()
       local currentHeading = getShipHeading()
       local targetHeading = nav.targetHeading
+      log("  [rotating_to_heading] currentHeading=" .. currentHeading .. ", targetHeading=" .. targetHeading)
 
       local rotation = calculateRotation(currentHeading, targetHeading)
 
       -- Only rotate if rotation is significant (> 2 degrees)
       if math.abs(rotation) > 2 then
+        log("  [rotating_to_heading] Rotating by " .. rotation .. " degrees")
         sendNavigationCommand("rot " .. rotation)
         nav.state = "awaiting_rotation_confirmation"
       else
-        -- Already pointing in right direction
+        log("  [rotating_to_heading] Already aligned (rotation=" .. rotation .. "), moving to setting_speed")
         nav.state = "setting_speed"
       end
     end,
 
     awaiting_rotation_confirmation = function()
       local timeSinceCommand = os.time() - nav.lastCommand
+      log("  [awaiting_rotation_confirmation] timeSinceCommand=" .. timeSinceCommand)
 
       if timeSinceCommand > config.commandTimeout then
+        log("  [awaiting_rotation_confirmation] TIMEOUT - moving to stuck state")
         nav.state = "stuck"
         return
       end
@@ -225,7 +251,10 @@ function navigationTick()
         headingDiff = 360 - headingDiff
       end
 
+      log("  [awaiting_rotation_confirmation] currentHeading=" .. currentHeading .. ", targetHeading=" .. targetHeading .. ", diff=" .. headingDiff)
+
       if headingDiff < 5 then  -- Within 5 degrees is good enough
+        log("  [awaiting_rotation_confirmation] Rotation complete, moving to setting_speed")
         nav.state = "setting_speed"
       end
     end,
@@ -236,11 +265,14 @@ function navigationTick()
       local targetY = nav.target.sectorPositionY
       local distance = calculateDistance(currentX, currentY, targetX, targetY)
       local currentSpeed = getWarpSpeed() or 0
+      log("  [setting_speed] distance=" .. distance .. ", currentSpeed=" .. currentSpeed)
 
       local speedType, speedValue = config.decideSpeed(distance, currentSpeed)
+      log("  [setting_speed] decided: " .. speedType .. " " .. speedValue)
 
       -- Only send command if speed needs to change
       if math.abs(currentSpeed - speedValue) > 0.1 then
+        log("  [setting_speed] Changing speed to " .. speedType .. " " .. speedValue)
         if speedType == "WARP" then
           sendNavigationCommand("warp " .. speedValue)
         else
@@ -248,15 +280,17 @@ function navigationTick()
         end
         nav.state = "awaiting_speed_confirmation"
       else
-        -- Speed already correct, start traveling
+        log("  [setting_speed] Speed already correct, moving to traveling")
         nav.state = "traveling"
       end
     end,
 
     awaiting_speed_confirmation = function()
       local timeSinceCommand = os.time() - nav.lastCommand
+      log("  [awaiting_speed_confirmation] timeSinceCommand=" .. timeSinceCommand)
 
       if timeSinceCommand > config.commandTimeout then
+        log("  [awaiting_speed_confirmation] TIMEOUT - moving to stuck state")
         nav.state = "stuck"
         return
       end
@@ -265,23 +299,28 @@ function navigationTick()
         -- Store current heading/speed for interruption detection
         config.lastKnownHeading = getShipHeading()
         config.lastKnownSpeed = getWarpSpeed()
+        log("  [awaiting_speed_confirmation] Speed confirmed, moving to traveling")
         nav.state = "traveling"
       end
     end,
 
     traveling = function()
+      log("  [traveling] Checking interruption and polling interval")
+
       -- Check for interruption (unexpected heading/speed change)
       if config.detectInterruption then
         local currentHeading = getShipHeading()
         local currentSpeed = getWarpSpeed()
 
         if config.lastKnownHeading and math.abs(currentHeading - config.lastKnownHeading) > 5 then
+          log("  [traveling] INTERRUPTED - heading changed from " .. config.lastKnownHeading .. " to " .. currentHeading)
           cecho("<red>Navigation interrupted - heading changed unexpectedly\n")
           nav.state = "aborted"
           return
         end
 
         if config.lastKnownSpeed and math.abs(currentSpeed - config.lastKnownSpeed) > 0.5 then
+          log("  [traveling] INTERRUPTED - speed changed from " .. config.lastKnownSpeed .. " to " .. currentSpeed)
           cecho("<red>Navigation interrupted - speed changed unexpectedly\n")
           nav.state = "aborted"
           return
@@ -289,37 +328,45 @@ function navigationTick()
       end
 
       local timeSinceCheck = os.time() - nav.lastPositionCheck
+      log("  [traveling] timeSinceCheck=" .. timeSinceCheck .. ", pollingInterval=" .. config.pollingInterval)
 
       if timeSinceCheck >= config.pollingInterval then
+        log("  [traveling] Time to check position again, moving to requesting_position")
         nav.state = "requesting_position"
       end
     end,
 
     arrived = function()
+      log("  [arrived] Stopping ship")
       sendNavigationCommand("warp 0")
       nav.state = "stopping"
     end,
 
     stopping = function()
       local currentSpeed = getWarpSpeed()
+      log("  [stopping] currentSpeed=" .. currentSpeed)
 
       if currentSpeed == 0 then
+        log("  [stopping] Ship stopped, moving to completed")
         nav.state = "completed"
       end
     end,
 
     completed = function()
+      log("  [completed] Navigation completed successfully")
       echo("Navigation completed!")
       nav.active = false
       nav.state = "idle"
     end,
 
     stuck = function()
+      log("  [stuck] Navigation stuck, aborting")
       cecho("<red>Navigation stuck in previous state\n")
       nav.state = "aborted"
     end,
 
     aborted = function()
+      log("  [aborted] Navigation aborted")
       cecho("<red>Navigation aborted\n")
       nav.active = false
       nav.state = "idle"

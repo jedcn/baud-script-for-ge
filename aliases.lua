@@ -117,3 +117,24 @@ createAlias("^tuff$", function()
     send("tra up 1 flux")
     send("flux")
 end, { type = "regex" })
+
+--
+-- Navigation commands
+--
+
+-- navto X Y -> navigateToCoordinates(X, Y)
+createAlias("^navto (\\d+) (\\d+)$", function(matches)
+    local x = matches[2]
+    local y = matches[3]
+    navigateToCoordinates(x, y)
+end, { type = "regex" })
+
+-- navstatus -> getNavigationStatus()
+createAlias("^navstatus$", function()
+    echo(getNavigationStatus())
+end, { type = "regex" })
+
+-- navcancel -> cancelNavigation()
+createAlias("^navcancel$", function()
+    cancelNavigation()
+end, { type = "regex" })

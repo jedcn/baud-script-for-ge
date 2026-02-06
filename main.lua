@@ -19,8 +19,10 @@ dofile(scriptDir .. "triggers.lua")
 
 dofile(scriptDir .. "state-machine-core.lua")
 
-dofile(scriptDir .. "status.lua")
+dofile(scriptDir .. "navigate-config.lua")
 
 dofile(scriptDir .. "navigate.lua")
+
+dofile(scriptDir .. "status.lua")
 
 echo("Finishing reading main.lua")

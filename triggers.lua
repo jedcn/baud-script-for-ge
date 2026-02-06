@@ -71,6 +71,11 @@ createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
     local xSectorPosition = matches[2]
     local ySectorPosition = matches[3]
     setSectorPosition(xSectorPosition, ySectorPosition)
+
+    -- Update navigation timestamp
+    if gePackage.navigation then
+      gePackage.navigation.lastPositionUpdate = os.time()
+    end
 end, { type = "regex" })
 
 -- sets orbiting planet from status display

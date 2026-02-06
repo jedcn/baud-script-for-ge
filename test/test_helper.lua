@@ -78,6 +78,12 @@ function createAlias(pattern, callback, options)
     })
 end
 
+-- Mock createTimer: no-op for testing (timers don't run in tests)
+function createTimer(interval, callback, options)
+    -- In tests, we don't actually run timers - we manually call tick functions
+    return "mock_timer_id"
+end
+
 -- Mock cecho: no-op for testing
 function cecho(color, text)
 end

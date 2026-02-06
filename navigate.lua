@@ -312,19 +312,19 @@ function navigationTick()
         local currentHeading = getShipHeading()
         local currentSpeed = getWarpSpeed()
 
-        if config.lastKnownHeading and math.abs(currentHeading - config.lastKnownHeading) > 5 then
-          log("  [traveling] INTERRUPTED - heading changed from " .. config.lastKnownHeading .. " to " .. currentHeading)
-          cecho("<red>Navigation interrupted - heading changed unexpectedly\n")
-          nav.state = "aborted"
-          return
-        end
+        -- if config.lastKnownHeading and math.abs(currentHeading - config.lastKnownHeading) > 5 then
+        --   log("  [traveling] INTERRUPTED - heading changed from " .. config.lastKnownHeading .. " to " .. currentHeading)
+        --   cecho("<red>Navigation interrupted - heading changed unexpectedly\n")
+        --   nav.state = "aborted"
+        --   return
+        -- end
 
-        if config.lastKnownSpeed and math.abs(currentSpeed - config.lastKnownSpeed) > 0.5 then
-          log("  [traveling] INTERRUPTED - speed changed from " .. config.lastKnownSpeed .. " to " .. currentSpeed)
-          cecho("<red>Navigation interrupted - speed changed unexpectedly\n")
-          nav.state = "aborted"
-          return
-        end
+        -- if config.lastKnownSpeed and math.abs(currentSpeed - config.lastKnownSpeed) > 0.5 then
+        --   log("  [traveling] INTERRUPTED - speed changed from " .. config.lastKnownSpeed .. " to " .. currentSpeed)
+        --   cecho("<red>Navigation interrupted - speed changed unexpectedly\n")
+        --   nav.state = "aborted"
+        --   return
+        -- end
       end
 
       local timeSinceCheck = os.time() - nav.lastPositionCheck

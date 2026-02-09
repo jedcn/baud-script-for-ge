@@ -1,5 +1,5 @@
 -- Set up recurring timer for navigation tick (every 1 second = 1000ms)
-createTimer(1000, function()
+createTimer(3000, function()
     -- Navigation tick (if function exists)
     if navigationTick then
         local navStatus, navErr = pcall(navigationTick)

@@ -352,7 +352,8 @@ function navigationTick()
 
     aborted = function()
       navDebug("  [aborted] Navigation aborted")
-      navError("Navigation aborted")
+      navError("Navigation aborted - coming to a stop")
+      sendNavigationCommand("war 0 0")
       nav.active = false
       nav.state = "idle"
     end

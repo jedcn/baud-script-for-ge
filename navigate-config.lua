@@ -24,7 +24,7 @@ gePackage.navigation.config = {
 
   -- Timing
   pollingInterval = 3,              -- Seconds between position checks
-  commandTimeout = 10,              -- Timeout for command responses
+  commandTimeout = 18,              -- Timeout for command responses
   maxStuckTime = 60,               -- Abort if stuck this long
 
   -- Speed decision function (distance-based, user can customize)

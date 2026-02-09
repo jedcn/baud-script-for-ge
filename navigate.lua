@@ -76,8 +76,6 @@ end
 -- ============================================================================
 
 function navigateToCoordinates(x, y)
-  navDebug("navigateToCoordinates(" .. tostring(x) .. ", " .. tostring(y) .. ")")
-
   -- Convert to numbers first
   x = tonumber(x)
   y = tonumber(y)
@@ -98,7 +96,6 @@ function navigateToCoordinates(x, y)
   gePackage.navigation.lastPositionCheck = 0
   gePackage.navigation.lastPositionUpdate = 0
 
-  navDebug("Navigation initialized: target=(" .. x .. ", " .. y .. "), state=" .. gePackage.navigation.state)
   navLog("Navigation started to (" .. x .. ", " .. y .. ")")
   return true
 end

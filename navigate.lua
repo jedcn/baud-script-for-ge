@@ -94,6 +94,7 @@ function navigateToCoordinates(x, y)
   gePackage.navigation.target.sectorPositionX = x
   gePackage.navigation.target.sectorPositionY = y
   gePackage.navigation.state = "requesting_position"
+  gePackage.navigation.navigationStart = os.time()
   gePackage.navigation.lastPositionCheck = 0
   gePackage.navigation.lastPositionUpdate = 0
 
@@ -175,7 +176,7 @@ function navigationTick()
     awaiting_position = function()
       navWaitingFor("Position Update")
       local timeSinceCheck = os.time() - nav.lastPositionCheck
-      navDebug("  [awaiting_position] timeSinceCheck=" .. timeSinceCheck .. ", lastUpdate=" .. nav.lastPositionUpdate .. ", lastCheck=" .. nav.lastPositionCheck)
+      navDebug("  [awaiting_position] timeSinceCheck=" .. timeSinceCheck .. ", lastUpdate=" .. (nav.lastPositionUpdate - nav.navigationStart) .. ", lastCheck=" .. (nav.lastPositionCheck - nav.navigationStart))
 
       -- Check timeout
       if timeSinceCheck > config.commandTimeout then

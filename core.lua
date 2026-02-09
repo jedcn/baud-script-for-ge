@@ -28,14 +28,14 @@ function toggleDebug()
   gePackage.debug = not gePackage.debug
 end
 
-function log(s)
+function debugLog(s)
   if gePackage.debug then
     cecho("#ff00ff", s)
   end
 end
 
 function setSector(newX, newY)
-  log("setSector(" .. newX .. ", " .. newY .. ")")
+  debugLog("setSector(" .. newX .. ", " .. newY .. ")")
   gePackage.position.sectorX = tonumber(newX)
   gePackage.position.sectorY = tonumber(newY)
 end
@@ -45,7 +45,7 @@ function getSector()
 end
 
 function setSectorPosition(newX, newY)
-  log("setSectorPosition(" .. newX .. ", " .. newY .. ")")
+  debugLog("setSectorPosition(" .. newX .. ", " .. newY .. ")")
   gePackage.position.sectorPositionX = tonumber(newX)
   gePackage.position.sectorPositionY = tonumber(newY)
 end
@@ -55,12 +55,12 @@ function getSectorPosition()
 end
 
 function clearOrbitingPlanet()
-  log("clearOrbitingPlanet()")
+  debugLog("clearOrbitingPlanet()")
   gePackage.position.orbitingPlanet = nil
 end
 
 function setOrbitingPlanet(newPlanetNumber)
-  log("setOrbitingPlanet(" .. newPlanetNumber .. ")");
+  debugLog("setOrbitingPlanet(" .. newPlanetNumber .. ")");
   gePackage.position.orbitingPlanet = tonumber(newPlanetNumber)
 end
 
@@ -69,7 +69,7 @@ function getOrbitingPlanet()
 end
 
 function setShipHeading(newHeading)
-  log("setHeading(" .. newHeading .. ")");
+  debugLog("setHeading(" .. newHeading .. ")");
   gePackage.ship.heading = tonumber(newHeading)
 end
 
@@ -78,32 +78,32 @@ function getShipHeading()
 end
 
 function setShipNeutronFlux(newFluxAmount)
-  log("setShipNeutronFlux(" .. newFluxAmount .. ")");
+  debugLog("setShipNeutronFlux(" .. newFluxAmount .. ")");
   gePackage.ship.neutronFlux = tonumber(newFluxAmount)
 end
 
 function getShipNeutronFlux()
-  log("getShipNeutronFlux()");
+  debugLog("getShipNeutronFlux()");
   return gePackage.ship.neutronFlux
 end
 
 function setShipInventory(itemType, itemCount)
-  log("setShipInventory(" .. itemType .. ", " .. itemCount .. ")")
+  debugLog("setShipInventory(" .. itemType .. ", " .. itemCount .. ")")
   gePackage.ship.inventory[itemType] = tonumber(itemCount)
 end
 
 function getShipInventory(itemType)
-  log("getShipInventory(" .. itemType .. ")")
+  debugLog("getShipInventory(" .. itemType .. ")")
   return gePackage.ship.inventory[itemType] or 0
 end
 
 function clearShipInventory()
-  log("clearShipInventory()")
+  debugLog("clearShipInventory()")
   gePackage.ship.inventory = {}
 end
 
 function setShipStatus(newStatus)
-  log("setShipSatus(" .. newStatus .. ")")
+  debugLog("setShipSatus(" .. newStatus .. ")")
   gePackage.ship.status = newStatus
 end
 
@@ -120,7 +120,7 @@ function getWarpSpeed()
 end
 
 function setShieldStatus(newStatus)
-  log("setShieldStatus(" .. newStatus .. ")")
+  debugLog("setShieldStatus(" .. newStatus .. ")")
   gePackage.shieldStatus = newStatus
 end
 
@@ -129,7 +129,7 @@ function getShieldStatus()
 end
 
 function setShieldCharge(newShieldCharge)
-  log("setShieldCharge(" .. newShieldCharge .. ")")
+  debugLog("setShieldCharge(" .. newShieldCharge .. ")")
   gePackage.shieldCharge = tonumber(newShieldCharge)
 end
 
@@ -138,11 +138,11 @@ function getShieldCharge()
 end
 
 function setParseState(stateName, newBoolean)
-  log("setParseState(" .. stateName .. ", " .. newBoolean .. ")")
+  debugLog("setParseState(" .. stateName .. ", " .. newBoolean .. ")")
   gePackage.parseState.stateName = newBoolean
 end
 
 function doMaint()
-  log("doMaint()");
+  debugLog("doMaint()");
   send("maint arbor123")
 end

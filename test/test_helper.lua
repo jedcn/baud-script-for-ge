@@ -84,8 +84,13 @@ function createTimer(interval, callback, options)
     return "mock_timer_id"
 end
 
--- Mock cecho: no-op for testing
+-- Mock cecho: records calls like echo for verification
 function cecho(color, text)
+    -- If text is nil, it means color is actually the text (single param form)
+    if text == nil then
+        text = color
+    end
+    table.insert(M.echoCalls, text)
 end
 
 -- Mock setStatus: no-op for testing

@@ -131,7 +131,7 @@ end, { type = "regex" })
 
 -- navstatus -> getNavigationStatus()
 createAlias("^navstatus$", function()
-    echo(getNavigationStatus())
+    cecho("green", getNavigationStatus())
 end, { type = "regex" })
 
 -- navcancel -> cancelNavigation()

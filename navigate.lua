@@ -1,20 +1,6 @@
 -- navigate.lua
 -- Autonomous navigation system for Galactic Empire
 
--- Initialize navigation state
-if not gePackage.navigation then
-  gePackage.navigation = {
-    active = false,
-    phase = nil,
-    target = {},
-    state = "idle",
-    lastPositionCheck = 0,
-    lastPositionUpdate = 0,
-    lastCommand = 0,
-    targetHeading = nil
-  }
-end
-
 local function navLog(s)
   cecho("#ff00ff", "[nav] " .. s)
 end

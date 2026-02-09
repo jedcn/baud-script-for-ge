@@ -3,7 +3,7 @@
 --
 if not gePackage then
   gePackage = {}
-  gePackage.debug = true
+  gePackage.debug = false
   gePackage.position = {}
   gePackage.ship = {}
   gePackage.ship.inventory = {}

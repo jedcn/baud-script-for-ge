@@ -158,8 +158,6 @@ function navigationTick()
   local config = nav.config
   local state = nav.state
 
-  navDebug("navigationTick: state=" .. state)
-
   -- State handler functions
   local actions = {
     idle = function()

@@ -16,7 +16,15 @@ if not gePackage.navigation then
 end
 
 local function navLog(s)
-  cecho("gray", "[nav] " .. s)
+  cecho("#ff00ff", "[nav] " .. s)
+end
+
+local function navCmd(s)
+  cecho("green", "[nav][cmd] " .. s)
+end
+
+local function navWaitingFor(s)
+  cecho("green", "[nav][waiting for] " .. s)
 end
 
 local function navDebug(s)
@@ -72,7 +80,7 @@ function calculateRotation(currentHeading, goalHeading)
 end
 
 function sendNavigationCommand(command)
-  navDebug("sendNavigationCommand: " .. command)
+  navCmd(command)
   gePackage.navigation.lastCommand = os.time()
   send(command)
 end
@@ -189,6 +197,7 @@ function navigationTick()
     end,
 
     awaiting_position = function()
+      navWaitingFor("Position Update")
       local timeSinceCheck = os.time() - nav.lastPositionCheck
       navDebug("  [awaiting_position] timeSinceCheck=" .. timeSinceCheck .. ", lastUpdate=" .. nav.lastPositionUpdate .. ", lastCheck=" .. nav.lastPositionCheck)
 
@@ -245,6 +254,7 @@ function navigationTick()
 
     awaiting_rotation_confirmation = function()
       local timeSinceCommand = os.time() - nav.lastCommand
+      navWaitingFor("Rotation Confirmation")
       navDebug("  [awaiting_rotation_confirmation] timeSinceCommand=" .. timeSinceCommand)
 
       if timeSinceCommand > config.commandTimeout then
@@ -298,6 +308,7 @@ function navigationTick()
     end,
 
     awaiting_speed_confirmation = function()
+      navWaitingFor("Speed Confirmation")
       local timeSinceCommand = os.time() - nav.lastCommand
       navDebug("  [awaiting_speed_confirmation] timeSinceCommand=" .. timeSinceCommand)
 

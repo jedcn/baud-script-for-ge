@@ -15,7 +15,7 @@ if not gePackage.navigation then
   }
 end
 
-local function navEcho(s)
+local function navLog(s)
   cecho("gray", "[nav] " .. s)
 end
 
@@ -100,21 +100,21 @@ function navigateToCoordinates(x, y)
   gePackage.navigation.lastPositionUpdate = 0
 
   debugLog("Navigation initialized: target=(" .. x .. ", " .. y .. "), state=" .. gePackage.navigation.state)
-  navEcho("Navigation started to (" .. x .. ", " .. y .. ")")
+  navLog("Navigation started to (" .. x .. ", " .. y .. ")")
   return true
 end
 
 function cancelNavigation()
   debugLog("cancelNavigation()")
   if not gePackage.navigation.active then
-    navEcho("No navigation in progress")
+    navLog("No navigation in progress")
     return
   end
 
   gePackage.navigation.active = false
   gePackage.navigation.state = "aborted"
   send("warp 0")
-  navEcho("Navigation cancelled")
+  navLog("Navigation cancelled")
 end
 
 function isNavigating()
@@ -135,15 +135,15 @@ end
 
 -- Stubs for future phases
 function navigateToPlanet(planetNumber)
-  navEcho("Phase 2 not yet implemented")
+  navLog("Phase 2 not yet implemented")
 end
 
 function navigateToSector(sectorX, sectorY)
-  navEcho("Phase 3 not yet implemented")
+  navLog("Phase 3 not yet implemented")
 end
 
 function navigateToSectorAndPlanet(sectorX, sectorY, planetNumber)
-  navEcho("Phase 5 not yet implemented")
+  navLog("Phase 5 not yet implemented")
 end
 
 -- ============================================================================
@@ -348,7 +348,7 @@ function navigationTick()
 
     completed = function()
       debugLog("  [completed] Navigation completed successfully")
-      navEcho("Navigation completed!")
+      navLog("Navigation completed!")
       nav.active = false
       nav.state = "idle"
     end,

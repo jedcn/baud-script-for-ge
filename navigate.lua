@@ -159,16 +159,6 @@ function navigateToSectorAndPlanet(sectorX, sectorY, planetNumber)
 end
 
 -- ============================================================================
--- Legacy function (kept for backward compatibility)
--- ============================================================================
-
-function navigateWithinSectorTo(destX, destY)
-  local currentX, currentY = getSectorPosition()
-  local heading = calculateHeading(currentX, currentY, destX, destY)
-  echo("Navigate to heading: " .. heading .. " degrees")
-end
-
--- ============================================================================
 -- State Machine Tick Function
 -- ============================================================================
 

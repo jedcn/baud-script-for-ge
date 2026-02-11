@@ -183,6 +183,26 @@ createTrigger("^Scanning Planet (\\d+)\\s*(.*)$", function(matches)
     setScanningPlanetName(planetName)
 end, { type = "regex" })
 
+-- Capture planet bearing from scan (for navigation)
+-- Example: "Bearing: -20 degrees" or "Planet bearing 045 degrees"
+createTrigger("^.*[Bb]earing[:.\\s]+(-?\\d+)\\s*degrees?", function(matches)
+    local bearing = tonumber(matches[2])
+    if gePackage.navigation and gePackage.navigation.phase == "planet" then
+        gePackage.navigation.planetScan.bearing = bearing
+        gePackage.navigation.lastScanUpdate = os.time()
+    end
+end, { type = "regex" })
+
+-- Capture planet distance from scan (for navigation)
+-- Example: "Distance: 1000" or "Range 1000 units"
+createTrigger("^.*[Dd]istance[:.\\s]+(\\d+)", function(matches)
+    local distance = tonumber(matches[2])
+    if gePackage.navigation and gePackage.navigation.phase == "planet" then
+        gePackage.navigation.planetScan.distance = distance
+        gePackage.navigation.lastScanUpdate = os.time()
+    end
+end, { type = "regex" })
+
 -- set shield strength
 createTrigger("^Shields are at (\\d+) percent charge, Sir!", function(matches)
     local shieldCharge = matches[2]

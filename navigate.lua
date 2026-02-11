@@ -68,6 +68,23 @@ function calculateRotation(currentHeading, goalHeading)
   return rotation
 end
 
+function calculatePlanetCoordinates(currentX, currentY, bearing, distance)
+  -- Convert bearing to radians
+  -- In navigation: 0° = North (-Y), 90° = East (+X), 180° = South (+Y), 270° = West (-X)
+  local bearingRadians = bearing * math.pi / 180
+
+  -- Calculate planet position using polar to cartesian conversion
+  local planetX = currentX + distance * math.sin(bearingRadians)
+  local planetY = currentY - distance * math.cos(bearingRadians)
+
+  -- Round to nearest integer
+  planetX = math.floor(planetX + 0.5)
+  planetY = math.floor(planetY + 0.5)
+
+  navDebug("helper", "calculatePlanetCoordinates(current: (" .. currentX .. ", " .. currentY .. "), bearing: " .. bearing .. "°, distance: " .. distance .. ") = (" .. planetX .. ", " .. planetY .. ")")
+  return planetX, planetY
+end
+
 function sendNavigationCommand(command)
   navCmd(command)
   gePackage.navigation.lastCommand = os.time()
@@ -132,9 +149,26 @@ function getNavigationStatus()
   return "Navigating to (" .. targetX .. ", " .. targetY .. ") - " .. state
 end
 
--- Stubs for future phases
 function navigateToPlanet(planetNumber)
-  navLog("Phase 2 not yet implemented")
+  -- Convert to number and validate
+  planetNumber = tonumber(planetNumber)
+  if not planetNumber or planetNumber < 1 or planetNumber > 999 then
+    navError("ERROR: Invalid planet number. Must be 1-999.")
+    return false
+  end
+
+  -- Initialize navigation
+  gePackage.navigation.active = true
+  gePackage.navigation.phase = "planet"
+  gePackage.navigation.target.planetNumber = planetNumber
+  gePackage.navigation.state = "requesting_planet_scan"
+  gePackage.navigation.navigationStart = os.time()
+  gePackage.navigation.lastScanUpdate = 0
+  gePackage.navigation.lastPositionCheck = 0
+  gePackage.navigation.lastPositionUpdate = 0
+
+  navLog("Planet navigation started to planet " .. planetNumber)
+  return true
 end
 
 function navigateToSector(sectorX, sectorY)
@@ -164,6 +198,75 @@ function navigationTick()
       navDebug(state, "No action")
     end,
 
+    -- ===== Planet Navigation States (Phase 2) =====
+    requesting_planet_scan = function()
+      local planetNumber = nav.target.planetNumber
+      sendNavigationCommand("scan planet " .. planetNumber)
+      nav.state = "awaiting_planet_scan"
+      nav.lastCommand = os.time()
+    end,
+
+    awaiting_planet_scan = function()
+      local timeSinceCommand = os.time() - nav.lastCommand
+      navDebug(state, "timeSinceCommand=" .. timeSinceCommand .. ", bearing=" .. tostring(nav.planetScan.bearing) .. ", distance=" .. tostring(nav.planetScan.distance))
+
+      -- Check timeout
+      if timeSinceCommand > config.commandTimeout then
+        navDebug(state, "TIMEOUT - moving to stuck state")
+        nav.state = "stuck"
+        return
+      end
+
+      -- Check if we have both bearing and distance from scan
+      if nav.planetScan.bearing and nav.planetScan.distance then
+        navDebug(state, "Scan data received, moving to requesting_position_for_planet")
+        nav.state = "requesting_position_for_planet"
+      end
+    end,
+
+    requesting_position_for_planet = function()
+      sendNavigationCommand("rep nav")
+      nav.state = "awaiting_position_for_planet"
+      nav.lastPositionCheck = os.time()
+    end,
+
+    awaiting_position_for_planet = function()
+      local timeSinceCheck = os.time() - nav.lastPositionCheck
+      navDebug(state, "timeSinceCheck=" .. timeSinceCheck .. ", lastUpdate=" .. (nav.lastPositionUpdate - nav.navigationStart) .. ", lastCheck=" .. (nav.lastPositionCheck - nav.navigationStart))
+
+      -- Check timeout
+      if timeSinceCheck > config.commandTimeout then
+        navDebug(state, "TIMEOUT - moving to stuck state")
+        nav.state = "stuck"
+        return
+      end
+
+      -- Check if position was updated after we requested it
+      if nav.lastPositionUpdate >= nav.lastPositionCheck then
+        navDebug(state, "Position updated, moving to calculating_planet_coordinates")
+        nav.state = "calculating_planet_coordinates"
+      end
+    end,
+
+    calculating_planet_coordinates = function()
+      local currentX, currentY = getSectorPosition()
+      local bearing = nav.planetScan.bearing
+      local distance = nav.planetScan.distance
+      navDebug(state, "current=(" .. currentX .. ", " .. currentY .. "), bearing=" .. bearing .. ", distance=" .. distance)
+
+      -- Calculate planet coordinates
+      local planetX, planetY = calculatePlanetCoordinates(currentX, currentY, bearing, distance)
+
+      -- Store as target coordinates and switch to coordinate navigation
+      nav.target.sectorPositionX = planetX
+      nav.target.sectorPositionY = planetY
+
+      navLog("Planet " .. nav.target.planetNumber .. " calculated at (" .. planetX .. ", " .. planetY .. ")")
+      navDebug(state, "Transitioning to coordinate navigation (calculating_route)")
+      nav.state = "calculating_route"
+    end,
+
+    -- ===== Coordinate Navigation States (Phase 1) =====
     requesting_position = function()
       sendNavigationCommand("rep nav")
       nav.state = "awaiting_position"
@@ -313,8 +416,30 @@ function navigationTick()
       navDebug(state, "currentSpeed=" .. currentSpeed)
 
       if currentSpeed == 0 then
-        navDebug(state, "Ship stopped, moving to completed")
+        -- For planet navigation, check if we've achieved orbit
+        if nav.phase == "planet" then
+          navDebug(state, "Ship stopped, checking orbit status")
+          nav.state = "awaiting_orbit"
+        else
+          navDebug(state, "Ship stopped, moving to completed")
+          nav.state = "completed"
+        end
+      end
+    end,
+
+    awaiting_orbit = function()
+      local orbitingPlanet = getOrbitingPlanet()
+      local targetPlanet = nav.target.planetNumber
+      navDebug(state, "orbitingPlanet=" .. tostring(orbitingPlanet) .. ", targetPlanet=" .. targetPlanet)
+
+      if orbitingPlanet == targetPlanet then
+        navDebug(state, "Successfully orbiting planet " .. targetPlanet)
+        navLog("Successfully orbiting planet " .. targetPlanet .. "!")
         nav.state = "completed"
+      else
+        -- Not orbiting yet - auto-orbit trigger should engage if we're close enough
+        -- Wait a bit for the trigger to fire
+        navDebug(state, "Waiting for orbit confirmation...")
       end
     end,
 

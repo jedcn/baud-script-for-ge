@@ -11,7 +11,12 @@ if not gePackage.navigation then
     lastPositionCheck = 0,
     lastPositionUpdate = 0,
     lastCommand = 0,
+    lastScanUpdate = 0,
     targetHeading = nil,
+    planetScan = {
+      bearing = nil,
+      distance = nil
+    },
     config = {}
   }
 end

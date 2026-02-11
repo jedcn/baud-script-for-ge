@@ -163,7 +163,6 @@ function navigationTick()
     end,
 
     requesting_position = function()
-      navDebug(state, "Sending 'rep nav'")
       sendNavigationCommand("rep nav")
       nav.state = "awaiting_position"
       nav.lastPositionCheck = os.time()
@@ -215,7 +214,6 @@ function navigationTick()
 
       -- Only rotate if rotation is significant (> 2 degrees)
       if math.abs(rotation) > 2 then
-        navDebug(state, "Rotating by " .. rotation .. " degrees")
         sendNavigationCommand("rot " .. rotation)
         nav.state = "awaiting_rotation_confirmation"
       else
@@ -265,7 +263,6 @@ function navigationTick()
 
       -- Only send command if speed needs to change
       if math.abs(currentSpeed - speedValue) > 0.1 then
-        navDebug(state, "Changing speed to " .. speedType .. " " .. speedValue)
         if speedType == "WARP" then
           sendNavigationCommand("warp " .. speedValue)
         else
@@ -316,7 +313,6 @@ function navigationTick()
     end,
 
     arrived = function()
-      navDebug(state, "Stopping ship")
       sendNavigationCommand("warp 0")
       nav.state = "stopping"
     end,

@@ -49,10 +49,5 @@ gePackage.navigation.config = {
     if distance > 500 then return "WARP", 2 end
     if distance > 200 then return "WARP", 1 end
     return "IMPULSE", 99
-  end,
-
-  -- Interruption detection
-  detectInterruption = true,        -- Abort if heading/speed changes unexpectedly
-  lastKnownHeading = nil,
-  lastKnownSpeed = nil
+  end
 }

@@ -288,23 +288,12 @@ function navigationTick()
       end
 
       if timeSinceCommand > 1 then
-        -- Store current heading/speed for interruption detection
-        config.lastKnownHeading = getShipHeading()
-        config.lastKnownSpeed = getWarpSpeed()
         navDebug(state, "Speed confirmed, moving to traveling")
         nav.state = "traveling"
       end
     end,
 
     traveling = function()
-      navDebug(state, "Checking interruption and polling interval")
-
-      -- Check for interruption (unexpected heading/speed change)
-      if config.detectInterruption then
-        local currentHeading = getShipHeading()
-        local currentSpeed = getWarpSpeed()
-      end
-
       local timeSinceCheck = os.time() - nav.lastPositionCheck
       navDebug(state, "timeSinceCheck=" .. timeSinceCheck .. ", pollingInterval=" .. config.pollingInterval)
 

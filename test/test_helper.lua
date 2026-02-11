@@ -78,8 +78,19 @@ function createAlias(pattern, callback, options)
     })
 end
 
--- Mock cecho: no-op for testing
+-- Mock createTimer: no-op for testing (timers don't run in tests)
+function createTimer(interval, callback, options)
+    -- In tests, we don't actually run timers - we manually call tick functions
+    return "mock_timer_id"
+end
+
+-- Mock cecho: records calls like echo for verification
 function cecho(color, text)
+    -- If text is nil, it means color is actually the text (single param form)
+    if text == nil then
+        text = color
+    end
+    table.insert(M.echoCalls, text)
 end
 
 -- Mock setStatus: no-op for testing

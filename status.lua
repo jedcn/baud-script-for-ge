@@ -1,5 +1,5 @@
 function status()
---   log("status()")
+--   debug("status()")
   local sectorX, sectorY = getSector()
   sectorX = sectorX or 0
   sectorY = sectorY or 0

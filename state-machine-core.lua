@@ -5,7 +5,7 @@ if not gePackage.stateMachine then
 end
 
 function toggleDashes()
-  --log("toggleDashes()")
+  --debugLog("toggleDashes()")
   if gePackage.stateMachine.inbetweenDashes then
     gePackage.stateMachine.inbetweenDashes = false
     gePackage.stateMachine.reportType = nil
@@ -16,7 +16,7 @@ function toggleDashes()
 end
 
 function setScanningPlanet(newBoolean)
-  --log("setScanningPlanet(" .. tostring(newBoolean) .. ")")
+  --debugLog("setScanningPlanet(" .. tostring(newBoolean) .. ")")
   gePackage.stateMachine.scanningPlanet = newBoolean
   if not newBoolean then
     gePackage.stateMachine.scanningPlanetNumber = nil
@@ -25,21 +25,21 @@ function setScanningPlanet(newBoolean)
 end
 
 function getScanningPlanet()
-  --log("getScanningPlanet()")
+  --debugLog("getScanningPlanet()")
   return gePackage.stateMachine.scanningPlanet
 end
 
 function setScanningPlanetNumber(newPlanetNumber)
-  log("setScanningPlanetNumber(" .. tostring(newPlanetNumber) .. ")")
+  debugLog("setScanningPlanetNumber(" .. tostring(newPlanetNumber) .. ")")
   gePackage.stateMachine.scanningPlanetNumber = newPlanetNumber
 end
 
 function setScanningPlanetName(newPlanetName)
-  log("setScanningPlanetName(" .. newPlanetName .. ")")
+  debugLog("setScanningPlanetName(" .. newPlanetName .. ")")
   gePackage.stateMachine.newPlanetName = newPlanetName
 end
 
 function setReportType(newReportName)
-  log("setReportType(" .. newReportName .. ")")
+  debugLog("setReportType(" .. newReportName .. ")")
   gePackage.stateMachine.reportType = newReportName
 end

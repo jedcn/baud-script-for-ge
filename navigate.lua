@@ -14,7 +14,9 @@ local function navWaitingFor(s)
 end
 
 local function navDebug(state, s)
-  cecho("gray", "[nav] [" .. state .. "] " .. s)
+  if gePackage.navigation.config.debug then
+    cecho("yellow", "[nav] [" .. state .. "] " .. s)
+  end
 end
 
 

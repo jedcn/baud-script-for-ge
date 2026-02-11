@@ -18,6 +18,9 @@ end
 
 -- Set configuration (will be available to navigate.lua)
 gePackage.navigation.config = {
+  -- show debug output?
+  debug = false,
+
   -- Distance thresholds
   arrivalThreshold = 150,           -- Stop within this distance
   planetArrivalThreshold = 250,     -- For Phase 2

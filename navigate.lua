@@ -181,7 +181,7 @@ function navigationTick()
       end
 
       -- Check if position was updated after we requested it
-      if nav.lastPositionUpdate > nav.lastPositionCheck then
+      if nav.lastPositionUpdate >= nav.lastPositionCheck then
         navDebug(state, "Position updated, moving to calculating_route")
         nav.state = "calculating_route"
       end

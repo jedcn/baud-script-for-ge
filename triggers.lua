@@ -44,7 +44,7 @@ createTrigger("^Leaving orbit Sir!$", function(matches)
     clearOrbitingPlanet()
 end, { type = "regex" })
 
-createTrigger("^We are now in stationary orbit around planet (\\d+)$", function(matches)
+createTrigger("^We are now in stationary orbit around planet (\\d+)", function(matches)
     local planetNumber = matches[2]
     setOrbitingPlanet(planetNumber)
 end, { type = "regex" })
@@ -183,24 +183,11 @@ createTrigger("^Scanning Planet (\\d+)\\s*(.*)$", function(matches)
     setScanningPlanetName(planetName)
 end, { type = "regex" })
 
--- Capture planet bearing from scan (for navigation)
--- Example: "Bearing: -20 degrees" or "Planet bearing 045 degrees"
-createTrigger("^.*[Bb]earing[:.\\s]+(-?\\d+)\\s*degrees?", function(matches)
-    local bearing = tonumber(matches[2])
-    if gePackage.navigation and gePackage.navigation.phase == "planet" then
-        gePackage.navigation.planetScan.bearing = bearing
-        gePackage.navigation.lastScanUpdate = os.time()
-    end
-end, { type = "regex" })
-
--- Capture planet distance from scan (for navigation)
--- Example: "Distance: 1000" or "Range 1000 units"
-createTrigger("^.*[Dd]istance[:.\\s]+(\\d+)", function(matches)
-    local distance = tonumber(matches[2])
-    if gePackage.navigation and gePackage.navigation.phase == "planet" then
-        gePackage.navigation.planetScan.distance = distance
-        gePackage.navigation.lastScanUpdate = os.time()
-    end
+-- Capture planet distance and bearing from planet scan (for navigation)
+createTrigger("^Bearing[:.\\s]+(-?\\d+) Dist[:.\\s]+(\\d+)", function(matches)
+    local bearing = matches[2]
+    local distance = matches[3]
+    setPlanetBearingAndDistance(bearing, distance)
 end, { type = "regex" })
 
 -- set shield strength

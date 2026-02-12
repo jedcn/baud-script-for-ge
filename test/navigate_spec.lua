@@ -246,9 +246,11 @@ describe("Navigation System", function()
     it("calculates planet coordinates after position update", function()
       navigateToPlanet(1)
       setSectorPosition(5000, 5000)
+      setShipHeading(0)  -- Heading north
 
-      -- Simulate having scan data
-      gePackage.navigation.planetScan.bearing = 90  -- Due east
+      -- Simulate having scan data (relative to ship heading)
+      -- Relative bearing 90 + ship heading 0 = absolute bearing 90 (due east)
+      gePackage.navigation.planetScan.bearing = 90
       gePackage.navigation.planetScan.distance = 1000
       gePackage.navigation.lastScanUpdate = os.time()
 

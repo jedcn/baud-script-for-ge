@@ -171,6 +171,14 @@ function navigateToPlanet(planetNumber)
   return true
 end
 
+function setPlanetBearingAndDistance(bearing, distance)
+  if gePackage.navigation and gePackage.navigation.phase == "planet" then
+    gePackage.navigation.planetScan.bearing = tonumber(bearing)
+    gePackage.navigation.planetScan.distance = tonumber(distance)
+    gePackage.navigation.lastScanUpdate = os.time()
+  end
+end
+
 function navigateToSector(sectorX, sectorY)
   navLog("Phase 3 not yet implemented")
 end
@@ -250,12 +258,18 @@ function navigationTick()
 
     calculating_planet_coordinates = function()
       local currentX, currentY = getSectorPosition()
-      local bearing = nav.planetScan.bearing
+      local relativeBearing = nav.planetScan.bearing
       local distance = nav.planetScan.distance
-      navDebug(state, "current=(" .. currentX .. ", " .. currentY .. "), bearing=" .. bearing .. ", distance=" .. distance)
+      local shipHeading = getShipHeading()
 
-      -- Calculate planet coordinates
-      local planetX, planetY = calculatePlanetCoordinates(currentX, currentY, bearing, distance)
+      -- Convert relative bearing to absolute bearing
+      -- Scan bearing is relative to ship's heading
+      local absoluteBearing = (shipHeading + relativeBearing) % 360
+
+      navDebug(state, "current=(" .. currentX .. ", " .. currentY .. "), shipHeading=" .. shipHeading .. ", relativeBearing=" .. relativeBearing .. ", absoluteBearing=" .. absoluteBearing .. ", distance=" .. distance)
+
+      -- Calculate planet coordinates using absolute bearing
+      local planetX, planetY = calculatePlanetCoordinates(currentX, currentY, absoluteBearing, distance)
 
       -- Store as target coordinates and switch to coordinate navigation
       nav.target.sectorPositionX = planetX

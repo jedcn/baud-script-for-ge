@@ -44,7 +44,7 @@ createTrigger("^Leaving orbit Sir!$", function(matches)
     clearOrbitingPlanet()
 end, { type = "regex" })
 
-createTrigger("^We are now in stationary orbit around planet (\\d+)$", function(matches)
+createTrigger("^We are now in stationary orbit around planet (\\d+)", function(matches)
     local planetNumber = matches[2]
     setOrbitingPlanet(planetNumber)
 end, { type = "regex" })
@@ -181,6 +181,13 @@ createTrigger("^Scanning Planet (\\d+)\\s*(.*)$", function(matches)
     setScanningPlanet(true)
     setScanningPlanetNumber(planetNumber)
     setScanningPlanetName(planetName)
+end, { type = "regex" })
+
+-- Capture planet distance and bearing from planet scan (for navigation)
+createTrigger("^Bearing[:.\\s]+(-?\\d+) Dist[:.\\s]+(\\d+)", function(matches)
+    local bearing = matches[2]
+    local distance = matches[3]
+    setPlanetBearingAndDistance(bearing, distance)
 end, { type = "regex" })
 
 -- set shield strength

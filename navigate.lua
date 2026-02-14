@@ -412,6 +412,12 @@ function navigationTick()
       local distance = nav.planetScan.distance
       local shipHeading = getShipHeading()
 
+      -- If heading is unknown, request position again to get it
+      if not shipHeading then
+        transitionTo(nav, "requesting_position_for_planet", "ship heading unknown, requesting position to get heading")
+        return
+      end
+
       -- Convert relative bearing to absolute bearing
       -- Scan bearing is relative to ship's heading
       local absoluteBearing = (shipHeading + relativeBearing) % 360
@@ -473,6 +479,13 @@ function navigationTick()
     rotating_to_heading = function()
       local currentHeading = getShipHeading()
       local targetHeading = nav.targetHeading
+
+      -- If heading is unknown, request position again to get it
+      if not currentHeading then
+        transitionTo(nav, "requesting_position", "ship heading unknown, requesting position to get heading")
+        return
+      end
+
       navDebug(state, "currentHeading=" .. currentHeading .. ", targetHeading=" .. targetHeading)
 
       local rotation = calculateRotation(currentHeading, targetHeading)
@@ -499,6 +512,13 @@ function navigationTick()
       -- Check if rotation completed by comparing current heading to target
       local currentHeading = getShipHeading()
       local targetHeading = nav.targetHeading
+
+      -- If heading is unknown, keep waiting for rotation confirmation trigger
+      if not currentHeading then
+        navDebug(state, "waiting for heading update from rotation confirmation")
+        return
+      end
+
       local headingDiff = math.abs(currentHeading - targetHeading)
 
       -- Account for wrap-around (359 vs 1 degree)

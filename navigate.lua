@@ -19,9 +19,25 @@ local function navDebug(state, s)
   end
 end
 
-
 local function navError(s)
   cecho("red", "[nav] " .. s)
+end
+
+-- State transition logging (hot pink) - always visible
+local function navTransition(fromState, toState, reason)
+  cecho("#ff00ff", "[nav][state] " .. fromState .. " -> " .. toState .. " (" .. reason .. ")")
+end
+
+-- Decision logging (hot pink) - always visible
+local function navDecision(action, reason)
+  cecho("#ff00ff", "[nav][decision] " .. action .. " - " .. reason)
+end
+
+-- Helper to transition state with logging
+local function transitionTo(nav, newState, reason)
+  local oldState = nav.state
+  nav.state = newState
+  navTransition(oldState, newState, reason)
 end
 
 -- ============================================================================
@@ -111,12 +127,12 @@ function navigateToCoordinates(x, y)
   gePackage.navigation.phase = "coordinate"
   gePackage.navigation.target.sectorPositionX = x
   gePackage.navigation.target.sectorPositionY = y
-  gePackage.navigation.state = "requesting_position"
   gePackage.navigation.navigationStart = os.time()
   gePackage.navigation.lastPositionCheck = 0
   gePackage.navigation.lastPositionUpdate = 0
 
   navLog("Navigation started to (" .. x .. ", " .. y .. ")")
+  transitionTo(gePackage.navigation, "requesting_position", "coordinate navigation initiated to (" .. x .. ", " .. y .. ")")
   return true
 end
 
@@ -128,8 +144,9 @@ function cancelNavigation()
   end
 
   gePackage.navigation.active = false
-  gePackage.navigation.state = "aborted"
+  navDecision("warp 0", "user requested navigation cancel")
   send("warp 0")
+  transitionTo(gePackage.navigation, "aborted", "user cancelled navigation")
   navLog("Navigation cancelled")
 end
 
@@ -161,13 +178,13 @@ function navigateToPlanet(planetNumber)
   gePackage.navigation.active = true
   gePackage.navigation.phase = "planet"
   gePackage.navigation.target.planetNumber = planetNumber
-  gePackage.navigation.state = "requesting_planet_scan"
   gePackage.navigation.navigationStart = os.time()
   gePackage.navigation.lastScanUpdate = 0
   gePackage.navigation.lastPositionCheck = 0
   gePackage.navigation.lastPositionUpdate = 0
 
   navLog("Planet navigation started to planet " .. planetNumber)
+  transitionTo(gePackage.navigation, "requesting_planet_scan", "coordinate-based planet navigation initiated to planet " .. planetNumber)
   return true
 end
 
@@ -193,7 +210,6 @@ function navigateToPlanetSimple(planetNumber)
   gePackage.navigation.active = true
   gePackage.navigation.phase = "planet_simple"
   gePackage.navigation.target.planetNumber = planetNumber
-  gePackage.navigation.state = "spl_scanning"
   gePackage.navigation.navigationStart = os.time()
   gePackage.navigation.lastScanUpdate = 0
   gePackage.navigation.lastPositionCheck = 0
@@ -202,6 +218,7 @@ function navigateToPlanetSimple(planetNumber)
   gePackage.navigation.planetScan.distance = nil
 
   navLog("Simple planet navigation started to planet " .. planetNumber)
+  transitionTo(gePackage.navigation, "spl_scanning", "bearing-following navigation initiated to planet " .. planetNumber)
   return true
 end
 
@@ -238,8 +255,9 @@ function navigationTick()
       nav.planetScan.bearing = nil
       nav.planetScan.distance = nil
       local planetNumber = nav.target.planetNumber
+      navDecision("scan planet " .. planetNumber, "need bearing and distance to planet")
       sendNavigationCommand("scan planet " .. planetNumber)
-      nav.state = "spl_awaiting_scan"
+      transitionTo(nav, "spl_awaiting_scan", "scan command sent, waiting for scan results")
     end,
 
     spl_awaiting_scan = function()
@@ -249,7 +267,7 @@ function navigationTick()
       -- Check timeout
       if timeSinceCommand > config.commandTimeout then
         navDebug(state, "TIMEOUT - moving to stuck state")
-        nav.state = "stuck"
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for scan")
         return
       end
 
@@ -259,11 +277,9 @@ function navigationTick()
 
         -- Check if we're close enough to orbit
         if distance < config.planetArrivalThreshold then
-          navDebug(state, "Within orbit range (distance=" .. distance .. "), moving to awaiting_orbit")
-          nav.state = "awaiting_orbit"
+          transitionTo(nav, "awaiting_orbit", "distance " .. distance .. " < threshold " .. config.planetArrivalThreshold .. ", close enough to orbit")
         else
-          navDebug(state, "Scan received: bearing=" .. nav.planetScan.bearing .. ", distance=" .. distance)
-          nav.state = "spl_rotating"
+          transitionTo(nav, "spl_rotating", "scan received: bearing=" .. nav.planetScan.bearing .. ", distance=" .. distance .. ", need to rotate")
         end
       end
     end,
@@ -274,11 +290,11 @@ function navigationTick()
 
       -- Rotate toward the planet using the relative bearing directly
       if math.abs(bearing) > 2 then
+        navDecision("rot " .. bearing, "planet is " .. bearing .. " degrees off current heading")
         sendNavigationCommand("rot " .. bearing)
-        nav.state = "spl_awaiting_rotation"
+        transitionTo(nav, "spl_awaiting_rotation", "rotation command sent")
       else
-        navDebug(state, "Already aligned (bearing=" .. bearing .. "), moving to spl_setting_speed")
-        nav.state = "spl_setting_speed"
+        transitionTo(nav, "spl_setting_speed", "already aligned within 2 degrees (bearing=" .. bearing .. ")")
       end
     end,
 
@@ -287,15 +303,13 @@ function navigationTick()
       navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
 
       if timeSinceCommand > config.commandTimeout then
-        navDebug(state, "TIMEOUT - moving to stuck state")
-        nav.state = "stuck"
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for rotation")
         return
       end
 
       -- Give rotation time to complete before setting speed
       if timeSinceCommand > 2 then
-        navDebug(state, "Rotation settled, moving to spl_setting_speed")
-        nav.state = "spl_setting_speed"
+        transitionTo(nav, "spl_setting_speed", "rotation settled after " .. timeSinceCommand .. "s")
       end
     end,
 
@@ -308,15 +322,16 @@ function navigationTick()
       navDebug(state, "decided: " .. speedType .. " " .. speedValue)
 
       if math.abs(currentSpeed - speedValue) > 0.1 then
+        local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
+        navDecision(cmd, "distance=" .. distance .. ", changing from speed " .. currentSpeed .. " to " .. speedValue)
         if speedType == "WARP" then
           sendNavigationCommand("warp " .. speedValue)
         else
           sendNavigationCommand("imp " .. speedValue)
         end
-        nav.state = "spl_awaiting_speed"
+        transitionTo(nav, "spl_awaiting_speed", "speed command sent")
       else
-        navDebug(state, "Speed already correct, moving to spl_traveling")
-        nav.state = "spl_traveling"
+        transitionTo(nav, "spl_traveling", "speed already correct at " .. currentSpeed)
       end
     end,
 
@@ -325,14 +340,12 @@ function navigationTick()
       navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
 
       if timeSinceCommand > config.commandTimeout then
-        navDebug(state, "TIMEOUT - moving to stuck state")
-        nav.state = "stuck"
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for speed change")
         return
       end
 
       if timeSinceCommand > 1 then
-        navDebug(state, "Speed confirmed, moving to spl_traveling")
-        nav.state = "spl_traveling"
+        transitionTo(nav, "spl_traveling", "speed confirmed after " .. timeSinceCommand .. "s")
       end
     end,
 
@@ -341,17 +354,17 @@ function navigationTick()
       navDebug(state, "timeSinceCommand=" .. timeSinceCommand .. ", pollingInterval=" .. config.pollingInterval)
 
       if timeSinceCommand >= config.pollingInterval then
-        navDebug(state, "Time to rescan")
-        nav.state = "spl_scanning"
+        transitionTo(nav, "spl_scanning", "polling interval " .. config.pollingInterval .. "s elapsed, time to rescan")
       end
     end,
 
     -- ===== Planet Navigation States (Phase 2 coordinate approach) =====
     requesting_planet_scan = function()
       local planetNumber = nav.target.planetNumber
+      navDecision("scan planet " .. planetNumber, "need bearing and distance to calculate planet coordinates")
       sendNavigationCommand("scan planet " .. planetNumber)
-      nav.state = "awaiting_planet_scan"
       nav.lastCommand = os.time()
+      transitionTo(nav, "awaiting_planet_scan", "scan command sent, waiting for scan results")
     end,
 
     awaiting_planet_scan = function()
@@ -360,22 +373,21 @@ function navigationTick()
 
       -- Check timeout
       if timeSinceCommand > config.commandTimeout then
-        navDebug(state, "TIMEOUT - moving to stuck state")
-        nav.state = "stuck"
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for scan")
         return
       end
 
       -- Check if we have both bearing and distance from scan
       if nav.planetScan.bearing and nav.planetScan.distance then
-        navDebug(state, "Scan data received, moving to requesting_position_for_planet")
-        nav.state = "requesting_position_for_planet"
+        transitionTo(nav, "requesting_position_for_planet", "scan received: bearing=" .. nav.planetScan.bearing .. ", distance=" .. nav.planetScan.distance .. ", need current position")
       end
     end,
 
     requesting_position_for_planet = function()
+      navDecision("rep nav", "need current position to calculate planet absolute coordinates")
       sendNavigationCommand("rep nav")
-      nav.state = "awaiting_position_for_planet"
       nav.lastPositionCheck = os.time()
+      transitionTo(nav, "awaiting_position_for_planet", "position request sent")
     end,
 
     awaiting_position_for_planet = function()
@@ -384,15 +396,13 @@ function navigationTick()
 
       -- Check timeout
       if timeSinceCheck > config.commandTimeout then
-        navDebug(state, "TIMEOUT - moving to stuck state")
-        nav.state = "stuck"
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for position")
         return
       end
 
       -- Check if position was updated after we requested it
       if nav.lastPositionUpdate >= nav.lastPositionCheck then
-        navDebug(state, "Position updated, moving to calculating_planet_coordinates")
-        nav.state = "calculating_planet_coordinates"
+        transitionTo(nav, "calculating_planet_coordinates", "position data received")
       end
     end,
 
@@ -416,15 +426,15 @@ function navigationTick()
       nav.target.sectorPositionY = planetY
 
       navLog("Planet " .. nav.target.planetNumber .. " calculated at (" .. planetX .. ", " .. planetY .. ")")
-      navDebug(state, "Transitioning to coordinate navigation (calculating_route)")
-      nav.state = "calculating_route"
+      transitionTo(nav, "calculating_route", "planet coordinates calculated from pos=(" .. currentX .. "," .. currentY .. "), heading=" .. shipHeading .. ", bearing=" .. relativeBearing .. " -> abs=" .. absoluteBearing .. ", dist=" .. distance)
     end,
 
     -- ===== Coordinate Navigation States (Phase 1) =====
     requesting_position = function()
+      navDecision("rep nav", "need current position to calculate route")
       sendNavigationCommand("rep nav")
-      nav.state = "awaiting_position"
       nav.lastPositionCheck = os.time()
+      transitionTo(nav, "awaiting_position", "position request sent")
     end,
 
     awaiting_position = function()
@@ -433,15 +443,13 @@ function navigationTick()
 
       -- Check timeout
       if timeSinceCheck > config.commandTimeout then
-        navDebug(state, "TIMEOUT - moving to stuck state")
-        nav.state = "stuck"
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for position")
         return
       end
 
       -- Check if position was updated after we requested it
       if nav.lastPositionUpdate >= nav.lastPositionCheck then
-        navDebug(state, "Position updated, moving to calculating_route")
-        nav.state = "calculating_route"
+        transitionTo(nav, "calculating_route", "position data received")
       end
     end,
 
@@ -454,13 +462,11 @@ function navigationTick()
       local distance = calculateDistance(currentX, currentY, targetX, targetY)
 
       if distance < config.arrivalThreshold then
-        navDebug(state, "ARRIVED! distance=" .. distance .. " < threshold=" .. config.arrivalThreshold)
-        nav.state = "arrived"
+        transitionTo(nav, "arrived", "distance " .. string.format("%.1f", distance) .. " < threshold " .. config.arrivalThreshold .. ", arrived at destination")
       else
         -- Calculate and store target heading for rotation
         nav.targetHeading = calculateHeading(currentX, currentY, targetX, targetY)
-        navDebug(state, "distance=" .. distance .. ", targetHeading=" .. nav.targetHeading .. ", moving to rotating_to_heading")
-        nav.state = "rotating_to_heading"
+        transitionTo(nav, "rotating_to_heading", "distance=" .. string.format("%.1f", distance) .. ", calculated target heading=" .. nav.targetHeading .. " degrees")
       end
     end,
 
@@ -473,11 +479,11 @@ function navigationTick()
 
       -- Only rotate if rotation is significant (> 2 degrees)
       if math.abs(rotation) > 2 then
+        navDecision("rot " .. rotation, "current heading " .. currentHeading .. ", need " .. targetHeading .. ", rotating " .. rotation .. " degrees")
         sendNavigationCommand("rot " .. rotation)
-        nav.state = "awaiting_rotation_confirmation"
+        transitionTo(nav, "awaiting_rotation_confirmation", "rotation command sent")
       else
-        navDebug(state, "Already aligned (rotation=" .. rotation .. "), moving to setting_speed")
-        nav.state = "setting_speed"
+        transitionTo(nav, "setting_speed", "already aligned within 2 degrees (rotation=" .. rotation .. ")")
       end
     end,
 
@@ -486,8 +492,7 @@ function navigationTick()
       navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
 
       if timeSinceCommand > config.commandTimeout then
-        navDebug(state, "TIMEOUT - moving to stuck state")
-        nav.state = "stuck"
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for rotation")
         return
       end
 
@@ -504,8 +509,7 @@ function navigationTick()
       navDebug(state, "currentHeading=" .. currentHeading .. ", targetHeading=" .. targetHeading .. ", diff=" .. headingDiff)
 
       if headingDiff < 5 then  -- Within 5 degrees is good enough
-        navDebug(state, "Rotation complete, moving to setting_speed")
-        nav.state = "setting_speed"
+        transitionTo(nav, "setting_speed", "rotation complete, heading " .. currentHeading .. " within 5 degrees of target " .. targetHeading)
       end
     end,
 
@@ -522,15 +526,16 @@ function navigationTick()
 
       -- Only send command if speed needs to change
       if math.abs(currentSpeed - speedValue) > 0.1 then
+        local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
+        navDecision(cmd, "distance=" .. string.format("%.1f", distance) .. ", changing from speed " .. currentSpeed .. " to " .. speedValue)
         if speedType == "WARP" then
           sendNavigationCommand("warp " .. speedValue)
         else
           sendNavigationCommand("imp " .. speedValue)
         end
-        nav.state = "awaiting_speed_confirmation"
+        transitionTo(nav, "awaiting_speed_confirmation", "speed command sent")
       else
-        navDebug(state, "Speed already correct, moving to traveling")
-        nav.state = "traveling"
+        transitionTo(nav, "traveling", "speed already correct at " .. currentSpeed)
       end
     end,
 
@@ -539,14 +544,12 @@ function navigationTick()
       navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
 
       if timeSinceCommand > config.commandTimeout then
-        navDebug(state, "TIMEOUT - moving to stuck state")
-        nav.state = "stuck"
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for speed change")
         return
       end
 
       if timeSinceCommand > 1 then
-        navDebug(state, "Speed confirmed, moving to traveling")
-        nav.state = "traveling"
+        transitionTo(nav, "traveling", "speed confirmed after " .. timeSinceCommand .. "s")
       end
     end,
 
@@ -555,14 +558,14 @@ function navigationTick()
       navDebug(state, "timeSinceCheck=" .. timeSinceCheck .. ", pollingInterval=" .. config.pollingInterval)
 
       if timeSinceCheck >= config.pollingInterval then
-        navDebug(state, "Time to check position again, moving to requesting_position")
-        nav.state = "requesting_position"
+        transitionTo(nav, "requesting_position", "polling interval " .. config.pollingInterval .. "s elapsed, checking position")
       end
     end,
 
     arrived = function()
+      navDecision("warp 0", "arrived at destination, stopping ship")
       sendNavigationCommand("warp 0")
-      nav.state = "stopping"
+      transitionTo(nav, "stopping", "stop command sent")
     end,
 
     stopping = function()
@@ -572,11 +575,9 @@ function navigationTick()
       if currentSpeed == 0 then
         -- For planet navigation, check if we've achieved orbit
         if nav.phase == "planet" or nav.phase == "planet_simple" then
-          navDebug(state, "Ship stopped, checking orbit status")
-          nav.state = "awaiting_orbit"
+          transitionTo(nav, "awaiting_orbit", "ship stopped, checking if orbiting planet " .. nav.target.planetNumber)
         else
-          navDebug(state, "Ship stopped, moving to completed")
-          nav.state = "completed"
+          transitionTo(nav, "completed", "ship stopped, coordinate navigation complete")
         end
       end
     end,
@@ -587,9 +588,8 @@ function navigationTick()
       navDebug(state, "orbitingPlanet=" .. tostring(orbitingPlanet) .. ", targetPlanet=" .. targetPlanet)
 
       if orbitingPlanet == targetPlanet then
-        navDebug(state, "Successfully orbiting planet " .. targetPlanet)
         navLog("Successfully orbiting planet " .. targetPlanet .. "!")
-        nav.state = "completed"
+        transitionTo(nav, "completed", "confirmed orbiting planet " .. targetPlanet)
       else
         -- Not orbiting yet - auto-orbit trigger should engage if we're close enough
         -- Wait a bit for the trigger to fire
@@ -598,24 +598,22 @@ function navigationTick()
     end,
 
     completed = function()
-      navDebug(state, "Navigation completed successfully")
       navLog("Navigation completed!")
       nav.active = false
-      nav.state = "idle"
+      transitionTo(nav, "idle", "navigation finished successfully")
     end,
 
     stuck = function()
-      navDebug(state, "Navigation stuck, aborting")
       navError("Navigation stuck in previous state")
-      nav.state = "aborted"
+      transitionTo(nav, "aborted", "stuck state detected, aborting")
     end,
 
     aborted = function()
-      navDebug(state, "Navigation aborted")
       navError("Navigation aborted - coming to a stop")
+      navDecision("war 0 0", "emergency stop due to abort")
       sendNavigationCommand("war 0 0")
       nav.active = false
-      nav.state = "idle"
+      transitionTo(nav, "idle", "navigation aborted, ship stopped")
     end
   }
 

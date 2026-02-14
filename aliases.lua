@@ -129,10 +129,16 @@ createAlias("^navto (\\d+) (\\d+)$", function(matches)
     navigateToCoordinates(x, y)
 end, { type = "regex" })
 
--- navpl N -> navigateToPlanet(N)
-createAlias("^navpl (\\d+)$", function(matches)
+-- navcpl N -> navigateToPlanet(N) (coordinate-based approach)
+createAlias("^navcpl (\\d+)$", function(matches)
     local planetNumber = matches[2]
     navigateToPlanet(planetNumber)
+end, { type = "regex" })
+
+-- navspl N -> navigateToPlanetSimple(N) (bearing-following approach)
+createAlias("^navspl (\\d+)$", function(matches)
+    local planetNumber = matches[2]
+    navigateToPlanetSimple(planetNumber)
 end, { type = "regex" })
 
 -- navstatus -> getNavigationStatus()

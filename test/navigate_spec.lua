@@ -284,4 +284,105 @@ describe("Navigation System", function()
       assert.equals("completed", gePackage.navigation.state)
     end)
   end)
+
+  -- ===== Simple Planet Navigation Tests (bearing-following) =====
+  describe("navigateToPlanetSimple", function()
+    it("initializes simple planet navigation state", function()
+      navigateToPlanetSimple(1)
+
+      assert.is_true(gePackage.navigation.active)
+      assert.equals("planet_simple", gePackage.navigation.phase)
+      assert.equals(1, gePackage.navigation.target.planetNumber)
+      assert.equals("spl_scanning", gePackage.navigation.state)
+    end)
+
+    it("rejects invalid planet numbers", function()
+      local result = navigateToPlanetSimple(0)
+      assert.is_false(result)
+      assert.is_false(gePackage.navigation.active)
+    end)
+  end)
+
+  describe("simple planet navigation state machine", function()
+    it("scans planet on first tick", function()
+      navigateToPlanetSimple(5)
+
+      navigationTick()
+
+      assert.is_true(helper.wasSendCalledWith("scan planet 5"))
+      assert.equals("spl_awaiting_scan", gePackage.navigation.state)
+    end)
+
+    it("clears stale scan data before each scan", function()
+      navigateToPlanetSimple(1)
+      gePackage.navigation.planetScan.bearing = 99
+      gePackage.navigation.planetScan.distance = 9999
+
+      navigationTick()
+
+      assert.is_nil(gePackage.navigation.planetScan.bearing)
+      assert.is_nil(gePackage.navigation.planetScan.distance)
+    end)
+
+    it("rotates toward planet after scan", function()
+      navigateToPlanetSimple(1)
+      gePackage.navigation.state = "spl_awaiting_scan"
+      gePackage.navigation.lastCommand = os.time() - 2
+      gePackage.navigation.planetScan.bearing = 45
+      gePackage.navigation.planetScan.distance = 3000
+
+      navigationTick()
+
+      -- Should transition to spl_rotating
+      assert.equals("spl_rotating", gePackage.navigation.state)
+
+      -- Next tick should send rotation command
+      navigationTick()
+      assert.is_true(helper.wasSendCalledWith("rot 45"))
+      assert.equals("spl_awaiting_rotation", gePackage.navigation.state)
+    end)
+
+    it("skips rotation when already aligned", function()
+      navigateToPlanetSimple(1)
+      gePackage.navigation.state = "spl_rotating"
+      gePackage.navigation.planetScan.bearing = 1  -- within 2 degree tolerance
+      gePackage.navigation.planetScan.distance = 3000
+
+      navigationTick()
+
+      assert.equals("spl_setting_speed", gePackage.navigation.state)
+    end)
+
+    it("orbits when within 250 distance", function()
+      navigateToPlanetSimple(1)
+      gePackage.navigation.state = "spl_awaiting_scan"
+      gePackage.navigation.lastCommand = os.time() - 2
+      gePackage.navigation.planetScan.bearing = 5
+      gePackage.navigation.planetScan.distance = 200  -- within threshold
+
+      navigationTick()
+
+      assert.equals("awaiting_orbit", gePackage.navigation.state)
+    end)
+
+    it("rescans after traveling", function()
+      navigateToPlanetSimple(1)
+      gePackage.navigation.state = "spl_traveling"
+      gePackage.navigation.lastCommand = os.time() - 4  -- past pollingInterval of 3s
+
+      navigationTick()
+
+      assert.equals("spl_scanning", gePackage.navigation.state)
+    end)
+
+    it("stays in spl_traveling if not enough time has passed", function()
+      navigateToPlanetSimple(1)
+      gePackage.navigation.state = "spl_traveling"
+      gePackage.navigation.lastCommand = os.time() - 1  -- not past pollingInterval
+
+      navigationTick()
+
+      assert.equals("spl_traveling", gePackage.navigation.state)
+    end)
+  end)
 end)

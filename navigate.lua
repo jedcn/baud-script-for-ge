@@ -172,11 +172,37 @@ function navigateToPlanet(planetNumber)
 end
 
 function setPlanetBearingAndDistance(bearing, distance)
-  if gePackage.navigation and gePackage.navigation.phase == "planet" then
+  local phase = gePackage.navigation and gePackage.navigation.phase
+  if phase == "planet" or phase == "planet_simple" then
     gePackage.navigation.planetScan.bearing = tonumber(bearing)
     gePackage.navigation.planetScan.distance = tonumber(distance)
     gePackage.navigation.lastScanUpdate = os.time()
   end
+end
+
+function navigateToPlanetSimple(planetNumber)
+  -- Bearing-following approach: repeatedly scans the planet and rotates toward it
+  -- Does not calculate absolute coordinates
+  planetNumber = tonumber(planetNumber)
+  if not planetNumber or planetNumber < 1 or planetNumber > 999 then
+    navError("ERROR: Invalid planet number. Must be 1-999.")
+    return false
+  end
+
+  -- Initialize navigation
+  gePackage.navigation.active = true
+  gePackage.navigation.phase = "planet_simple"
+  gePackage.navigation.target.planetNumber = planetNumber
+  gePackage.navigation.state = "spl_scanning"
+  gePackage.navigation.navigationStart = os.time()
+  gePackage.navigation.lastScanUpdate = 0
+  gePackage.navigation.lastPositionCheck = 0
+  gePackage.navigation.lastPositionUpdate = 0
+  gePackage.navigation.planetScan.bearing = nil
+  gePackage.navigation.planetScan.distance = nil
+
+  navLog("Simple planet navigation started to planet " .. planetNumber)
+  return true
 end
 
 function navigateToSector(sectorX, sectorY)
@@ -206,7 +232,121 @@ function navigationTick()
       navDebug(state, "No action")
     end,
 
-    -- ===== Planet Navigation States (Phase 2) =====
+    -- ===== Simple Planet Navigation States (bearing-following approach) =====
+    spl_scanning = function()
+      -- Clear stale scan data before each scan
+      nav.planetScan.bearing = nil
+      nav.planetScan.distance = nil
+      local planetNumber = nav.target.planetNumber
+      sendNavigationCommand("scan planet " .. planetNumber)
+      nav.state = "spl_awaiting_scan"
+    end,
+
+    spl_awaiting_scan = function()
+      local timeSinceCommand = os.time() - nav.lastCommand
+      navDebug(state, "timeSinceCommand=" .. timeSinceCommand .. ", bearing=" .. tostring(nav.planetScan.bearing) .. ", distance=" .. tostring(nav.planetScan.distance))
+
+      -- Check timeout
+      if timeSinceCommand > config.commandTimeout then
+        navDebug(state, "TIMEOUT - moving to stuck state")
+        nav.state = "stuck"
+        return
+      end
+
+      -- Wait until both bearing and distance are populated by triggers
+      if nav.planetScan.bearing and nav.planetScan.distance then
+        local distance = nav.planetScan.distance
+
+        -- Check if we're close enough to orbit
+        if distance < config.planetArrivalThreshold then
+          navDebug(state, "Within orbit range (distance=" .. distance .. "), moving to awaiting_orbit")
+          nav.state = "awaiting_orbit"
+        else
+          navDebug(state, "Scan received: bearing=" .. nav.planetScan.bearing .. ", distance=" .. distance)
+          nav.state = "spl_rotating"
+        end
+      end
+    end,
+
+    spl_rotating = function()
+      local bearing = nav.planetScan.bearing
+      navDebug(state, "bearing=" .. bearing)
+
+      -- Rotate toward the planet using the relative bearing directly
+      if math.abs(bearing) > 2 then
+        sendNavigationCommand("rot " .. bearing)
+        nav.state = "spl_awaiting_rotation"
+      else
+        navDebug(state, "Already aligned (bearing=" .. bearing .. "), moving to spl_setting_speed")
+        nav.state = "spl_setting_speed"
+      end
+    end,
+
+    spl_awaiting_rotation = function()
+      local timeSinceCommand = os.time() - nav.lastCommand
+      navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
+
+      if timeSinceCommand > config.commandTimeout then
+        navDebug(state, "TIMEOUT - moving to stuck state")
+        nav.state = "stuck"
+        return
+      end
+
+      -- Give rotation time to complete before setting speed
+      if timeSinceCommand > 2 then
+        navDebug(state, "Rotation settled, moving to spl_setting_speed")
+        nav.state = "spl_setting_speed"
+      end
+    end,
+
+    spl_setting_speed = function()
+      local distance = nav.planetScan.distance
+      local currentSpeed = getWarpSpeed() or 0
+      navDebug(state, "distance=" .. distance .. ", currentSpeed=" .. currentSpeed)
+
+      local speedType, speedValue = config.decideSpeed(distance, currentSpeed)
+      navDebug(state, "decided: " .. speedType .. " " .. speedValue)
+
+      if math.abs(currentSpeed - speedValue) > 0.1 then
+        if speedType == "WARP" then
+          sendNavigationCommand("warp " .. speedValue)
+        else
+          sendNavigationCommand("imp " .. speedValue)
+        end
+        nav.state = "spl_awaiting_speed"
+      else
+        navDebug(state, "Speed already correct, moving to spl_traveling")
+        nav.state = "spl_traveling"
+      end
+    end,
+
+    spl_awaiting_speed = function()
+      local timeSinceCommand = os.time() - nav.lastCommand
+      navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
+
+      if timeSinceCommand > config.commandTimeout then
+        navDebug(state, "TIMEOUT - moving to stuck state")
+        nav.state = "stuck"
+        return
+      end
+
+      if timeSinceCommand > 1 then
+        navDebug(state, "Speed confirmed, moving to spl_traveling")
+        nav.state = "spl_traveling"
+      end
+    end,
+
+    spl_traveling = function()
+      local timeSinceCommand = os.time() - nav.lastCommand
+      navDebug(state, "timeSinceCommand=" .. timeSinceCommand .. ", pollingInterval=" .. config.pollingInterval)
+
+      if timeSinceCommand >= config.pollingInterval then
+        navDebug(state, "Time to rescan")
+        nav.state = "spl_scanning"
+      end
+    end,
+
+    -- ===== Planet Navigation States (Phase 2 coordinate approach) =====
     requesting_planet_scan = function()
       local planetNumber = nav.target.planetNumber
       sendNavigationCommand("scan planet " .. planetNumber)
@@ -431,7 +571,7 @@ function navigationTick()
 
       if currentSpeed == 0 then
         -- For planet navigation, check if we've achieved orbit
-        if nav.phase == "planet" then
+        if nav.phase == "planet" or nav.phase == "planet_simple" then
           navDebug(state, "Ship stopped, checking orbit status")
           nav.state = "awaiting_orbit"
         else

@@ -353,7 +353,7 @@ describe("Navigation System", function()
       assert.equals("spl_setting_speed", gePackage.navigation.state)
     end)
 
-    it("orbits when within 250 distance", function()
+    it("transitions to arrived when within 250 distance", function()
       navigateToPlanetSimple(1)
       gePackage.navigation.state = "spl_awaiting_scan"
       gePackage.navigation.lastCommand = os.time() - 2
@@ -362,7 +362,8 @@ describe("Navigation System", function()
 
       navigationTick()
 
-      assert.equals("awaiting_orbit", gePackage.navigation.state)
+      -- Goes to arrived first to stop the ship, then stopping -> awaiting_orbit
+      assert.equals("arrived", gePackage.navigation.state)
     end)
 
     it("rescans after traveling", function()

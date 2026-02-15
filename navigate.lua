@@ -277,7 +277,7 @@ function navigationTick()
 
         -- Check if we're close enough to orbit
         if distance < config.planetArrivalThreshold then
-          transitionTo(nav, "awaiting_orbit", "distance " .. distance .. " < threshold " .. config.planetArrivalThreshold .. ", close enough to orbit")
+          transitionTo(nav, "arrived", "distance " .. distance .. " < threshold " .. config.planetArrivalThreshold .. ", close enough to orbit")
         else
           transitionTo(nav, "spl_rotating", "scan received: bearing=" .. nav.planetScan.bearing .. ", distance=" .. distance .. ", need to rotate")
         end
@@ -611,9 +611,12 @@ function navigationTick()
         navLog("Successfully orbiting planet " .. targetPlanet .. "!")
         transitionTo(nav, "completed", "confirmed orbiting planet " .. targetPlanet)
       else
-        -- Not orbiting yet - auto-orbit trigger should engage if we're close enough
-        -- Wait a bit for the trigger to fire
-        navDebug(state, "Waiting for orbit confirmation...")
+        -- Not orbiting yet - send orbit command
+        local timeSinceCommand = os.time() - (nav.lastCommand or 0)
+        if timeSinceCommand > 2 then
+          navDecision("orb " .. targetPlanet, "within orbit range, sending orbit command")
+          sendNavigationCommand("orb " .. targetPlanet)
+        end
       end
     end,
 

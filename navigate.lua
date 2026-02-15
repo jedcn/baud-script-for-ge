@@ -534,9 +534,20 @@ function navigationTick()
       local currentHeading = getShipHeading()
       local targetHeading = nav.targetHeading
 
-      -- If heading is unknown, request position again to get it
+      -- If heading is unknown, we need to get it
       if not currentHeading then
-        transitionTo(nav, "requesting_position", "ship heading unknown, requesting position to get heading")
+        local orbitingPlanet = getOrbitingPlanet()
+        if orbitingPlanet then
+          -- When orbiting, rep nav doesn't show heading. Send war 0 to leave orbit.
+          navDecision("war 0", "leaving orbit to get heading (rep nav doesn't show heading while orbiting)")
+          sendNavigationCommand("war 0")
+          transitionTo(nav, "getting_heading", "left orbit, waiting for heading from helm report")
+        else
+          -- Not orbiting, send rot 0 to get current heading without changing it
+          navDecision("rot 0", "getting current heading (rotate 0 degrees)")
+          sendNavigationCommand("rot 0")
+          transitionTo(nav, "getting_heading", "sent rot 0, waiting for heading confirmation")
+        end
         return
       end
 
@@ -551,6 +562,22 @@ function navigationTick()
         transitionTo(nav, "awaiting_rotation_confirmation", "rotation command sent")
       else
         transitionTo(nav, "setting_speed", "already aligned within 2 degrees (rotation=" .. rotation .. ")")
+      end
+    end,
+
+    getting_heading = function()
+      local timeSinceCommand = os.time() - nav.lastCommand
+      navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
+
+      if timeSinceCommand > config.commandTimeout then
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for heading")
+        return
+      end
+
+      -- Check if we now have a heading
+      local currentHeading = getShipHeading()
+      if currentHeading then
+        transitionTo(nav, "rotating_to_heading", "heading confirmed: " .. currentHeading .. " degrees")
       end
     end,
 

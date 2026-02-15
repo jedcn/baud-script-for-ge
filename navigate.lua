@@ -240,6 +240,17 @@ function navigationTick()
   end
 
   local nav = gePackage.navigation
+
+  -- Early exit: if we're doing planet navigation and already orbiting the target, we're done!
+  if (nav.phase == "planet" or nav.phase == "planet_simple") and nav.target.planetNumber then
+    local orbitingPlanet = getOrbitingPlanet()
+    if orbitingPlanet == nav.target.planetNumber then
+      navLog("Successfully orbiting planet " .. nav.target.planetNumber .. "!")
+      nav.active = false
+      transitionTo(nav, "idle", "detected orbit of target planet " .. nav.target.planetNumber .. " (auto-orbit triggered)")
+      return
+    end
+  end
   local config = nav.config
   local state = nav.state
 

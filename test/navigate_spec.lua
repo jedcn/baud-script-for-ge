@@ -273,7 +273,7 @@ describe("Navigation System", function()
       assert.equals("calculating_route", gePackage.navigation.state)
     end)
 
-    it("checks orbit status after arriving at planet", function()
+    it("detects orbit early and completes navigation", function()
       navigateToPlanet(2)
       setOrbitingPlanet(2)
 
@@ -281,7 +281,9 @@ describe("Navigation System", function()
 
       navigationTick()
 
-      assert.equals("completed", gePackage.navigation.state)
+      -- Early orbit detection now goes directly to idle
+      assert.equals("idle", gePackage.navigation.state)
+      assert.equals(false, gePackage.navigation.active)
     end)
   end)
 

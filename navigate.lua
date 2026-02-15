@@ -543,10 +543,8 @@ function navigationTick()
           sendNavigationCommand("war 0")
           transitionTo(nav, "getting_heading", "left orbit, waiting for heading from helm report")
         else
-          -- Not orbiting, send rot 0 to get current heading without changing it
-          navDecision("rot 0", "getting current heading (rotate 0 degrees)")
-          sendNavigationCommand("rot 0")
-          transitionTo(nav, "getting_heading", "sent rot 0, waiting for heading confirmation")
+          -- Not orbiting, request position which will include heading via rep nav
+          transitionTo(nav, "requesting_position", "heading unknown, requesting nav report to get heading")
         end
         return
       end

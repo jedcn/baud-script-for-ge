@@ -78,10 +78,11 @@ createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
     end
 end, { type = "regex" })
 
--- sets orbiting planet from status display
-createTrigger("^Orbiting Planet........  (\\d+)$", function(matches)
+-- sets orbiting planet from status display (e.g., "Orbiting Planet........  3 SS# 11  -9")
+createTrigger("^Orbiting Planet........  (\\d+)", function(matches)
     local planetNumber = matches[2]
     setOrbitingPlanet(planetNumber)
+    setWarpSpeed(0)
 end, { type = "regex" })
 
 -- sets ship heading from status display

@@ -297,11 +297,19 @@ function navigationTick()
 
     spl_rotating = function()
       local bearing = nav.planetScan.bearing
-      navDebug(state, "bearing=" .. bearing)
+      local currentHeading = getShipHeading()
+      navDebug(state, "bearing=" .. bearing .. ", currentHeading=" .. tostring(currentHeading))
 
       -- Rotate toward the planet using the relative bearing directly
       if math.abs(bearing) > 2 then
-        navDecision("rot " .. bearing, "planet is " .. bearing .. " degrees off current heading")
+        -- Calculate and store the expected heading after rotation
+        if currentHeading then
+          nav.targetHeading = (currentHeading + bearing) % 360
+          if nav.targetHeading < 0 then nav.targetHeading = nav.targetHeading + 360 end
+        else
+          nav.targetHeading = nil  -- Will need to wait for heading confirmation
+        end
+        navDecision("rot " .. bearing, "planet is " .. bearing .. " degrees off current heading, target heading=" .. tostring(nav.targetHeading))
         sendNavigationCommand("rot " .. bearing)
         transitionTo(nav, "spl_awaiting_rotation", "rotation command sent")
       else
@@ -318,9 +326,35 @@ function navigationTick()
         return
       end
 
-      -- Give rotation time to complete before setting speed
-      if timeSinceCommand > 2 then
-        transitionTo(nav, "spl_setting_speed", "rotation settled after " .. timeSinceCommand .. "s")
+      -- Check if rotation completed by comparing current heading to target
+      local currentHeading = getShipHeading()
+      local targetHeading = nav.targetHeading
+
+      -- If we don't know target heading, wait for heading update then recalculate
+      if not targetHeading then
+        if currentHeading and timeSinceCommand > 2 then
+          -- We got a heading update, assume rotation is done
+          transitionTo(nav, "spl_setting_speed", "rotation complete (no target heading tracked), current heading=" .. currentHeading)
+        end
+        return
+      end
+
+      -- If heading is unknown, keep waiting
+      if not currentHeading then
+        navDebug(state, "waiting for heading update from rotation confirmation")
+        return
+      end
+
+      local headingDiff = math.abs(currentHeading - targetHeading)
+      -- Account for wrap-around (359 vs 1 degree)
+      if headingDiff > 180 then
+        headingDiff = 360 - headingDiff
+      end
+
+      navDebug(state, "currentHeading=" .. currentHeading .. ", targetHeading=" .. targetHeading .. ", diff=" .. headingDiff)
+
+      if headingDiff < 5 then  -- Within 5 degrees is good enough
+        transitionTo(nav, "spl_setting_speed", "rotation complete, heading " .. currentHeading .. " within 5 degrees of target " .. targetHeading)
       end
     end,
 

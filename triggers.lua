@@ -102,6 +102,12 @@ createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(ma
     setShipHeading(heading)
 end, { type = "regex" })
 
+-- sets ship heading from engines firing message (when leaving orbit or starting movement)
+createTrigger("^Helm Reports Engines Firing - Ship coming to (\\d+) degrees$", function(matches)
+    local heading = matches[2]
+    setShipHeading(heading)
+end, { type = "regex" })
+
 -- sets fighter count (only when not scanning a planet)
 createTrigger("^Fighters..................\\s*(\\d+)$", function(matches)
     local fighterCount = matches[2]

@@ -367,6 +367,8 @@ function navigationTick()
       navDebug(state, "decided: " .. speedType .. " " .. speedValue)
 
       if math.abs(currentSpeed - speedValue) > 0.1 then
+        -- Store target speed for verification
+        nav.targetSpeed = speedValue
         local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
         navDecision(cmd, "distance=" .. distance .. ", changing from speed " .. currentSpeed .. " to " .. speedValue)
         if speedType == "WARP" then
@@ -374,7 +376,7 @@ function navigationTick()
         else
           sendNavigationCommand("imp " .. speedValue)
         end
-        transitionTo(nav, "spl_awaiting_speed", "speed command sent")
+        transitionTo(nav, "spl_awaiting_speed", "speed command sent, waiting for speed=" .. speedValue)
       else
         transitionTo(nav, "spl_traveling", "speed already correct at " .. currentSpeed)
       end
@@ -389,8 +391,15 @@ function navigationTick()
         return
       end
 
-      if timeSinceCommand > 1 then
-        transitionTo(nav, "spl_traveling", "speed confirmed after " .. timeSinceCommand .. "s")
+      -- Check if speed has reached target
+      local currentSpeed = getWarpSpeed() or 0
+      local targetSpeed = nav.targetSpeed or 0
+
+      navDebug(state, "currentSpeed=" .. currentSpeed .. ", targetSpeed=" .. targetSpeed)
+
+      -- Allow some tolerance for speed matching (within 0.5)
+      if math.abs(currentSpeed - targetSpeed) < 0.5 then
+        transitionTo(nav, "spl_traveling", "speed confirmed at " .. currentSpeed .. " (target was " .. targetSpeed .. ")")
       end
     end,
 

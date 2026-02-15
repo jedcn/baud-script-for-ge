@@ -55,8 +55,8 @@ gePackage.navigation.config = {
     -- Acceleration logic: speed up for long distances
     if distance > 5000 then return "WARP", 5 end
     if distance > 3000 then return "WARP", 3 end
-    if distance > 1500 then return "WARP", 2 end
-    if distance > 1000 then return "WARP", 1 end
+    if distance > 1000 then return "WARP", 2 end
+    if distance > 750 then return "WARP", 1 end
 
     -- For short distances (≤ 1000), use impulse
     -- IMPORTANT: Can't go directly from WARP to IMPULSE

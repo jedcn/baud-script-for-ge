@@ -1235,9 +1235,9 @@ function sectorNavTick()
         -- In target sector, check if at target position
         local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
         if distToTarget < config.arrivalThreshold then
-          secLog("Already at destination!")
-          sec.state = "sec_completed"
-          secTransition("sec_calculating_route", "sec_completed", "already at target")
+          secLog("Arrived at destination!")
+          sec.state = "sec_arrived"
+          secTransition("sec_calculating_route", "sec_arrived", "at target position")
           return
         end
       end

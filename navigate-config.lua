@@ -27,7 +27,7 @@ gePackage.navigation.config = {
   debug = false,
 
   -- Distance thresholds
-  arrivalThreshold = 150,           -- Stop within this distance
+  arrivalThreshold = 100,           -- Stop within this distance
   planetArrivalThreshold = 250,     -- For Phase 2
 
   -- Timing

@@ -163,3 +163,19 @@ createAlias("^rotto (\\d+)$", function(matches)
     local targetHeading = matches[2]
     rotateToHeading(targetHeading)
 end, { type = "regex" })
+
+-- navsec X Y -> navigateToSector(X, Y) - goes to center (5000, 5000)
+createAlias("^navsec (-?\\d+) (-?\\d+)$", function(matches)
+    local sectorX = matches[2]
+    local sectorY = matches[3]
+    navigateToSector(sectorX, sectorY)
+end, { type = "regex" })
+
+-- navsec X Y posX posY -> navigateToSector(X, Y, posX, posY)
+createAlias("^navsec (-?\\d+) (-?\\d+) (\\d+) (\\d+)$", function(matches)
+    local sectorX = matches[2]
+    local sectorY = matches[3]
+    local posX = matches[4]
+    local posY = matches[5]
+    navigateToSector(sectorX, sectorY, posX, posY)
+end, { type = "regex" })

@@ -8,6 +8,14 @@ createTimer(3000, function()
         end
     end
 
+    -- Flip away tick (if function exists)
+    if flipAwayTick then
+        local faStatus, faErr = pcall(flipAwayTick)
+        if not faStatus then
+            echo("\n\nCaught an error in flipAwayTick:\n\n" .. faErr)
+        end
+    end
+
     -- Rotto tick (if function exists)
     if rottoTick then
         local rottoStatus, rottoErr = pcall(rottoTick)

@@ -151,6 +151,12 @@ createAlias("^navcancel$", function()
     cancelNavigation()
 end, { type = "regex" })
 
+-- flipaway -> flipAwayFromPlanet()
+-- Rotates ship so orbited planet is at bearing 180 (behind ship)
+createAlias("^flipaway$", function()
+    flipAwayFromPlanet()
+end, { type = "regex" })
+
 -- rotto N -> rotateToHeading(N)
 -- Rotates ship to absolute heading N (only works when not orbiting)
 createAlias("^rotto (\\d+)$", function(matches)

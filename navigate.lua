@@ -761,6 +761,205 @@ function navigationTick()
 end
 
 -- ============================================================================
+-- Flip Away Feature
+-- ============================================================================
+-- Rotates the ship so that the orbited planet is directly behind (bearing 180)
+
+local function faLog(s)
+  cecho("#ff00ff", "[flipaway] " .. s)
+end
+
+local function faError(s)
+  cecho("red", "[flipaway] " .. s)
+end
+
+local function faTransition(fromState, toState, reason)
+  cecho("#ff00ff", "[flipaway][state] " .. fromState .. " -> " .. toState .. " (" .. reason .. ")")
+end
+
+function flipAwayFromPlanet()
+  local orbitingPlanet = getOrbitingPlanet()
+  if not orbitingPlanet then
+    faError("Not orbiting a planet - cannot flip away")
+    return false
+  end
+
+  -- Initialize flipaway state
+  gePackage.flipAway = {
+    active = true,
+    state = "fa_verifying_orbit",
+    planetNumber = orbitingPlanet,
+    initialBearing = nil,
+    finalBearing = nil,
+    lastCommand = os.time(),
+    lastBearingUpdate = 0
+  }
+
+  faLog("Starting flip away from planet " .. orbitingPlanet)
+  send("rep nav")
+  return true
+end
+
+function setFlipAwayBearing(bearing)
+  if gePackage.flipAway and gePackage.flipAway.active then
+    gePackage.flipAway.lastBearingUpdate = os.time()
+    local state = gePackage.flipAway.state
+    if state == "fa_awaiting_initial_scan" then
+      gePackage.flipAway.initialBearing = tonumber(bearing)
+    elseif state == "fa_awaiting_verify_scan" then
+      gePackage.flipAway.finalBearing = tonumber(bearing)
+    end
+  end
+end
+
+function cancelFlipAway()
+  if gePackage.flipAway and gePackage.flipAway.active then
+    gePackage.flipAway.active = false
+    faLog("Flip away cancelled")
+  end
+end
+
+function setFlipAwayRotationComplete()
+  if gePackage.flipAway and gePackage.flipAway.active then
+    if gePackage.flipAway.state == "fa_awaiting_rotation" then
+      gePackage.flipAway.rotationComplete = true
+    end
+  end
+end
+
+function flipAwayTick()
+  if not gePackage.flipAway or not gePackage.flipAway.active then
+    return
+  end
+
+  local fa = gePackage.flipAway
+  local state = fa.state
+  local commandTimeout = 60
+
+  local actions = {
+    fa_verifying_orbit = function()
+      local orbitingPlanet = getOrbitingPlanet()
+      if orbitingPlanet == fa.planetNumber then
+        fa.state = "fa_scanning_initial"
+        faTransition("fa_verifying_orbit", "fa_scanning_initial", "confirmed orbiting planet " .. fa.planetNumber)
+      else
+        local timeSinceCommand = os.time() - fa.lastCommand
+        if timeSinceCommand > commandTimeout then
+          faError("Timeout waiting for orbit confirmation")
+          fa.active = false
+          fa.state = "fa_failed"
+        end
+      end
+    end,
+
+    fa_scanning_initial = function()
+      fa.initialBearing = nil
+      fa.lastCommand = os.time()
+      send("scan planet " .. fa.planetNumber)
+      fa.state = "fa_awaiting_initial_scan"
+      faTransition("fa_scanning_initial", "fa_awaiting_initial_scan", "scanning planet for bearing")
+    end,
+
+    fa_awaiting_initial_scan = function()
+      local timeSinceCommand = os.time() - fa.lastCommand
+
+      if fa.initialBearing then
+        fa.state = "fa_rotating"
+        faTransition("fa_awaiting_initial_scan", "fa_rotating", "got bearing " .. fa.initialBearing)
+      elseif timeSinceCommand > commandTimeout then
+        faError("Timeout waiting for scan results")
+        fa.active = false
+        fa.state = "fa_failed"
+      end
+    end,
+
+    fa_rotating = function()
+      local bearing = fa.initialBearing
+      -- When we rotate by R, planet's new bearing = bearing - R
+      -- We want new bearing = 180, so: bearing - R = 180, thus R = bearing - 180
+      local rotation = bearing - 180
+
+      -- Normalize rotation to -180 to 180 range
+      if rotation > 180 then
+        rotation = rotation - 360
+      elseif rotation < -180 then
+        rotation = rotation + 360
+      end
+
+      if math.abs(rotation) <= 2 then
+        faLog("Planet already at bearing " .. bearing .. ", no rotation needed")
+        fa.state = "fa_completed"
+        faTransition("fa_rotating", "fa_completed", "planet already behind ship")
+      else
+        faLog("Planet at bearing " .. bearing .. ", rotating " .. rotation .. " degrees")
+        fa.lastCommand = os.time()
+        fa.rotationComplete = false
+        send("rot " .. rotation)
+        fa.state = "fa_awaiting_rotation"
+        faTransition("fa_rotating", "fa_awaiting_rotation", "rotation command sent")
+      end
+    end,
+
+    fa_awaiting_rotation = function()
+      local timeSinceCommand = os.time() - fa.lastCommand
+
+      -- Wait for rotation complete signal from trigger
+      if fa.rotationComplete then
+        fa.state = "fa_scanning_verify"
+        faTransition("fa_awaiting_rotation", "fa_scanning_verify", "rotation complete, verifying")
+      elseif timeSinceCommand > commandTimeout then
+        faError("Timeout waiting for rotation")
+        fa.active = false
+        fa.state = "fa_failed"
+      end
+    end,
+
+    fa_scanning_verify = function()
+      fa.finalBearing = nil
+      fa.lastCommand = os.time()
+      send("scan planet " .. fa.planetNumber)
+      fa.state = "fa_awaiting_verify_scan"
+      faTransition("fa_scanning_verify", "fa_awaiting_verify_scan", "scanning to verify planet bearing")
+    end,
+
+    fa_awaiting_verify_scan = function()
+      local timeSinceCommand = os.time() - fa.lastCommand
+
+      if fa.finalBearing then
+        local diff = math.abs(fa.finalBearing - 180)
+        if diff <= 5 or diff >= 355 then
+          faLog("Success! Planet now at bearing " .. fa.finalBearing)
+          fa.state = "fa_completed"
+          faTransition("fa_awaiting_verify_scan", "fa_completed", "planet verified at bearing " .. fa.finalBearing)
+        else
+          faError("Planet at bearing " .. fa.finalBearing .. " (expected ~180)")
+          fa.state = "fa_completed"
+          faTransition("fa_awaiting_verify_scan", "fa_completed", "bearing off but accepting result")
+        end
+      elseif timeSinceCommand > commandTimeout then
+        faError("Timeout waiting for verification scan")
+        fa.active = false
+        fa.state = "fa_failed"
+      end
+    end,
+
+    fa_completed = function()
+      faLog("Flip away complete")
+      fa.active = false
+    end,
+
+    fa_failed = function()
+      faError("Flip away failed")
+      fa.active = false
+    end
+  }
+
+  if actions[state] then
+    actions[state]()
+  end
+end
+
+-- ============================================================================
 -- Rotate To Heading Feature (rotto)
 -- ============================================================================
 -- Rotates the ship to an absolute heading (only works when not orbiting)

@@ -100,6 +100,7 @@ end, { type = "regex" })
 createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(matches)
     local heading = matches[2]
     setShipHeading(heading)
+    setFlipAwayRotationComplete()
     setRottoRotationComplete()
 end, { type = "regex" })
 
@@ -191,11 +192,12 @@ createTrigger("^Scanning Planet (\\d+)\\s*(.*)$", function(matches)
     setScanningPlanetName(planetName)
 end, { type = "regex" })
 
--- Capture planet distance and bearing from planet scan (for navigation)
+-- Capture planet distance and bearing from planet scan (for navigation and flipaway)
 createTrigger("^Bearing[:.\\s]+(-?\\d+) Dist[:.\\s]+(\\d+)", function(matches)
     local bearing = matches[2]
     local distance = matches[3]
     setPlanetBearingAndDistance(bearing, distance)
+    setFlipAwayBearing(bearing)
 end, { type = "regex" })
 
 -- set shield strength

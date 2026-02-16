@@ -150,3 +150,10 @@ end, { type = "regex" })
 createAlias("^navcancel$", function()
     cancelNavigation()
 end, { type = "regex" })
+
+-- rotto N -> rotateToHeading(N)
+-- Rotates ship to absolute heading N (only works when not orbiting)
+createAlias("^rotto (\\d+)$", function(matches)
+    local targetHeading = matches[2]
+    rotateToHeading(targetHeading)
+end, { type = "regex" })

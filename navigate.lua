@@ -759,3 +759,154 @@ function navigationTick()
     actions[state]()
   end
 end
+
+-- ============================================================================
+-- Rotate To Heading Feature (rotto)
+-- ============================================================================
+-- Rotates the ship to an absolute heading (only works when not orbiting)
+
+local function rottoLog(s)
+  cecho("#ff00ff", "[rotto] " .. s)
+end
+
+local function rottoError(s)
+  cecho("red", "[rotto] " .. s)
+end
+
+local function rottoTransition(fromState, toState, reason)
+  cecho("#ff00ff", "[rotto][state] " .. fromState .. " -> " .. toState .. " (" .. reason .. ")")
+end
+
+function rotateToHeading(targetHeading)
+  targetHeading = tonumber(targetHeading)
+  if not targetHeading or targetHeading < 0 or targetHeading > 359 then
+    rottoError("Invalid heading. Must be 0-359.")
+    return false
+  end
+
+  -- Initialize rotto state
+  gePackage.rotto = {
+    active = true,
+    state = "rotto_checking_status",
+    targetHeading = targetHeading,
+    lastCommand = os.time(),
+    lastHeadingUpdate = 0
+  }
+
+  rottoLog("Rotating to heading " .. targetHeading)
+  send("rep nav")
+  return true
+end
+
+function setRottoHeadingReceived()
+  if gePackage.rotto and gePackage.rotto.active then
+    if gePackage.rotto.state == "rotto_checking_status" then
+      gePackage.rotto.headingReceived = true
+    end
+  end
+end
+
+function setRottoRotationComplete()
+  if gePackage.rotto and gePackage.rotto.active then
+    if gePackage.rotto.state == "rotto_awaiting_rotation" then
+      gePackage.rotto.rotationComplete = true
+    end
+  end
+end
+
+function cancelRotto()
+  if gePackage.rotto and gePackage.rotto.active then
+    gePackage.rotto.active = false
+    rottoLog("Rotate to heading cancelled")
+  end
+end
+
+function rottoTick()
+  if not gePackage.rotto or not gePackage.rotto.active then
+    return
+  end
+
+  local rotto = gePackage.rotto
+  local state = rotto.state
+  local commandTimeout = 60
+
+  local actions = {
+    rotto_checking_status = function()
+      local orbitingPlanet = getOrbitingPlanet()
+      if orbitingPlanet then
+        rottoError("Cannot rotate while orbiting planet " .. orbitingPlanet .. ". Leave orbit first.")
+        rotto.active = false
+        rotto.state = "rotto_failed"
+        return
+      end
+
+      local currentHeading = getShipHeading()
+      if currentHeading then
+        rotto.state = "rotto_rotating"
+        rottoTransition("rotto_checking_status", "rotto_rotating", "current heading is " .. currentHeading)
+      else
+        local timeSinceCommand = os.time() - rotto.lastCommand
+        if timeSinceCommand > commandTimeout then
+          rottoError("Timeout waiting for heading")
+          rotto.active = false
+          rotto.state = "rotto_failed"
+        end
+      end
+    end,
+
+    rotto_rotating = function()
+      local currentHeading = getShipHeading()
+      local targetHeading = rotto.targetHeading
+      local rotation = targetHeading - currentHeading
+
+      -- Normalize rotation to -180 to 180 range
+      if rotation > 180 then
+        rotation = rotation - 360
+      elseif rotation < -180 then
+        rotation = rotation + 360
+      end
+
+      if math.abs(rotation) <= 2 then
+        rottoLog("Already at heading " .. currentHeading .. ", no rotation needed")
+        rotto.state = "rotto_completed"
+        rottoTransition("rotto_rotating", "rotto_completed", "already at target heading")
+      else
+        rottoLog("Current heading " .. currentHeading .. ", rotating " .. rotation .. " to reach " .. targetHeading)
+        rotto.lastCommand = os.time()
+        rotto.rotationComplete = false
+        send("rot " .. rotation)
+        rotto.state = "rotto_awaiting_rotation"
+        rottoTransition("rotto_rotating", "rotto_awaiting_rotation", "rotation command sent")
+      end
+    end,
+
+    rotto_awaiting_rotation = function()
+      local timeSinceCommand = os.time() - rotto.lastCommand
+
+      if rotto.rotationComplete then
+        local currentHeading = getShipHeading()
+        rottoLog("Rotation complete. Now heading " .. currentHeading)
+        rotto.state = "rotto_completed"
+        rottoTransition("rotto_awaiting_rotation", "rotto_completed", "rotation confirmed")
+      elseif timeSinceCommand > commandTimeout then
+        rottoError("Timeout waiting for rotation")
+        rotto.active = false
+        rotto.state = "rotto_failed"
+      end
+    end,
+
+    rotto_completed = function()
+      rottoLog("Rotate to heading complete")
+      rotto.active = false
+    end,
+
+    rotto_failed = function()
+      rottoError("Rotate to heading failed")
+      rotto.active = false
+    end
+  }
+
+  if actions[state] then
+    actions[state]()
+  end
+end

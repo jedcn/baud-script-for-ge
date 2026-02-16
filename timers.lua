@@ -15,4 +15,12 @@ createTimer(3000, function()
             echo("\n\nCaught an error in flipAwayTick:\n\n" .. faErr)
         end
     end
+
+    -- Rotto tick (if function exists)
+    if rottoTick then
+        local rottoStatus, rottoErr = pcall(rottoTick)
+        if not rottoStatus then
+            echo("\n\nCaught an error in rottoTick:\n\n" .. rottoErr)
+        end
+    end
 end, { name = "mainTick", repeating = true, enabled = true })

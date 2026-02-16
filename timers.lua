@@ -23,4 +23,12 @@ createTimer(3000, function()
             echo("\n\nCaught an error in rottoTick:\n\n" .. rottoErr)
         end
     end
+
+    -- Sector navigation tick (if function exists)
+    if sectorNavTick then
+        local secStatus, secErr = pcall(sectorNavTick)
+        if not secStatus then
+            echo("\n\nCaught an error in sectorNavTick:\n\n" .. secErr)
+        end
+    end
 end, { name = "mainTick", repeating = true, enabled = true })

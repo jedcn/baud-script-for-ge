@@ -1109,3 +1109,304 @@ function rottoTick()
     actions[state]()
   end
 end
+
+-- ============================================================================
+-- Sector Navigation Feature (navsec)
+-- ============================================================================
+-- Navigates the ship to a different sector, optionally to specific coordinates
+
+local function secLog(s)
+  cecho("#ff00ff", "[navsec] " .. s)
+end
+
+local function secError(s)
+  cecho("red", "[navsec] " .. s)
+end
+
+local function secTransition(fromState, toState, reason)
+  cecho("#ff00ff", "[navsec][state] " .. fromState .. " -> " .. toState .. " (" .. reason .. ")")
+end
+
+-- Convert sector + position to absolute galactic coordinates
+function calculateAbsolutePosition(sectorX, sectorY, posX, posY)
+  local absX = (sectorX * 10000) + posX
+  local absY = (sectorY * 10000) + posY
+  return absX, absY
+end
+
+function navigateToSector(targetSectorX, targetSectorY, targetPosX, targetPosY)
+  targetSectorX = tonumber(targetSectorX)
+  targetSectorY = tonumber(targetSectorY)
+
+  if not targetSectorX or not targetSectorY then
+    secError("Invalid sector coordinates")
+    return false
+  end
+
+  -- Default to sector center if no position specified
+  targetPosX = tonumber(targetPosX) or 5000
+  targetPosY = tonumber(targetPosY) or 5000
+
+  if targetPosX < 0 or targetPosX > 10000 or targetPosY < 0 or targetPosY > 10000 then
+    secError("Invalid position. Must be 0-10000.")
+    return false
+  end
+
+  -- Initialize sector navigation state
+  gePackage.sectorNav = {
+    active = true,
+    state = "sec_requesting_position",
+    targetSectorX = targetSectorX,
+    targetSectorY = targetSectorY,
+    targetPosX = targetPosX,
+    targetPosY = targetPosY,
+    lastCommand = os.time(),
+    lastPositionUpdate = 0,
+    targetHeading = nil,
+    rotationComplete = false,
+    targetSpeed = nil,
+    lastObservedSpeed = nil,
+    lastSpeedChange = nil
+  }
+
+  secLog("Navigating to sector (" .. targetSectorX .. ", " .. targetSectorY .. ") position (" .. targetPosX .. ", " .. targetPosY .. ")")
+  send("rep nav")
+  return true
+end
+
+function setSectorNavRotationComplete()
+  if gePackage.sectorNav and gePackage.sectorNav.active then
+    if gePackage.sectorNav.state == "sec_awaiting_rotation" then
+      gePackage.sectorNav.rotationComplete = true
+    end
+  end
+end
+
+function cancelSectorNav()
+  if gePackage.sectorNav and gePackage.sectorNav.active then
+    gePackage.sectorNav.active = false
+    send("warp 0")
+    secLog("Sector navigation cancelled")
+  end
+end
+
+function sectorNavTick()
+  if not gePackage.sectorNav or not gePackage.sectorNav.active then
+    return
+  end
+
+  local sec = gePackage.sectorNav
+  local state = sec.state
+  local config = gePackage.navigation.config
+  local commandTimeout = 60
+
+  local actions = {
+    sec_requesting_position = function()
+      sec.lastCommand = os.time()
+      sec.lastPositionUpdate = 0
+      send("rep nav")
+      sec.state = "sec_awaiting_position"
+      secTransition("sec_requesting_position", "sec_awaiting_position", "position request sent")
+    end,
+
+    sec_awaiting_position = function()
+      local timeSinceCommand = os.time() - sec.lastCommand
+
+      -- Check if we have fresh position data
+      local currentSectorX, currentSectorY = getSector()
+      local currentPosX, currentPosY = getSectorPosition()
+
+      if currentSectorX and currentSectorY and currentPosX and currentPosY then
+        sec.state = "sec_calculating_route"
+        secTransition("sec_awaiting_position", "sec_calculating_route", "position received: sector (" .. currentSectorX .. ", " .. currentSectorY .. ") pos (" .. currentPosX .. ", " .. currentPosY .. ")")
+      elseif timeSinceCommand > commandTimeout then
+        secError("Timeout waiting for position")
+        sec.active = false
+        sec.state = "sec_failed"
+      end
+    end,
+
+    sec_calculating_route = function()
+      local currentSectorX, currentSectorY = getSector()
+      local currentPosX, currentPosY = getSectorPosition()
+
+      -- Check if we've already arrived at target sector
+      if currentSectorX == sec.targetSectorX and currentSectorY == sec.targetSectorY then
+        -- In target sector, check if at target position
+        local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
+        if distToTarget < config.arrivalThreshold then
+          secLog("Already at destination!")
+          sec.state = "sec_completed"
+          secTransition("sec_calculating_route", "sec_completed", "already at target")
+          return
+        end
+      end
+
+      -- Calculate absolute positions
+      local currentAbsX, currentAbsY = calculateAbsolutePosition(currentSectorX, currentSectorY, currentPosX, currentPosY)
+      local targetAbsX, targetAbsY = calculateAbsolutePosition(sec.targetSectorX, sec.targetSectorY, sec.targetPosX, sec.targetPosY)
+
+      -- Calculate heading to target
+      sec.targetHeading = calculateHeading(currentAbsX, currentAbsY, targetAbsX, targetAbsY)
+      local distance = calculateDistance(currentAbsX, currentAbsY, targetAbsX, targetAbsY)
+
+      secLog("Current absolute: (" .. currentAbsX .. ", " .. currentAbsY .. "), Target: (" .. targetAbsX .. ", " .. targetAbsY .. ")")
+      secLog("Distance: " .. string.format("%.0f", distance) .. ", Target heading: " .. sec.targetHeading)
+
+      sec.state = "sec_rotating"
+      secTransition("sec_calculating_route", "sec_rotating", "route calculated, heading " .. sec.targetHeading)
+    end,
+
+    sec_rotating = function()
+      local currentHeading = getShipHeading()
+
+      if not currentHeading then
+        -- Need to get heading, leave orbit if orbiting
+        local orbitingPlanet = getOrbitingPlanet()
+        if orbitingPlanet then
+          secLog("Leaving orbit to get heading")
+          send("war 0")
+          sec.lastCommand = os.time()
+        end
+        return
+      end
+
+      local rotation = calculateRotation(currentHeading, sec.targetHeading)
+
+      if math.abs(rotation) <= 2 then
+        secLog("Already aligned to heading " .. currentHeading)
+        sec.state = "sec_setting_speed"
+        secTransition("sec_rotating", "sec_setting_speed", "already aligned")
+      else
+        secLog("Current heading " .. currentHeading .. ", rotating " .. rotation .. " to reach " .. sec.targetHeading)
+        sec.lastCommand = os.time()
+        sec.rotationComplete = false
+        send("rot " .. rotation)
+        sec.state = "sec_awaiting_rotation"
+        secTransition("sec_rotating", "sec_awaiting_rotation", "rotation command sent")
+      end
+    end,
+
+    sec_awaiting_rotation = function()
+      local timeSinceCommand = os.time() - sec.lastCommand
+
+      if sec.rotationComplete then
+        sec.state = "sec_setting_speed"
+        secTransition("sec_awaiting_rotation", "sec_setting_speed", "rotation complete")
+      elseif timeSinceCommand > commandTimeout then
+        secError("Timeout waiting for rotation")
+        sec.active = false
+        sec.state = "sec_failed"
+      end
+    end,
+
+    sec_setting_speed = function()
+      local currentSectorX, currentSectorY = getSector()
+      local currentPosX, currentPosY = getSectorPosition()
+      local currentAbsX, currentAbsY = calculateAbsolutePosition(currentSectorX, currentSectorY, currentPosX, currentPosY)
+      local targetAbsX, targetAbsY = calculateAbsolutePosition(sec.targetSectorX, sec.targetSectorY, sec.targetPosX, sec.targetPosY)
+      local distance = calculateDistance(currentAbsX, currentAbsY, targetAbsX, targetAbsY)
+      local currentSpeed = getWarpSpeed() or 0
+
+      local speedType, speedValue = config.decideSpeed(distance, currentSpeed)
+
+      if math.abs(currentSpeed - speedValue) > 0.1 then
+        sec.targetSpeed = speedValue
+        sec.lastObservedSpeed = currentSpeed
+        sec.lastSpeedChange = os.time()
+        local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
+        secLog("Distance " .. string.format("%.0f", distance) .. ", setting " .. cmd)
+        send(cmd)
+        sec.state = "sec_awaiting_speed"
+        secTransition("sec_setting_speed", "sec_awaiting_speed", "speed command sent")
+      else
+        sec.state = "sec_traveling"
+        secTransition("sec_setting_speed", "sec_traveling", "speed already correct at " .. currentSpeed)
+      end
+    end,
+
+    sec_awaiting_speed = function()
+      local currentSpeed = getWarpSpeed() or 0
+      local targetSpeed = sec.targetSpeed or 0
+      local lastObserved = sec.lastObservedSpeed or 0
+
+      -- Track speed progress
+      if math.abs(currentSpeed - lastObserved) > 0.1 then
+        local oldDistanceToTarget = math.abs(lastObserved - targetSpeed)
+        local newDistanceToTarget = math.abs(currentSpeed - targetSpeed)
+        if newDistanceToTarget < oldDistanceToTarget then
+          sec.lastSpeedChange = os.time()
+        end
+        sec.lastObservedSpeed = currentSpeed
+      end
+
+      local timeSinceSpeedChange = os.time() - (sec.lastSpeedChange or sec.lastCommand)
+
+      if timeSinceSpeedChange > commandTimeout then
+        secError("Timeout waiting for speed change")
+        sec.active = false
+        sec.state = "sec_failed"
+        return
+      end
+
+      if math.abs(currentSpeed - targetSpeed) < 0.5 then
+        sec.state = "sec_traveling"
+        secTransition("sec_awaiting_speed", "sec_traveling", "speed confirmed at " .. currentSpeed)
+      end
+    end,
+
+    sec_traveling = function()
+      local timeSinceCommand = os.time() - sec.lastCommand
+
+      -- Periodically check position
+      if timeSinceCommand >= config.pollingInterval then
+        local currentSectorX, currentSectorY = getSector()
+        local currentPosX, currentPosY = getSectorPosition()
+
+        -- Check if arrived at target sector
+        if currentSectorX == sec.targetSectorX and currentSectorY == sec.targetSectorY then
+          local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
+          if distToTarget < config.arrivalThreshold then
+            sec.state = "sec_arrived"
+            secTransition("sec_traveling", "sec_arrived", "arrived at target position in sector")
+            return
+          end
+        end
+
+        -- Recalculate route (course correction)
+        sec.state = "sec_requesting_position"
+        secTransition("sec_traveling", "sec_requesting_position", "polling interval elapsed, rechecking position")
+      end
+    end,
+
+    sec_arrived = function()
+      secLog("Stopping ship")
+      send("warp 0")
+      sec.state = "sec_stopping"
+      secTransition("sec_arrived", "sec_stopping", "stop command sent")
+    end,
+
+    sec_stopping = function()
+      local currentSpeed = getWarpSpeed()
+      if currentSpeed == 0 then
+        sec.state = "sec_completed"
+        secTransition("sec_stopping", "sec_completed", "ship stopped")
+      end
+    end,
+
+    sec_completed = function()
+      local currentSectorX, currentSectorY = getSector()
+      secLog("Sector navigation complete! Now in sector (" .. currentSectorX .. ", " .. currentSectorY .. ")")
+      sec.active = false
+    end,
+
+    sec_failed = function()
+      secError("Sector navigation failed")
+      sec.active = false
+    end
+  }
+
+  if actions[state] then
+    actions[state]()
+  end
+end

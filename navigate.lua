@@ -367,8 +367,10 @@ function navigationTick()
       navDebug(state, "decided: " .. speedType .. " " .. speedValue)
 
       if math.abs(currentSpeed - speedValue) > 0.1 then
-        -- Store target speed for verification
+        -- Store target speed and initial speed for tracking acceleration progress
         nav.targetSpeed = speedValue
+        nav.lastObservedSpeed = currentSpeed
+        nav.lastSpeedChange = os.time()
         local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
         navDecision(cmd, "distance=" .. distance .. ", changing from speed " .. currentSpeed .. " to " .. speedValue)
         if speedType == "WARP" then
@@ -383,19 +385,30 @@ function navigationTick()
     end,
 
     spl_awaiting_speed = function()
-      local timeSinceCommand = os.time() - nav.lastCommand
-      navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
-
-      if timeSinceCommand > config.commandTimeout then
-        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for speed change")
-        return
-      end
-
-      -- Check if speed has reached target
       local currentSpeed = getWarpSpeed() or 0
       local targetSpeed = nav.targetSpeed or 0
+      local lastObserved = nav.lastObservedSpeed or 0
 
-      navDebug(state, "currentSpeed=" .. currentSpeed .. ", targetSpeed=" .. targetSpeed)
+      -- Check if speed has changed since last observation
+      if math.abs(currentSpeed - lastObserved) > 0.1 then
+        -- Speed changed - check if it's moving toward target
+        local oldDistanceToTarget = math.abs(lastObserved - targetSpeed)
+        local newDistanceToTarget = math.abs(currentSpeed - targetSpeed)
+        if newDistanceToTarget < oldDistanceToTarget then
+          -- Making progress toward target, reset timeout
+          navDebug(state, "speed progressing: " .. lastObserved .. " -> " .. currentSpeed .. " (target=" .. targetSpeed .. "), resetting timeout")
+          nav.lastSpeedChange = os.time()
+        end
+        nav.lastObservedSpeed = currentSpeed
+      end
+
+      local timeSinceSpeedChange = os.time() - (nav.lastSpeedChange or nav.lastCommand)
+      navDebug(state, "timeSinceSpeedChange=" .. timeSinceSpeedChange .. ", currentSpeed=" .. currentSpeed .. ", targetSpeed=" .. targetSpeed)
+
+      if timeSinceSpeedChange > config.commandTimeout then
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s with no speed progress")
+        return
+      end
 
       -- Allow some tolerance for speed matching (within 0.5)
       if math.abs(currentSpeed - targetSpeed) < 0.5 then
@@ -625,6 +638,10 @@ function navigationTick()
 
       -- Only send command if speed needs to change
       if math.abs(currentSpeed - speedValue) > 0.1 then
+        -- Store target speed and initial speed for tracking acceleration progress
+        nav.targetSpeed = speedValue
+        nav.lastObservedSpeed = currentSpeed
+        nav.lastSpeedChange = os.time()
         local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
         navDecision(cmd, "distance=" .. string.format("%.1f", distance) .. ", changing from speed " .. currentSpeed .. " to " .. speedValue)
         if speedType == "WARP" then
@@ -639,16 +656,34 @@ function navigationTick()
     end,
 
     awaiting_speed_confirmation = function()
-      local timeSinceCommand = os.time() - nav.lastCommand
-      navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
+      local currentSpeed = getWarpSpeed() or 0
+      local targetSpeed = nav.targetSpeed or 0
+      local lastObserved = nav.lastObservedSpeed or 0
 
-      if timeSinceCommand > config.commandTimeout then
-        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for speed change")
+      -- Check if speed has changed since last observation
+      if math.abs(currentSpeed - lastObserved) > 0.1 then
+        -- Speed changed - check if it's moving toward target
+        local oldDistanceToTarget = math.abs(lastObserved - targetSpeed)
+        local newDistanceToTarget = math.abs(currentSpeed - targetSpeed)
+        if newDistanceToTarget < oldDistanceToTarget then
+          -- Making progress toward target, reset timeout
+          navDebug(state, "speed progressing: " .. lastObserved .. " -> " .. currentSpeed .. " (target=" .. targetSpeed .. "), resetting timeout")
+          nav.lastSpeedChange = os.time()
+        end
+        nav.lastObservedSpeed = currentSpeed
+      end
+
+      local timeSinceSpeedChange = os.time() - (nav.lastSpeedChange or nav.lastCommand)
+      navDebug(state, "timeSinceSpeedChange=" .. timeSinceSpeedChange .. ", currentSpeed=" .. currentSpeed .. ", targetSpeed=" .. targetSpeed)
+
+      if timeSinceSpeedChange > config.commandTimeout then
+        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s with no speed progress")
         return
       end
 
-      if timeSinceCommand > 1 then
-        transitionTo(nav, "traveling", "speed confirmed after " .. timeSinceCommand .. "s")
+      -- Allow some tolerance for speed matching (within 0.5)
+      if math.abs(currentSpeed - targetSpeed) < 0.5 then
+        transitionTo(nav, "traveling", "speed confirmed at " .. currentSpeed .. " (target was " .. targetSpeed .. ")")
       end
     end,
 

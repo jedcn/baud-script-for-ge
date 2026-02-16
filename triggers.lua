@@ -44,7 +44,7 @@ createTrigger("^Leaving orbit Sir!$", function(matches)
     clearOrbitingPlanet()
 end, { type = "regex" })
 
-createTrigger("^We are now in stationary orbit around planet (\\d+)$", function(matches)
+createTrigger("^We are now in stationary orbit around planet (\\d+)", function(matches)
     local planetNumber = matches[2]
     setOrbitingPlanet(planetNumber)
 end, { type = "regex" })
@@ -78,10 +78,11 @@ createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
     end
 end, { type = "regex" })
 
--- sets orbiting planet from status display
-createTrigger("^Orbiting Planet........  (\\d+)$", function(matches)
+-- sets orbiting planet from status display (e.g., "Orbiting Planet........  3 SS# 11  -9")
+createTrigger("^Orbiting Planet........  (\\d+)", function(matches)
     local planetNumber = matches[2]
     setOrbitingPlanet(planetNumber)
+    setWarpSpeed(0)
 end, { type = "regex" })
 
 -- sets ship heading from status display
@@ -97,6 +98,12 @@ end, { type = "regex" })
 
 -- sets ship heading from helm message
 createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(matches)
+    local heading = matches[2]
+    setShipHeading(heading)
+end, { type = "regex" })
+
+-- sets ship heading from engines firing message (when leaving orbit or starting movement)
+createTrigger("^Helm Reports Engines Firing - Ship coming to (\\d+) degrees$", function(matches)
     local heading = matches[2]
     setShipHeading(heading)
 end, { type = "regex" })
@@ -181,6 +188,13 @@ createTrigger("^Scanning Planet (\\d+)\\s*(.*)$", function(matches)
     setScanningPlanet(true)
     setScanningPlanetNumber(planetNumber)
     setScanningPlanetName(planetName)
+end, { type = "regex" })
+
+-- Capture planet distance and bearing from planet scan (for navigation)
+createTrigger("^Bearing[:.\\s]+(-?\\d+) Dist[:.\\s]+(\\d+)", function(matches)
+    local bearing = matches[2]
+    local distance = matches[3]
+    setPlanetBearingAndDistance(bearing, distance)
 end, { type = "regex" })
 
 -- set shield strength

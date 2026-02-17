@@ -111,6 +111,12 @@ createTrigger("^Helm Reports Engines Firing - Ship coming to (\\d+) degrees$", f
     setShipHeading(heading)
 end, { type = "regex" })
 
+-- captures heading from "rot 0" probe response (used by rotto to discover current heading)
+createTrigger("^Ship is now turning to (\\d+) degrees.$", function(matches)
+    local heading = matches[2]
+    setShipHeading(heading)
+end, { type = "regex" })
+
 -- sets fighter count (only when not scanning a planet)
 createTrigger("^Fighters..................\\s*(\\d+)$", function(matches)
     local fighterCount = matches[2]

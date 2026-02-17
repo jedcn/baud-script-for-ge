@@ -124,7 +124,7 @@ describe("Navigation System", function()
 
     it("detects arrival when within threshold", function()
       navigateToCoordinates(5000, 5000)
-      setSectorPosition(4900, 4900)  -- Distance ~141, within threshold of 150
+      setSectorPosition(4950, 4950)  -- Distance ~71, within threshold of 100
       gePackage.navigation.state = "calculating_route"
 
       navigationTick()

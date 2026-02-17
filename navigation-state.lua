@@ -240,7 +240,7 @@ end
 function initFlipAway(planetNumber)
   gePackage.flipAway = {
     active = true,
-    state = "fa_verifying_orbit",
+    state = "fa_scanning_initial",  -- Skip verification since we trust getOrbitingPlanet()
     planetNumber = tonumber(planetNumber),
     initialBearing = nil,
     finalBearing = nil,

@@ -784,10 +784,10 @@ function flipAwayFromPlanet()
   end
 
   -- Initialize flipaway state using setter
+  -- No need to send "rep nav" - we already trust getOrbitingPlanet() as source of truth
   initFlipAway(orbitingPlanet)
 
   faLog("Starting flip away from planet " .. orbitingPlanet)
-  send("rep nav")
   return true
 end
 
@@ -827,20 +827,7 @@ function flipAwayTick()
   local commandTimeout = 60
 
   local actions = {
-    fa_verifying_orbit = function()
-      local orbitingPlanet = getOrbitingPlanet()
-      if orbitingPlanet == fa.planetNumber then
-        fa.state = "fa_scanning_initial"
-        faTransition("fa_verifying_orbit", "fa_scanning_initial", "confirmed orbiting planet " .. fa.planetNumber)
-      else
-        local timeSinceCommand = os.time() - fa.lastCommand
-        if timeSinceCommand > commandTimeout then
-          faError("Timeout waiting for orbit confirmation")
-          fa.active = false
-          fa.state = "fa_failed"
-        end
-      end
-    end,
+    -- fa_verifying_orbit removed - we trust getOrbitingPlanet() as source of truth
 
     fa_scanning_initial = function()
       fa.initialBearing = nil

@@ -69,8 +69,8 @@ function getOrbitingPlanet()
 end
 
 function setShipHeading(newHeading)
-  debugLog("setHeading(" .. newHeading .. ")");
-  gePackage.ship.heading = tonumber(newHeading)
+  debugLog("setShipHeading(" .. tostring(newHeading) .. ")")
+  gePackage.ship.heading = newHeading and tonumber(newHeading) or nil
 end
 
 function getShipHeading()
@@ -144,21 +144,6 @@ end
 
 function getStoredPlanet()
   return gePackage.storedPlanet or 1
-end
-
-function setParseState(stateName, newBoolean)
-  debugLog("setParseState(" .. stateName .. ", " .. tostring(newBoolean) .. ")")
-  if not gePackage.parseState then
-    gePackage.parseState = {}
-  end
-  gePackage.parseState[stateName] = newBoolean
-end
-
-function getParseState(stateName)
-  if not gePackage.parseState then
-    return nil
-  end
-  return gePackage.parseState[stateName]
 end
 
 function doMaint()

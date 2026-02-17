@@ -179,3 +179,19 @@ createAlias("^navsec (-?\\d+) (-?\\d+) (\\d+) (\\d+)$", function(matches)
     local posY = matches[5]
     navigateToSector(sectorX, sectorY, posX, posY)
 end, { type = "regex" })
+
+--
+-- Attack Run commands
+--
+
+-- attack-run -> startAttackRun()
+-- Starts the automated attack run loop
+createAlias("^attack-run$", function()
+    startAttackRun()
+end, { type = "regex" })
+
+-- attack-run-cancel -> cancelAttackRun()
+-- Cancels the attack run
+createAlias("^attack-run-cancel$", function()
+    cancelAttackRun()
+end, { type = "regex" })

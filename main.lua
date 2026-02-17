@@ -19,6 +19,8 @@ dofile(scriptDir .. "triggers.lua")
 
 dofile(scriptDir .. "state-machine-core.lua")
 
+dofile(scriptDir .. "navigation-state.lua")
+
 dofile(scriptDir .. "navigate-config.lua")
 
 dofile(scriptDir .. "navigate.lua")

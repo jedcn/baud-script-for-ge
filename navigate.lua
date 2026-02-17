@@ -103,7 +103,7 @@ end
 
 function sendNavigationCommand(command)
   navCmd(command)
-  gePackage.navigation.lastCommand = os.time()
+  setNavigationLastCommand(os.time())
   send(command)
 end
 
@@ -123,13 +123,12 @@ function navigateToCoordinates(x, y)
   end
 
   -- Initialize navigation
-  gePackage.navigation.active = true
-  gePackage.navigation.phase = "coordinate"
-  gePackage.navigation.target.sectorPositionX = x
-  gePackage.navigation.target.sectorPositionY = y
-  gePackage.navigation.navigationStart = os.time()
-  gePackage.navigation.lastPositionCheck = 0
-  gePackage.navigation.lastPositionUpdate = 0
+  setNavigationActive(true)
+  setNavigationPhase("coordinate")
+  setNavigationTargetCoordinates(x, y)
+  setNavigationStart(os.time())
+  setNavigationLastPositionCheck(0)
+  setNavigationLastPositionUpdate(0)
 
   navLog("Navigation started to (" .. x .. ", " .. y .. ")")
   transitionTo(gePackage.navigation, "requesting_position", "coordinate navigation initiated to (" .. x .. ", " .. y .. ")")
@@ -138,12 +137,12 @@ end
 
 function cancelNavigation()
   navDebug("cancel", "cancelNavigation()")
-  if not gePackage.navigation.active then
+  if not getNavigationActive() then
     navLog("No navigation in progress")
     return
   end
 
-  gePackage.navigation.active = false
+  setNavigationActive(false)
   navDecision("warp 0", "user requested navigation cancel")
   send("warp 0")
   transitionTo(gePackage.navigation, "aborted", "user cancelled navigation")
@@ -151,17 +150,18 @@ function cancelNavigation()
 end
 
 function isNavigating()
-  return gePackage.navigation.active
+  return getNavigationActive()
 end
 
-function getNavigationStatus()
-  if not gePackage.navigation.active then
+function getNavigationStatusText()
+  if not getNavigationActive() then
     return "Navigation inactive"
   end
 
-  local state = gePackage.navigation.state
-  local targetX = gePackage.navigation.target.sectorPositionX
-  local targetY = gePackage.navigation.target.sectorPositionY
+  local state = getNavigationState()
+  local target = getNavigationTarget()
+  local targetX = target.sectorPositionX
+  local targetY = target.sectorPositionY
 
   return "Navigating to (" .. targetX .. ", " .. targetY .. ") - " .. state
 end
@@ -175,13 +175,13 @@ function navigateToPlanet(planetNumber)
   end
 
   -- Initialize navigation
-  gePackage.navigation.active = true
-  gePackage.navigation.phase = "planet"
-  gePackage.navigation.target.planetNumber = planetNumber
-  gePackage.navigation.navigationStart = os.time()
-  gePackage.navigation.lastScanUpdate = 0
-  gePackage.navigation.lastPositionCheck = 0
-  gePackage.navigation.lastPositionUpdate = 0
+  setNavigationActive(true)
+  setNavigationPhase("planet")
+  setNavigationTargetPlanet(planetNumber)
+  setNavigationStart(os.time())
+  setNavigationLastScanUpdate(0)
+  setNavigationLastPositionCheck(0)
+  setNavigationLastPositionUpdate(0)
 
   navLog("Planet navigation started to planet " .. planetNumber)
   transitionTo(gePackage.navigation, "requesting_planet_scan", "coordinate-based planet navigation initiated to planet " .. planetNumber)
@@ -189,11 +189,11 @@ function navigateToPlanet(planetNumber)
 end
 
 function setPlanetBearingAndDistance(bearing, distance)
-  local phase = gePackage.navigation and gePackage.navigation.phase
+  local phase = getNavigationPhase()
   if phase == "planet" or phase == "planet_simple" then
-    gePackage.navigation.planetScan.bearing = tonumber(bearing)
-    gePackage.navigation.planetScan.distance = tonumber(distance)
-    gePackage.navigation.lastScanUpdate = os.time()
+    setNavigationPlanetScanBearing(bearing)
+    setNavigationPlanetScanDistance(distance)
+    setNavigationLastScanUpdate(os.time())
   end
 end
 
@@ -207,15 +207,14 @@ function navigateToPlanetSimple(planetNumber)
   end
 
   -- Initialize navigation
-  gePackage.navigation.active = true
-  gePackage.navigation.phase = "planet_simple"
-  gePackage.navigation.target.planetNumber = planetNumber
-  gePackage.navigation.navigationStart = os.time()
-  gePackage.navigation.lastScanUpdate = 0
-  gePackage.navigation.lastPositionCheck = 0
-  gePackage.navigation.lastPositionUpdate = 0
-  gePackage.navigation.planetScan.bearing = nil
-  gePackage.navigation.planetScan.distance = nil
+  setNavigationActive(true)
+  setNavigationPhase("planet_simple")
+  setNavigationTargetPlanet(planetNumber)
+  setNavigationStart(os.time())
+  setNavigationLastScanUpdate(0)
+  setNavigationLastPositionCheck(0)
+  setNavigationLastPositionUpdate(0)
+  clearNavigationPlanetScan()
 
   navLog("Simple planet navigation started to planet " .. planetNumber)
   transitionTo(gePackage.navigation, "spl_scanning", "bearing-following navigation initiated to planet " .. planetNumber)
@@ -784,45 +783,36 @@ function flipAwayFromPlanet()
     return false
   end
 
-  -- Initialize flipaway state
-  gePackage.flipAway = {
-    active = true,
-    state = "fa_verifying_orbit",
-    planetNumber = orbitingPlanet,
-    initialBearing = nil,
-    finalBearing = nil,
-    lastCommand = os.time(),
-    lastBearingUpdate = 0
-  }
+  -- Initialize flipaway state using setter
+  initFlipAway(orbitingPlanet)
 
   faLog("Starting flip away from planet " .. orbitingPlanet)
   send("rep nav")
   return true
 end
 
-function setFlipAwayBearing(bearing)
-  if gePackage.flipAway and gePackage.flipAway.active then
-    gePackage.flipAway.lastBearingUpdate = os.time()
-    local state = gePackage.flipAway.state
+function setFlipAwayBearingFromTrigger(bearing)
+  if getFlipAwayActive() then
+    local state = getFlipAwayState()
     if state == "fa_awaiting_initial_scan" then
-      gePackage.flipAway.initialBearing = tonumber(bearing)
+      setFlipAwayInitialBearing(bearing)
     elseif state == "fa_awaiting_verify_scan" then
-      gePackage.flipAway.finalBearing = tonumber(bearing)
+      setFlipAwayFinalBearing(bearing)
     end
   end
 end
 
 function cancelFlipAway()
-  if gePackage.flipAway and gePackage.flipAway.active then
-    gePackage.flipAway.active = false
+  if getFlipAwayActive() then
+    clearFlipAway()
     faLog("Flip away cancelled")
   end
 end
 
-function setFlipAwayRotationComplete()
-  if gePackage.flipAway and gePackage.flipAway.active then
-    if gePackage.flipAway.state == "fa_awaiting_rotation" then
-      gePackage.flipAway.rotationComplete = true
+function setFlipAwayRotationCompleteFromTrigger()
+  if getFlipAwayActive() then
+    if getFlipAwayState() == "fa_awaiting_rotation" then
+      setFlipAwayRotationComplete(true)
     end
   end
 end
@@ -984,32 +974,27 @@ function rotateToHeading(targetHeading)
   end
 
   -- Clear heading so we know when the probe response arrives
-  gePackage.ship.heading = nil
+  setShipHeading(nil)
 
-  -- Initialize rotto state
-  gePackage.rotto = {
-    active = true,
-    state = "rotto_probing",
-    targetHeading = targetHeading,
-    lastCommand = os.time()
-  }
+  -- Initialize rotto state using setter
+  initRotto(targetHeading)
 
   rottoLog("Rotating to heading " .. targetHeading .. " (probing current heading)")
   send("rot 0")
   return true
 end
 
-function setRottoRotationComplete()
-  if gePackage.rotto and gePackage.rotto.active then
-    if gePackage.rotto.state == "rotto_awaiting_rotation" then
-      gePackage.rotto.rotationComplete = true
+function setRottoRotationCompleteFromTrigger()
+  if getRottoActive() then
+    if getRottoState() == "rotto_awaiting_rotation" then
+      setRottoRotationComplete(true)
     end
   end
 end
 
 function cancelRotto()
-  if gePackage.rotto and gePackage.rotto.active then
-    gePackage.rotto.active = false
+  if getRottoActive() then
+    clearRotto()
     rottoLog("Rotate to heading cancelled")
   end
 end
@@ -1131,39 +1116,25 @@ function navigateToSector(targetSectorX, targetSectorY, targetPosX, targetPosY)
     return false
   end
 
-  -- Initialize sector navigation state
-  gePackage.sectorNav = {
-    active = true,
-    state = "sec_requesting_position",
-    targetSectorX = targetSectorX,
-    targetSectorY = targetSectorY,
-    targetPosX = targetPosX,
-    targetPosY = targetPosY,
-    lastCommand = os.time(),
-    lastPositionUpdate = 0,
-    targetHeading = nil,
-    rotationComplete = false,
-    targetSpeed = nil,
-    lastObservedSpeed = nil,
-    lastSpeedChange = nil
-  }
+  -- Initialize sector navigation state using setter
+  initSectorNav(targetSectorX, targetSectorY, targetPosX, targetPosY)
 
   secLog("Navigating to sector (" .. targetSectorX .. ", " .. targetSectorY .. ") position (" .. targetPosX .. ", " .. targetPosY .. ")")
   send("rep nav")
   return true
 end
 
-function setSectorNavRotationComplete()
-  if gePackage.sectorNav and gePackage.sectorNav.active then
-    if gePackage.sectorNav.state == "sec_awaiting_rotation" then
-      gePackage.sectorNav.rotationComplete = true
+function setSectorNavRotationCompleteFromTrigger()
+  if getSectorNavActive() then
+    if getSectorNavState() == "sec_awaiting_rotation" then
+      setSectorNavRotationComplete(true)
     end
   end
 end
 
 function cancelSectorNav()
-  if gePackage.sectorNav and gePackage.sectorNav.active then
-    gePackage.sectorNav.active = false
+  if getSectorNavActive() then
+    clearSectorNav()
     send("warp 0")
     secLog("Sector navigation cancelled")
   end

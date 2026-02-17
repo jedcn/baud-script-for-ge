@@ -72,10 +72,8 @@ createTrigger("^Sector Pos. X:(\\d+) Y:(\\d+)$", function(matches)
     local ySectorPosition = matches[3]
     setSectorPosition(xSectorPosition, ySectorPosition)
 
-    -- Update navigation timestamp
-    if gePackage.navigation then
-      gePackage.navigation.lastPositionUpdate = os.time()
-    end
+    -- Update navigation timestamp using setter
+    setNavigationLastPositionUpdate(os.time())
 end, { type = "regex" })
 
 -- sets orbiting planet from status display (e.g., "Orbiting Planet........  3 SS# 11  -9")
@@ -100,9 +98,9 @@ end, { type = "regex" })
 createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(matches)
     local heading = matches[2]
     setShipHeading(heading)
-    setFlipAwayRotationComplete()
-    setRottoRotationComplete()
-    setSectorNavRotationComplete()
+    setFlipAwayRotationCompleteFromTrigger()
+    setRottoRotationCompleteFromTrigger()
+    setSectorNavRotationCompleteFromTrigger()
 end, { type = "regex" })
 
 -- sets ship heading from engines firing message (when leaving orbit or starting movement)
@@ -204,7 +202,7 @@ createTrigger("^Bearing[:.\\s]+(-?\\d+) Dist[:.\\s]+(\\d+)", function(matches)
     local bearing = matches[2]
     local distance = matches[3]
     setPlanetBearingAndDistance(bearing, distance)
-    setFlipAwayBearing(bearing)
+    setFlipAwayBearingFromTrigger(bearing)
 end, { type = "regex" })
 
 -- set shield strength

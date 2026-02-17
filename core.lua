@@ -137,9 +137,28 @@ function getShieldCharge()
   return gePackage.shieldCharge
 end
 
+function setStoredPlanet(planetNumber)
+  debugLog("setStoredPlanet(" .. tostring(planetNumber) .. ")")
+  gePackage.storedPlanet = tonumber(planetNumber)
+end
+
+function getStoredPlanet()
+  return gePackage.storedPlanet or 1
+end
+
 function setParseState(stateName, newBoolean)
-  debugLog("setParseState(" .. stateName .. ", " .. newBoolean .. ")")
-  gePackage.parseState.stateName = newBoolean
+  debugLog("setParseState(" .. stateName .. ", " .. tostring(newBoolean) .. ")")
+  if not gePackage.parseState then
+    gePackage.parseState = {}
+  end
+  gePackage.parseState[stateName] = newBoolean
+end
+
+function getParseState(stateName)
+  if not gePackage.parseState then
+    return nil
+  end
+  return gePackage.parseState[stateName]
 end
 
 function doMaint()

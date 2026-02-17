@@ -983,26 +983,20 @@ function rotateToHeading(targetHeading)
     return false
   end
 
+  -- Clear heading so we know when the probe response arrives
+  gePackage.ship.heading = nil
+
   -- Initialize rotto state
   gePackage.rotto = {
     active = true,
-    state = "rotto_checking_status",
+    state = "rotto_probing",
     targetHeading = targetHeading,
-    lastCommand = os.time(),
-    lastHeadingUpdate = 0
+    lastCommand = os.time()
   }
 
-  rottoLog("Rotating to heading " .. targetHeading)
-  send("rep nav")
+  rottoLog("Rotating to heading " .. targetHeading .. " (probing current heading)")
+  send("rot 0")
   return true
-end
-
-function setRottoHeadingReceived()
-  if gePackage.rotto and gePackage.rotto.active then
-    if gePackage.rotto.state == "rotto_checking_status" then
-      gePackage.rotto.headingReceived = true
-    end
-  end
 end
 
 function setRottoRotationComplete()
@@ -1030,52 +1024,37 @@ function rottoTick()
   local commandTimeout = 60
 
   local actions = {
-    rotto_checking_status = function()
-      local orbitingPlanet = getOrbitingPlanet()
-      if orbitingPlanet then
-        rottoError("Cannot rotate while orbiting planet " .. orbitingPlanet .. ". Leave orbit first.")
+    rotto_probing = function()
+      local timeSinceCommand = os.time() - rotto.lastCommand
+      local currentHeading = getShipHeading()
+
+      if currentHeading then
+        local targetHeading = rotto.targetHeading
+        local rotation = targetHeading - currentHeading
+
+        -- Normalize rotation to -180 to 180 range
+        if rotation > 180 then
+          rotation = rotation - 360
+        elseif rotation < -180 then
+          rotation = rotation + 360
+        end
+
+        if math.abs(rotation) <= 2 then
+          rottoLog("Already at heading " .. currentHeading .. ", no rotation needed")
+          rotto.state = "rotto_completed"
+          rottoTransition("rotto_probing", "rotto_completed", "already at target heading")
+        else
+          rottoLog("Current heading " .. currentHeading .. ", rotating " .. rotation .. " to reach " .. targetHeading)
+          rotto.lastCommand = os.time()
+          rotto.rotationComplete = false
+          send("rot " .. rotation)
+          rotto.state = "rotto_awaiting_rotation"
+          rottoTransition("rotto_probing", "rotto_awaiting_rotation", "rotation command sent")
+        end
+      elseif timeSinceCommand > commandTimeout then
+        rottoError("Timeout waiting for heading probe response")
         rotto.active = false
         rotto.state = "rotto_failed"
-        return
-      end
-
-      local currentHeading = getShipHeading()
-      if currentHeading then
-        rotto.state = "rotto_rotating"
-        rottoTransition("rotto_checking_status", "rotto_rotating", "current heading is " .. currentHeading)
-      else
-        local timeSinceCommand = os.time() - rotto.lastCommand
-        if timeSinceCommand > commandTimeout then
-          rottoError("Timeout waiting for heading")
-          rotto.active = false
-          rotto.state = "rotto_failed"
-        end
-      end
-    end,
-
-    rotto_rotating = function()
-      local currentHeading = getShipHeading()
-      local targetHeading = rotto.targetHeading
-      local rotation = targetHeading - currentHeading
-
-      -- Normalize rotation to -180 to 180 range
-      if rotation > 180 then
-        rotation = rotation - 360
-      elseif rotation < -180 then
-        rotation = rotation + 360
-      end
-
-      if math.abs(rotation) <= 2 then
-        rottoLog("Already at heading " .. currentHeading .. ", no rotation needed")
-        rotto.state = "rotto_completed"
-        rottoTransition("rotto_rotating", "rotto_completed", "already at target heading")
-      else
-        rottoLog("Current heading " .. currentHeading .. ", rotating " .. rotation .. " to reach " .. targetHeading)
-        rotto.lastCommand = os.time()
-        rotto.rotationComplete = false
-        send("rot " .. rotation)
-        rotto.state = "rotto_awaiting_rotation"
-        rottoTransition("rotto_rotating", "rotto_awaiting_rotation", "rotation command sent")
       end
     end,
 

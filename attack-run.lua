@@ -117,7 +117,7 @@ function attackRunTick()
 
     ar_starting_flipaway = function()
       arLog("Starting flipaway")
-      flipAway()
+      flipAwayFromPlanet()
       ar.lastCommand = os.time()
       ar.state = "ar_awaiting_flipaway"
     end,

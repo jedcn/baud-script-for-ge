@@ -34,12 +34,24 @@ function setScanningPlanetNumber(newPlanetNumber)
   gePackage.stateMachine.scanningPlanetNumber = newPlanetNumber
 end
 
+function getScanningPlanetNumber()
+  return gePackage.stateMachine.scanningPlanetNumber
+end
+
 function setScanningPlanetName(newPlanetName)
   debugLog("setScanningPlanetName(" .. newPlanetName .. ")")
-  gePackage.stateMachine.newPlanetName = newPlanetName
+  gePackage.stateMachine.scanningPlanetName = newPlanetName
+end
+
+function getScanningPlanetName()
+  return gePackage.stateMachine.scanningPlanetName
 end
 
 function setReportType(newReportName)
   debugLog("setReportType(" .. newReportName .. ")")
   gePackage.stateMachine.reportType = newReportName
+end
+
+function getReportType()
+  return gePackage.stateMachine.reportType
 end

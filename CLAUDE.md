@@ -12,7 +12,9 @@ Lua scripts for playing Galactic Empire (GE) via [Baud](https://github.com/jedcn
 Update this section and README.md when files are added, removed, or renamed.
 
 - `main.lua` - Entry point, loads other files via `dofile()`
-- `core.lua` - State management functions (setSector, setOrbitingPlanet, setShipHeading, etc.)
+- `core.lua` - Ship state management (setSector, setOrbitingPlanet, setShipHeading, etc.)
+- `state-machine-core.lua` - Parsing state for multi-line output (scanning planets, reports)
+- `navigation-state.lua` - Navigation state machines (coordinate nav, flip-away, rotto, sector nav)
 - `status.lua` - Status bar display function
 - `triggers.lua` - Pattern-matching triggers that fire on game output
 - `aliases.lua` - Command aliases (shortcuts like `scapl1` -> `sca pl 1`)
@@ -58,3 +60,22 @@ All game state stored in global `gePackage` table:
 - `gePackage.position` - Sector coordinates, sector position, orbiting planet
 - `gePackage.ship` - Heading, neutron flux, inventory
 - `gePackage.stateMachine` - Parsing state for multi-line output (scanning planets, reports)
+
+### State Access Paradigm
+
+**Single Source of Truth**: All state lives in `gePackage`, accessed exclusively through setters and getters.
+
+1. **Triggers** parse game output and call **setters** (in `core.lua` or `navigation-state.lua`)
+2. **Aliases, state machines, and other scripts** read state via **getters only**
+3. **Never access `gePackage` directly** outside of core.lua, state-machine-core.lua, or navigation-state.lua
+
+This prevents duplication of state and ensures consistency. When a new game mechanic is discovered:
+1. Add a trigger that parses the output
+2. Add a setter/getter pair in the appropriate core file
+3. Any feature can then use the getter immediately
+
+### State Files
+
+- `core.lua` - Ship state (heading, position, shields, inventory, etc.)
+- `state-machine-core.lua` - Parsing state for multi-line output
+- `navigation-state.lua` - Navigation state machines (coordinate nav, flip-away, rotto, sector nav)

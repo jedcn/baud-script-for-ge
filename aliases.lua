@@ -26,18 +26,17 @@ end, { type = "regex" })
 -- scapl -> sca pl 1
 -- orbpl -> orb 1
 --
-local storedPlanet = 1
 createAlias("^setpl(\\d+)$", function(matches)
-    storedPlanet = tonumber(matches[2])
-    echo("Stored Planet: " .. storedPlanet)
+    setStoredPlanet(matches[2])
+    echo("Stored Planet: " .. getStoredPlanet())
 end, { type = "regex" })
 
 createAlias("^scapl$", function()
-    send("sca pl " .. storedPlanet)
+    send("sca pl " .. getStoredPlanet())
 end, { type = "regex" })
 
 createAlias("^orbpl$", function()
-    send("orb " .. storedPlanet)
+    send("orb " .. getStoredPlanet())
 end, { type = "regex" })
 
 
@@ -141,9 +140,9 @@ createAlias("^navspl (\\d+)$", function(matches)
     navigateToPlanetSimple(planetNumber)
 end, { type = "regex" })
 
--- navstatus -> getNavigationStatus()
+-- navstatus -> getNavigationStatusText()
 createAlias("^navstatus$", function()
-    cecho("green", getNavigationStatus())
+    cecho("green", getNavigationStatusText())
 end, { type = "regex" })
 
 -- navcancel -> cancelNavigation()

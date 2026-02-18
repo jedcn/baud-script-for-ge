@@ -366,8 +366,9 @@ function navigationTick()
       navDebug(state, "decided: " .. speedType .. " " .. speedValue)
 
       if math.abs(currentSpeed - speedValue) > 0.1 then
-        -- Store target speed and initial speed for tracking acceleration progress
+        -- Store target speed, speed type, and initial speed for tracking acceleration progress
         nav.targetSpeed = speedValue
+        nav.speedType = speedType
         nav.lastObservedSpeed = currentSpeed
         nav.lastSpeedChange = os.time()
         local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
@@ -386,31 +387,34 @@ function navigationTick()
     spl_awaiting_speed = function()
       local currentSpeed = getWarpSpeed() or 0
       local targetSpeed = nav.targetSpeed or 0
+      local speedType = nav.speedType or "WARP"
       local lastObserved = nav.lastObservedSpeed or 0
 
       -- Check if speed has changed since last observation
       if math.abs(currentSpeed - lastObserved) > 0.1 then
-        -- Speed changed - check if it's moving toward target
-        local oldDistanceToTarget = math.abs(lastObserved - targetSpeed)
-        local newDistanceToTarget = math.abs(currentSpeed - targetSpeed)
-        if newDistanceToTarget < oldDistanceToTarget then
-          -- Making progress toward target, reset timeout
-          navDebug(state, "speed progressing: " .. lastObserved .. " -> " .. currentSpeed .. " (target=" .. targetSpeed .. "), resetting timeout")
-          nav.lastSpeedChange = os.time()
-        end
+        nav.lastSpeedChange = os.time()
         nav.lastObservedSpeed = currentSpeed
       end
 
       local timeSinceSpeedChange = os.time() - (nav.lastSpeedChange or nav.lastCommand)
-      navDebug(state, "timeSinceSpeedChange=" .. timeSinceSpeedChange .. ", currentSpeed=" .. currentSpeed .. ", targetSpeed=" .. targetSpeed)
+      navDebug(state, "timeSinceSpeedChange=" .. timeSinceSpeedChange .. ", currentSpeed=" .. currentSpeed .. ", targetSpeed=" .. targetSpeed .. ", speedType=" .. speedType)
 
       if timeSinceSpeedChange > config.commandTimeout then
         transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s with no speed progress")
         return
       end
 
-      -- Allow some tolerance for speed matching (within 0.5)
-      if math.abs(currentSpeed - targetSpeed) < 0.5 then
+      -- Check if speed matches target
+      -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
+      local speedMatches = false
+      if speedType == "IMPULSE" then
+        -- Impulse is active when warp speed is between 0 and 1
+        speedMatches = currentSpeed > 0 and currentSpeed < 1
+      else
+        speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
+      end
+
+      if speedMatches then
         transitionTo(nav, "spl_traveling", "speed confirmed at " .. currentSpeed .. " (target was " .. targetSpeed .. ")")
       end
     end,

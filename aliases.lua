@@ -90,31 +90,25 @@ createAlias("^ss$", function()
 end, { type = "regex" })
 
 --
--- ^tufg$ ->
---   send("tra up 33333 fighters")
---   send("war 4 0")
---
-createAlias("^tufg$", function()
-    send("tra up 33333 fighters")
-    send("war 4 0")
+-- repair
+createAlias("^repair$", function()
+    flipAwayFromPlanet()
+    doMaint()
 end, { type = "regex" })
 
--- ^afg$ ->
---   send("attack 33333 fighters")
---   send("imp 99 0")
 --
+-- lfg
+createAlias("^lfg$", function()
+    send("tra up 1 flu")
+    send("flu")
+    send("tra up 33300 fighters")
+    navigateToSector(11, -9, 4300, 1050)
+end, { type = "regex" })
+
+-- afg
 createAlias("^afg$", function()
-    send("attack 33333 fighters")
+    send("attack 33300 fighters")
     send("imp 99 0")
-end, { type = "regex" })
-
--- ^tuff$ ->
---   send("tra up 1 flux")
---   send("flux")
---
-createAlias("^tuff$", function()
-    send("tra up 1 flux")
-    send("flux")
 end, { type = "regex" })
 
 --

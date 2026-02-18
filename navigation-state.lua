@@ -398,7 +398,7 @@ end
 function initSectorNav(targetSectorX, targetSectorY, targetPosX, targetPosY)
   gePackage.sectorNav = {
     active = true,
-    state = "sec_requesting_position",
+    state = "sec_awaiting_position",  -- Start awaiting since navigateToSector() already sends rep nav
     targetSectorX = tonumber(targetSectorX),
     targetSectorY = tonumber(targetSectorY),
     targetPosX = tonumber(targetPosX),

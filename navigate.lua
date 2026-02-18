@@ -1249,6 +1249,7 @@ function sectorNavTick()
 
       if math.abs(currentSpeed - speedValue) > 0.1 then
         sec.targetSpeed = speedValue
+        sec.speedType = speedType
         sec.lastObservedSpeed = currentSpeed
         sec.lastSpeedChange = os.time()
         local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
@@ -1265,15 +1266,12 @@ function sectorNavTick()
     sec_awaiting_speed = function()
       local currentSpeed = getWarpSpeed() or 0
       local targetSpeed = sec.targetSpeed or 0
+      local speedType = sec.speedType or "WARP"
       local lastObserved = sec.lastObservedSpeed or 0
 
       -- Track speed progress
       if math.abs(currentSpeed - lastObserved) > 0.1 then
-        local oldDistanceToTarget = math.abs(lastObserved - targetSpeed)
-        local newDistanceToTarget = math.abs(currentSpeed - targetSpeed)
-        if newDistanceToTarget < oldDistanceToTarget then
-          sec.lastSpeedChange = os.time()
-        end
+        sec.lastSpeedChange = os.time()
         sec.lastObservedSpeed = currentSpeed
       end
 
@@ -1286,7 +1284,17 @@ function sectorNavTick()
         return
       end
 
-      if math.abs(currentSpeed - targetSpeed) < 0.5 then
+      -- Check if speed matches target
+      -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
+      local speedMatches = false
+      if speedType == "IMPULSE" then
+        -- Impulse is active when warp speed is between 0 and 1
+        speedMatches = currentSpeed > 0 and currentSpeed < 1
+      else
+        speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
+      end
+
+      if speedMatches then
         sec.state = "sec_traveling"
         secTransition("sec_awaiting_speed", "sec_traveling", "speed confirmed at " .. currentSpeed)
       end

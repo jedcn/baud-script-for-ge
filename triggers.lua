@@ -110,9 +110,16 @@ createTrigger("^Helm Reports Engines Firing - Ship coming to (\\d+) degrees$", f
 end, { type = "regex" })
 
 -- captures heading from "rot 0" probe response (used by rotto to discover current heading)
+-- NOTE: "rot 0" is instantaneous and "Ship is now turning to X" means you ARE at heading X.
+-- But "rot N" (N != 0) takes time, so "Ship is now turning to X" only means rotation started.
+-- For actual rotations, we wait for "Helm reports we are now heading X degrees" instead.
 createTrigger("^Ship is now turning to (\\d+) degrees.$", function(matches)
     local heading = matches[2]
-    setShipHeading(heading)
+    -- Don't update heading if navigation is actively rotating - it would falsely indicate
+    -- we've reached the target heading when we've only started turning
+    if getNavigationState() ~= "awaiting_rotation_confirmation" then
+        setShipHeading(heading)
+    end
 end, { type = "regex" })
 
 -- sets fighter count (only when not scanning a planet)

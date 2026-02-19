@@ -573,6 +573,8 @@ function navigationTick()
       if math.abs(rotation) > 2 then
         navDecision("rot " .. rotation, "current heading " .. currentHeading .. ", need " .. targetHeading .. ", rotating " .. rotation .. " degrees")
         sendNavigationCommand("rot " .. rotation)
+        -- Clear heading so we wait for fresh data from rep nav (not from "turning to" trigger)
+        setShipHeading(nil)
         transitionTo(nav, "awaiting_rotation_confirmation", "rotation command sent")
       else
         transitionTo(nav, "setting_speed", "already aligned within 2 degrees (rotation=" .. rotation .. ")")
@@ -608,9 +610,10 @@ function navigationTick()
       local currentHeading = getShipHeading()
       local targetHeading = nav.targetHeading
 
-      -- If heading is unknown, keep waiting for rotation confirmation trigger
+      -- If heading is unknown, wait for "Helm reports we are now heading X degrees" trigger
+      -- (The "Ship is now turning to X" trigger doesn't set heading during rotation)
       if not currentHeading then
-        navDebug(state, "waiting for heading update from rotation confirmation")
+        navDebug(state, "waiting for helm rotation complete message")
         return
       end
 

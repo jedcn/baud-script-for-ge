@@ -166,6 +166,79 @@ function getNavigationStatusText()
   return "Navigating to (" .. targetX .. ", " .. targetY .. ") - " .. state
 end
 
+-- Cancel all types of navigation (coordinate nav, planet nav, flipaway, rotto, sector nav)
+function cancelAllNavigation()
+  local cancelled = false
+
+  if getNavigationActive() then
+    cancelNavigation()
+    cancelled = true
+  end
+
+  if getFlipAwayActive() then
+    cancelFlipAway()
+    cancelled = true
+  end
+
+  if getRottoActive() then
+    cancelRotto()
+    cancelled = true
+  end
+
+  if getSectorNavActive() then
+    cancelSectorNav()
+    cancelled = true
+  end
+
+  if not cancelled then
+    echo("No navigation in progress")
+  end
+end
+
+-- Get status text for whichever navigation type is currently active
+function getAllNavigationStatusText()
+  local statuses = {}
+
+  if getNavigationActive() then
+    local state = getNavigationState()
+    local target = getNavigationTarget()
+    local phase = getNavigationPhase()
+
+    if phase == "planet" or phase == "planet_simple" then
+      local planetNum = getNavigationTargetPlanet()
+      table.insert(statuses, "[nav] Planet " .. (planetNum or "?") .. " - " .. state)
+    else
+      local targetX = target.sectorPositionX
+      local targetY = target.sectorPositionY
+      table.insert(statuses, "[nav] Coordinates (" .. (targetX or "?") .. ", " .. (targetY or "?") .. ") - " .. state)
+    end
+  end
+
+  if getFlipAwayActive() then
+    local state = getFlipAwayState()
+    local planetNum = getFlipAwayPlanetNumber()
+    table.insert(statuses, "[flipaway] Planet " .. (planetNum or "?") .. " - " .. state)
+  end
+
+  if getRottoActive() then
+    local state = getRottoState()
+    local targetHeading = getRottoTargetHeading()
+    table.insert(statuses, "[rotto] Heading " .. (targetHeading or "?") .. " - " .. state)
+  end
+
+  if getSectorNavActive() then
+    local state = getSectorNavState()
+    local target = getSectorNavTarget()
+    table.insert(statuses, "[navsec] Sector (" .. (target.sectorX or "?") .. ", " .. (target.sectorY or "?") .. ") - " .. state)
+  end
+
+  if #statuses == 0 then
+    return "No navigation active"
+  end
+
+  return table.concat(statuses, "\n")
+end
+
 function navigateToPlanet(planetNumber)
   -- Convert to number and validate
   planetNumber = tonumber(planetNumber)

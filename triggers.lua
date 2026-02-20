@@ -94,10 +94,11 @@ createTrigger("^Heading.................... (-?\\d+)$", function(matches)
     setShipHeading(heading)
 end, { type = "regex" })
 
--- sets ship heading from helm message
+-- sets ship heading from helm message (rotation complete)
 createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(matches)
     local heading = matches[2]
     setShipHeading(heading)
+    setRotationInProgress(false)
     setFlipAwayRotationCompleteFromTrigger()
     setRottoRotationCompleteFromTrigger()
     setSectorNavRotationCompleteFromTrigger()
@@ -109,10 +110,14 @@ createTrigger("^Helm Reports Engines Firing - Ship coming to (\\d+) degrees$", f
     setShipHeading(heading)
 end, { type = "regex" })
 
--- captures heading from "rot 0" probe response (used by rotto to discover current heading)
+-- captures heading from "rot" response
+-- If rot 0 was sent, rotation is not in progress and the heading IS the current heading → update it
+-- If rot N (N != 0) was sent, rotation is in progress and the heading is the target → don't update yet
 createTrigger("^Ship is now turning to (\\d+) degrees.$", function(matches)
-    local heading = matches[2]
-    setShipHeading(heading)
+    if not getRotationInProgress() then
+        local heading = matches[2]
+        setShipHeading(heading)
+    end
 end, { type = "regex" })
 
 -- sets fighter count (only when not scanning a planet)
@@ -234,3 +239,15 @@ createTrigger("^DCO reports............ (.+)$", function(matches)
     local shipStatus = matches[2]
     setShipStatus(shipStatus)
 end, { type="regex" })
+
+-- =========================================================================
+-- Outbound triggers
+-- =========================================================================
+
+-- Track rotation state from outgoing rot commands
+-- rot 0: stops rotation instantly (probe), so no rotation in progress
+-- rot N (N != 0): starts rotation, need to wait for completion
+createOutboundTrigger("^rot (-?\\d+)$", function(matches)
+    local amount = tonumber(matches[2])
+    setRotationInProgress(amount ~= 0)
+end, { type = "regex" })

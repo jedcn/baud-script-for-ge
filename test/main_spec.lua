@@ -370,11 +370,43 @@ describe("GE Triggers", function()
     end)
 
     -- =========================================================================
-    -- Navigation (4)
+    -- Rotation state tracking (5)
     -- =========================================================================
 
-    -- Old Navigation tests removed - replaced by navigate_spec.lua
-    -- The navigateWithinSectorTo() function was replaced by navigateToCoordinates()
-    -- See navigate_spec.lua for comprehensive navigation tests
+    describe("Rotation state tracking", function()
+
+        it("sets rotationInProgress to false when rot 0 is sent", function()
+            setRotationInProgress(true)
+            helper.simulateOutbound("rot 0")
+            assert.is_false(getRotationInProgress())
+        end)
+
+        it("sets rotationInProgress to true when rot N (N != 0) is sent", function()
+            setRotationInProgress(false)
+            helper.simulateOutbound("rot 10")
+            assert.is_true(getRotationInProgress())
+        end)
+
+        it("updates heading from 'Ship is now turning to' when rotation is NOT in progress", function()
+            setRotationInProgress(false)
+            helper.simulateLine("Ship is now turning to 180 degrees.")
+            assert.equal(180, getShipHeading())
+        end)
+
+        it("does NOT update heading from 'Ship is now turning to' when rotation IS in progress", function()
+            setShipHeading(90)
+            setRotationInProgress(true)
+            helper.simulateLine("Ship is now turning to 180 degrees.")
+            assert.equal(90, getShipHeading())
+        end)
+
+        it("clears rotationInProgress and sets heading from 'Helm reports we are now heading'", function()
+            setRotationInProgress(true)
+            helper.simulateLine("Helm reports we are now heading 270 degrees.")
+            assert.equal(270, getShipHeading())
+            assert.is_false(getRotationInProgress())
+        end)
+
+    end)
 
 end)

@@ -6,6 +6,7 @@ if not gePackage then
   gePackage.debug = false
   gePackage.position = {}
   gePackage.ship = {}
+  gePackage.ship.rotationInProgress = false
   gePackage.ship.inventory = {}
 end
 
@@ -75,6 +76,15 @@ end
 
 function getShipHeading()
   return gePackage.ship.heading
+end
+
+function setRotationInProgress(inProgress)
+  debugLog("setRotationInProgress(" .. tostring(inProgress) .. ")")
+  gePackage.ship.rotationInProgress = inProgress
+end
+
+function getRotationInProgress()
+  return gePackage.ship.rotationInProgress
 end
 
 function setShipNeutronFlux(newFluxAmount)

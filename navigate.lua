@@ -9,10 +9,6 @@ local function navCmd(s)
   cecho("green", "[nav][cmd] " .. s)
 end
 
-local function navWaitingFor(s)
-  cecho("green", "[nav][waiting for] " .. s)
-end
-
 local function navDebug(state, s)
   if gePackage.navigation.config.debug then
     cecho("yellow", "[nav] [" .. state .. "] " .. s)
@@ -845,22 +841,11 @@ end
 -- ============================================================================
 -- Rotates the ship so that the orbited planet is directly behind (bearing 180)
 
-local function faLog(s)
-  cecho("#ff00ff", "[flipaway] " .. s)
-end
-
-local function faError(s)
-  cecho("red", "[flipaway] " .. s)
-end
-
-local function faTransition(fromState, toState, reason)
-  cecho("#ff00ff", "[flipaway][state] " .. fromState .. " -> " .. toState .. " (" .. reason .. ")")
-end
 
 function flipAwayFromPlanet()
   local orbitingPlanet = getOrbitingPlanet()
   if not orbitingPlanet then
-    faError("Not orbiting a planet - cannot flip away")
+    navError("[flipaway] Not orbiting a planet - cannot flip away")
     return false
   end
 
@@ -868,7 +853,7 @@ function flipAwayFromPlanet()
   -- No need to send "rep nav" - we already trust getOrbitingPlanet() as source of truth
   initFlipAway(orbitingPlanet)
 
-  faLog("Starting flip away from planet " .. orbitingPlanet)
+  navLog("[flipaway] Starting flip away from planet " .. orbitingPlanet)
   return true
 end
 
@@ -886,7 +871,7 @@ end
 function cancelFlipAway()
   if getFlipAwayActive() then
     clearFlipAway()
-    faLog("Flip away cancelled")
+    navLog("[flipaway] Flip away cancelled")
   end
 end
 
@@ -915,7 +900,7 @@ function flipAwayTick()
       fa.lastCommand = os.time()
       send("scan planet " .. fa.planetNumber)
       fa.state = "fa_awaiting_initial_scan"
-      faTransition("fa_scanning_initial", "fa_awaiting_initial_scan", "scanning planet for bearing")
+      navLog("[flipaway][state] fa_scanning_initial -> fa_awaiting_initial_scan (scanning planet for bearing)")
     end,
 
     fa_awaiting_initial_scan = function()
@@ -923,9 +908,9 @@ function flipAwayTick()
 
       if fa.initialBearing then
         fa.state = "fa_rotating"
-        faTransition("fa_awaiting_initial_scan", "fa_rotating", "got bearing " .. fa.initialBearing)
+        navLog("[flipaway][state] fa_awaiting_initial_scan -> fa_rotating (got bearing " .. fa.initialBearing .. ")")
       elseif timeSinceCommand > commandTimeout then
-        faError("Timeout waiting for scan results")
+        navError("[flipaway] Timeout waiting for scan results")
         fa.active = false
         fa.state = "fa_failed"
       end
@@ -945,16 +930,16 @@ function flipAwayTick()
       end
 
       if math.abs(rotation) <= 2 then
-        faLog("Planet already at bearing " .. bearing .. ", no rotation needed")
+        navLog("[flipaway] Planet already at bearing " .. bearing .. ", no rotation needed")
         fa.state = "fa_completed"
-        faTransition("fa_rotating", "fa_completed", "planet already behind ship")
+        navLog("[flipaway][state] fa_rotating -> fa_completed (planet already behind ship)")
       else
-        faLog("Planet at bearing " .. bearing .. ", rotating " .. rotation .. " degrees")
+        navLog("[flipaway] Planet at bearing " .. bearing .. ", rotating " .. rotation .. " degrees")
         fa.lastCommand = os.time()
         fa.rotationComplete = false
         send("rot " .. rotation)
         fa.state = "fa_awaiting_rotation"
-        faTransition("fa_rotating", "fa_awaiting_rotation", "rotation command sent")
+        navLog("[flipaway][state] fa_rotating -> fa_awaiting_rotation (rotation command sent)")
       end
     end,
 
@@ -964,9 +949,9 @@ function flipAwayTick()
       -- Wait for rotation complete signal from trigger
       if fa.rotationComplete then
         fa.state = "fa_scanning_verify"
-        faTransition("fa_awaiting_rotation", "fa_scanning_verify", "rotation complete, verifying")
+        navLog("[flipaway][state] fa_awaiting_rotation -> fa_scanning_verify (rotation complete, verifying)")
       elseif timeSinceCommand > commandTimeout then
-        faError("Timeout waiting for rotation")
+        navError("[flipaway] Timeout waiting for rotation")
         fa.active = false
         fa.state = "fa_failed"
       end
@@ -977,7 +962,7 @@ function flipAwayTick()
       fa.lastCommand = os.time()
       send("scan planet " .. fa.planetNumber)
       fa.state = "fa_awaiting_verify_scan"
-      faTransition("fa_scanning_verify", "fa_awaiting_verify_scan", "scanning to verify planet bearing")
+      navLog("[flipaway][state] fa_scanning_verify -> fa_awaiting_verify_scan (scanning to verify planet bearing)")
     end,
 
     fa_awaiting_verify_scan = function()
@@ -986,28 +971,28 @@ function flipAwayTick()
       if fa.finalBearing then
         local diff = math.abs(fa.finalBearing - 180)
         if diff <= 5 or diff >= 355 then
-          faLog("Success! Planet now at bearing " .. fa.finalBearing)
+          navLog("[flipaway] Success! Planet now at bearing " .. fa.finalBearing)
           fa.state = "fa_completed"
-          faTransition("fa_awaiting_verify_scan", "fa_completed", "planet verified at bearing " .. fa.finalBearing)
+          navLog("[flipaway][state] fa_awaiting_verify_scan -> fa_completed (planet verified at bearing " .. fa.finalBearing .. ")")
         else
-          faError("Planet at bearing " .. fa.finalBearing .. " (expected ~180)")
+          navError("[flipaway] Planet at bearing " .. fa.finalBearing .. " (expected ~180)")
           fa.state = "fa_completed"
-          faTransition("fa_awaiting_verify_scan", "fa_completed", "bearing off but accepting result")
+          navLog("[flipaway][state] fa_awaiting_verify_scan -> fa_completed (bearing off but accepting result)")
         end
       elseif timeSinceCommand > commandTimeout then
-        faError("Timeout waiting for verification scan")
+        navError("[flipaway] Timeout waiting for verification scan")
         fa.active = false
         fa.state = "fa_failed"
       end
     end,
 
     fa_completed = function()
-      faLog("Flip away complete")
+      navLog("[flipaway] Flip away complete")
       fa.active = false
     end,
 
     fa_failed = function()
-      faError("Flip away failed")
+      navError("[flipaway] Flip away failed")
       fa.active = false
     end
   }
@@ -1022,22 +1007,11 @@ end
 -- ============================================================================
 -- Rotates the ship to an absolute heading (only works when not orbiting)
 
-local function rottoLog(s)
-  cecho("#ff00ff", "[rotto] " .. s)
-end
-
-local function rottoError(s)
-  cecho("red", "[rotto] " .. s)
-end
-
-local function rottoTransition(fromState, toState, reason)
-  cecho("#ff00ff", "[rotto][state] " .. fromState .. " -> " .. toState .. " (" .. reason .. ")")
-end
 
 function rotateToHeading(targetHeading)
   targetHeading = tonumber(targetHeading)
   if not targetHeading or targetHeading < 0 or targetHeading > 359 then
-    rottoError("Invalid heading. Must be 0-359.")
+    navError("[rotto] Invalid heading. Must be 0-359.")
     return false
   end
 
@@ -1047,7 +1021,7 @@ function rotateToHeading(targetHeading)
   -- Initialize rotto state using setter
   initRotto(targetHeading)
 
-  rottoLog("Rotating to heading " .. targetHeading .. " (probing current heading)")
+  navLog("[rotto] Rotating to heading " .. targetHeading .. " (probing current heading)")
   send("rot 0")
   return true
 end
@@ -1063,7 +1037,7 @@ end
 function cancelRotto()
   if getRottoActive() then
     clearRotto()
-    rottoLog("Rotate to heading cancelled")
+    navLog("[rotto] Rotate to heading cancelled")
   end
 end
 
@@ -1093,19 +1067,19 @@ function rottoTick()
         end
 
         if math.abs(rotation) <= 2 then
-          rottoLog("Already at heading " .. currentHeading .. ", no rotation needed")
+          navLog("[rotto] Already at heading " .. currentHeading .. ", no rotation needed")
           rotto.state = "rotto_completed"
-          rottoTransition("rotto_probing", "rotto_completed", "already at target heading")
+          navLog("[rotto][state] rotto_probing -> rotto_completed (already at target heading)")
         else
-          rottoLog("Current heading " .. currentHeading .. ", rotating " .. rotation .. " to reach " .. targetHeading)
+          navLog("[rotto] Current heading " .. currentHeading .. ", rotating " .. rotation .. " to reach " .. targetHeading)
           rotto.lastCommand = os.time()
           rotto.rotationComplete = false
           send("rot " .. rotation)
           rotto.state = "rotto_awaiting_rotation"
-          rottoTransition("rotto_probing", "rotto_awaiting_rotation", "rotation command sent")
+          navLog("[rotto][state] rotto_probing -> rotto_awaiting_rotation (rotation command sent)")
         end
       elseif timeSinceCommand > commandTimeout then
-        rottoError("Timeout waiting for heading probe response")
+        navError("[rotto] Timeout waiting for heading probe response")
         rotto.active = false
         rotto.state = "rotto_failed"
       end
@@ -1116,23 +1090,23 @@ function rottoTick()
 
       if rotto.rotationComplete then
         local currentHeading = getShipHeading()
-        rottoLog("Rotation complete. Now heading " .. currentHeading)
+        navLog("[rotto] Rotation complete. Now heading " .. currentHeading)
         rotto.state = "rotto_completed"
-        rottoTransition("rotto_awaiting_rotation", "rotto_completed", "rotation confirmed")
+        navLog("[rotto][state] rotto_awaiting_rotation -> rotto_completed (rotation confirmed)")
       elseif timeSinceCommand > commandTimeout then
-        rottoError("Timeout waiting for rotation")
+        navError("[rotto] Timeout waiting for rotation")
         rotto.active = false
         rotto.state = "rotto_failed"
       end
     end,
 
     rotto_completed = function()
-      rottoLog("Rotate to heading complete")
+      navLog("[rotto] Rotate to heading complete")
       rotto.active = false
     end,
 
     rotto_failed = function()
-      rottoError("Rotate to heading failed")
+      navError("[rotto] Rotate to heading failed")
       rotto.active = false
     end
   }
@@ -1147,17 +1121,6 @@ end
 -- ============================================================================
 -- Navigates the ship to a different sector, optionally to specific coordinates
 
-local function secLog(s)
-  cecho("#ff00ff", "[navsec] " .. s)
-end
-
-local function secError(s)
-  cecho("red", "[navsec] " .. s)
-end
-
-local function secTransition(fromState, toState, reason)
-  cecho("#ff00ff", "[navsec][state] " .. fromState .. " -> " .. toState .. " (" .. reason .. ")")
-end
 
 -- Convert sector + position to absolute galactic coordinates
 function calculateAbsolutePosition(sectorX, sectorY, posX, posY)
@@ -1171,7 +1134,7 @@ function navigateToSector(targetSectorX, targetSectorY, targetPosX, targetPosY)
   targetSectorY = tonumber(targetSectorY)
 
   if not targetSectorX or not targetSectorY then
-    secError("Invalid sector coordinates")
+    navError("[navsec] Invalid sector coordinates")
     return false
   end
 
@@ -1180,14 +1143,14 @@ function navigateToSector(targetSectorX, targetSectorY, targetPosX, targetPosY)
   targetPosY = tonumber(targetPosY) or 5000
 
   if targetPosX < 0 or targetPosX > 10000 or targetPosY < 0 or targetPosY > 10000 then
-    secError("Invalid position. Must be 0-10000.")
+    navError("[navsec] Invalid position. Must be 0-10000.")
     return false
   end
 
   -- Initialize sector navigation state using setter
   initSectorNav(targetSectorX, targetSectorY, targetPosX, targetPosY)
 
-  secLog("Navigating to sector (" .. targetSectorX .. ", " .. targetSectorY .. ") position (" .. targetPosX .. ", " .. targetPosY .. ")")
+  navLog("[navsec] Navigating to sector (" .. targetSectorX .. ", " .. targetSectorY .. ") position (" .. targetPosX .. ", " .. targetPosY .. ")")
   send("rep nav")
   return true
 end
@@ -1204,7 +1167,7 @@ function cancelSectorNav()
   if getSectorNavActive() then
     clearSectorNav()
     send("warp 0")
-    secLog("Sector navigation cancelled")
+    navLog("[navsec] Sector navigation cancelled")
   end
 end
 
@@ -1224,7 +1187,7 @@ function sectorNavTick()
       sec.lastPositionUpdate = 0
       send("rep nav")
       sec.state = "sec_awaiting_position"
-      secTransition("sec_requesting_position", "sec_awaiting_position", "position request sent")
+      navLog("[navsec][state] sec_requesting_position -> sec_awaiting_position (position request sent)")
     end,
 
     sec_awaiting_position = function()
@@ -1236,9 +1199,9 @@ function sectorNavTick()
 
       if currentSectorX and currentSectorY and currentPosX and currentPosY then
         sec.state = "sec_calculating_route"
-        secTransition("sec_awaiting_position", "sec_calculating_route", "position received: sector (" .. currentSectorX .. ", " .. currentSectorY .. ") pos (" .. currentPosX .. ", " .. currentPosY .. ")")
+        navLog("[navsec][state] sec_awaiting_position -> sec_calculating_route (position received: sector (" .. currentSectorX .. ", " .. currentSectorY .. ") pos (" .. currentPosX .. ", " .. currentPosY .. "))")
       elseif timeSinceCommand > commandTimeout then
-        secError("Timeout waiting for position")
+        navError("[navsec] Timeout waiting for position")
         sec.active = false
         sec.state = "sec_failed"
       end
@@ -1253,9 +1216,9 @@ function sectorNavTick()
         -- In target sector, check if at target position
         local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
         if distToTarget < config.arrivalThreshold then
-          secLog("Arrived at destination!")
+          navLog("[navsec] Arrived at destination!")
           sec.state = "sec_arrived"
-          secTransition("sec_calculating_route", "sec_arrived", "at target position")
+          navLog("[navsec][state] sec_calculating_route -> sec_arrived (at target position)")
           return
         end
       end
@@ -1268,11 +1231,11 @@ function sectorNavTick()
       sec.targetHeading = calculateHeading(currentAbsX, currentAbsY, targetAbsX, targetAbsY)
       local distance = calculateDistance(currentAbsX, currentAbsY, targetAbsX, targetAbsY)
 
-      secLog("Current absolute: (" .. currentAbsX .. ", " .. currentAbsY .. "), Target: (" .. targetAbsX .. ", " .. targetAbsY .. ")")
-      secLog("Distance: " .. string.format("%.0f", distance) .. ", Target heading: " .. sec.targetHeading)
+      navLog("[navsec] Current absolute: (" .. currentAbsX .. ", " .. currentAbsY .. "), Target: (" .. targetAbsX .. ", " .. targetAbsY .. ")")
+      navLog("[navsec] Distance: " .. string.format("%.0f", distance) .. ", Target heading: " .. sec.targetHeading)
 
       sec.state = "sec_rotating"
-      secTransition("sec_calculating_route", "sec_rotating", "route calculated, heading " .. sec.targetHeading)
+      navLog("[navsec][state] sec_calculating_route -> sec_rotating (route calculated, heading " .. sec.targetHeading .. ")")
     end,
 
     sec_rotating = function()
@@ -1282,7 +1245,7 @@ function sectorNavTick()
         -- Need to get heading, leave orbit if orbiting
         local orbitingPlanet = getOrbitingPlanet()
         if orbitingPlanet then
-          secLog("Leaving orbit to get heading")
+          navLog("[navsec] Leaving orbit to get heading")
           send("war 0")
           sec.lastCommand = os.time()
         end
@@ -1292,16 +1255,16 @@ function sectorNavTick()
       local rotation = calculateRotation(currentHeading, sec.targetHeading)
 
       if math.abs(rotation) <= 2 then
-        secLog("Already aligned to heading " .. currentHeading)
+        navLog("[navsec] Already aligned to heading " .. currentHeading)
         sec.state = "sec_setting_speed"
-        secTransition("sec_rotating", "sec_setting_speed", "already aligned")
+        navLog("[navsec][state] sec_rotating -> sec_setting_speed (already aligned)")
       else
-        secLog("Current heading " .. currentHeading .. ", rotating " .. rotation .. " to reach " .. sec.targetHeading)
+        navLog("[navsec] Current heading " .. currentHeading .. ", rotating " .. rotation .. " to reach " .. sec.targetHeading)
         sec.lastCommand = os.time()
         sec.rotationComplete = false
         send("rot " .. rotation)
         sec.state = "sec_awaiting_rotation"
-        secTransition("sec_rotating", "sec_awaiting_rotation", "rotation command sent")
+        navLog("[navsec][state] sec_rotating -> sec_awaiting_rotation (rotation command sent)")
       end
     end,
 
@@ -1310,9 +1273,9 @@ function sectorNavTick()
 
       if sec.rotationComplete then
         sec.state = "sec_setting_speed"
-        secTransition("sec_awaiting_rotation", "sec_setting_speed", "rotation complete")
+        navLog("[navsec][state] sec_awaiting_rotation -> sec_setting_speed (rotation complete)")
       elseif timeSinceCommand > commandTimeout then
-        secError("Timeout waiting for rotation")
+        navError("[navsec] Timeout waiting for rotation")
         sec.active = false
         sec.state = "sec_failed"
       end
@@ -1334,13 +1297,13 @@ function sectorNavTick()
         sec.lastObservedSpeed = currentSpeed
         sec.lastSpeedChange = os.time()
         local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
-        secLog("Distance " .. string.format("%.0f", distance) .. ", setting " .. cmd)
+        navLog("[navsec] Distance " .. string.format("%.0f", distance) .. ", setting " .. cmd)
         send(cmd)
         sec.state = "sec_awaiting_speed"
-        secTransition("sec_setting_speed", "sec_awaiting_speed", "speed command sent")
+        navLog("[navsec][state] sec_setting_speed -> sec_awaiting_speed (speed command sent)")
       else
         sec.state = "sec_traveling"
-        secTransition("sec_setting_speed", "sec_traveling", "speed already correct at " .. currentSpeed)
+        navLog("[navsec][state] sec_setting_speed -> sec_traveling (speed already correct at " .. currentSpeed .. ")")
       end
     end,
 
@@ -1359,7 +1322,7 @@ function sectorNavTick()
       local timeSinceSpeedChange = os.time() - (sec.lastSpeedChange or sec.lastCommand)
 
       if timeSinceSpeedChange > commandTimeout then
-        secError("Timeout waiting for speed change")
+        navError("[navsec] Timeout waiting for speed change")
         sec.active = false
         sec.state = "sec_failed"
         return
@@ -1377,7 +1340,7 @@ function sectorNavTick()
 
       if speedMatches then
         sec.state = "sec_traveling"
-        secTransition("sec_awaiting_speed", "sec_traveling", "speed confirmed at " .. currentSpeed)
+        navLog("[navsec][state] sec_awaiting_speed -> sec_traveling (speed confirmed at " .. currentSpeed .. ")")
       end
     end,
 
@@ -1394,40 +1357,40 @@ function sectorNavTick()
           local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
           if distToTarget < config.arrivalThreshold then
             sec.state = "sec_arrived"
-            secTransition("sec_traveling", "sec_arrived", "arrived at target position in sector")
+            navLog("[navsec][state] sec_traveling -> sec_arrived (arrived at target position in sector)")
             return
           end
         end
 
         -- Recalculate route (course correction)
         sec.state = "sec_requesting_position"
-        secTransition("sec_traveling", "sec_requesting_position", "polling interval elapsed, rechecking position")
+        navLog("[navsec][state] sec_traveling -> sec_requesting_position (polling interval elapsed, rechecking position)")
       end
     end,
 
     sec_arrived = function()
-      secLog("Stopping ship")
+      navLog("[navsec] Stopping ship")
       send("warp 0")
       sec.state = "sec_stopping"
-      secTransition("sec_arrived", "sec_stopping", "stop command sent")
+      navLog("[navsec][state] sec_arrived -> sec_stopping (stop command sent)")
     end,
 
     sec_stopping = function()
       local currentSpeed = getWarpSpeed()
       if currentSpeed == 0 then
         sec.state = "sec_completed"
-        secTransition("sec_stopping", "sec_completed", "ship stopped")
+        navLog("[navsec][state] sec_stopping -> sec_completed (ship stopped)")
       end
     end,
 
     sec_completed = function()
       local currentSectorX, currentSectorY = getSector()
-      secLog("Sector navigation complete! Now in sector (" .. currentSectorX .. ", " .. currentSectorY .. ")")
+      navLog("[navsec] Sector navigation complete! Now in sector (" .. currentSectorX .. ", " .. currentSectorY .. ")")
       sec.active = false
     end,
 
     sec_failed = function()
-      secError("Sector navigation failed")
+      navError("[navsec] Sector navigation failed")
       sec.active = false
     end
   }

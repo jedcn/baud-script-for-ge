@@ -15,12 +15,16 @@ Update this section and README.md when files are added, removed, or renamed.
 - `core.lua` - Ship state management (setSector, setOrbitingPlanet, setShipHeading, etc.)
 - `state-machine-core.lua` - Parsing state for multi-line output (scanning planets, reports)
 - `navigation-state.lua` - Navigation state machines (coordinate nav, flip-away, rotto, sector nav)
+- `navigate.lua` - Autonomous navigation system
+- `navigate-config.lua` - User-configurable navigation settings
 - `status.lua` - Status bar display function
 - `triggers.lua` - Pattern-matching triggers that fire on game output
 - `aliases.lua` - Command aliases (shortcuts like `scapl1` -> `sca pl 1`)
+- `timers.lua` - Recurring timers (navigation tick, etc.)
 - `test/test_helper.lua` - Mocks Baud framework for testing
 - `test/core_spec.lua` - Core function tests (resetData, etc.)
 - `test/main_spec.lua` - Trigger tests using Busted framework
+- `test/navigate_spec.lua` - Navigation system tests
 
 ## Conventions
 

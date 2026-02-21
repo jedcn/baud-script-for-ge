@@ -162,33 +162,51 @@ function doMaint()
 end
 
 function printState()
-  local rows = {}
-  table.insert(rows, {"getOrbitingPlanet", tostring(getOrbitingPlanet())})
-  table.insert(rows, {"getRotationInProgress", tostring(getRotationInProgress())})
   local sX, sY = getSector()
-  table.insert(rows, {"getSector", tostring(sX) .. ", " .. tostring(sY)})
   local spX, spY = getSectorPosition()
-  table.insert(rows, {"getSectorPosition", tostring(spX) .. ", " .. tostring(spY)})
-  table.insert(rows, {"getShieldCharge", tostring(getShieldCharge())})
-  table.insert(rows, {"getShieldStatus", tostring(getShieldStatus())})
-  table.insert(rows, {"getShipHeading", tostring(getShipHeading())})
   local itemTypes = {}
   for _, v in pairs(gePackage.constants) do
     table.insert(itemTypes, v)
   end
   table.sort(itemTypes)
+  local inventoryRows = {}
   for _, itemType in ipairs(itemTypes) do
-    table.insert(rows, {"getShipInventory[" .. itemType .. "]", tostring(getShipInventory(itemType))})
+    table.insert(inventoryRows, {"getShipInventory[" .. itemType .. "]", tostring(getShipInventory(itemType))})
   end
-  table.insert(rows, {"getShipNeutronFlux", tostring(getShipNeutronFlux())})
-  table.insert(rows, {"getShipStatus", tostring(getShipStatus())})
-  table.insert(rows, {"getStoredPlanet", tostring(getStoredPlanet())})
-  table.insert(rows, {"getWarpSpeed", tostring(getWarpSpeed())})
+
+  local sections = {
+    {"Navigation", {
+      {"getOrbitingPlanet",     tostring(getOrbitingPlanet())},
+      {"getRotationInProgress", tostring(getRotationInProgress())},
+      {"getSector",             tostring(sX) .. ", " .. tostring(sY)},
+      {"getSectorPosition",     tostring(spX) .. ", " .. tostring(spY)},
+      {"getWarpSpeed",          tostring(getWarpSpeed())},
+    }},
+    {"Ship", {
+      {"getShieldCharge",    tostring(getShieldCharge())},
+      {"getShieldStatus",    tostring(getShieldStatus())},
+      {"getShipHeading",     tostring(getShipHeading())},
+      {"getShipNeutronFlux", tostring(getShipNeutronFlux())},
+      {"getShipStatus",      tostring(getShipStatus())},
+    }},
+    {"Misc", {
+      {"getStoredPlanet", tostring(getStoredPlanet())},
+    }},
+    {"Inventory", inventoryRows},
+  }
+
   local maxLen = 0
-  for _, row in ipairs(rows) do
-    if #row[1] > maxLen then maxLen = #row[1] end
+  for _, section in ipairs(sections) do
+    for _, row in ipairs(section[2]) do
+      if #row[1] > maxLen then maxLen = #row[1] end
+    end
   end
-  for _, row in ipairs(rows) do
-    echo(string.format("%-" .. maxLen .. "s  %s", row[1], row[2]))
+
+  for i, section in ipairs(sections) do
+    if i > 1 then echo("") end
+    echo("## " .. section[1])
+    for _, row in ipairs(section[2]) do
+      echo(string.format("%-" .. maxLen .. "s  %s", row[1], row[2]))
+    end
   end
 end

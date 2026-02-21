@@ -6,9 +6,10 @@ SCRIPT_DIR = "./"
 
 local M = {}
 
--- Storage for registered triggers and aliases
+-- Storage for registered triggers, aliases, and outbound triggers
 M.triggers = {}
 M.aliases = {}
+M.outboundTriggers = {}
 
 -- Track function calls for verification
 M.sendCalls = {}
@@ -62,6 +63,17 @@ end
 function createTrigger(pattern, callback, options)
     local luaPattern = regexToLuaPattern(pattern)
     table.insert(M.triggers, {
+        pattern = luaPattern,
+        originalPattern = pattern,
+        callback = callback,
+        options = options or {}
+    })
+end
+
+-- Mock createOutboundTrigger: stores pattern and callback for outgoing commands
+function createOutboundTrigger(pattern, callback, options)
+    local luaPattern = regexToLuaPattern(pattern)
+    table.insert(M.outboundTriggers, {
         pattern = luaPattern,
         originalPattern = pattern,
         callback = callback,
@@ -124,11 +136,26 @@ function M.simulateLine(text)
     end
 end
 
+-- Test utility: simulate an outgoing command and fire matching outbound triggers
+function M.simulateOutbound(text)
+    for _, trigger in ipairs(M.outboundTriggers) do
+        local matches = {string.match(text, trigger.pattern)}
+        if #matches > 0 or string.match(text, trigger.pattern) then
+            if #matches == 0 and string.match(text, trigger.pattern) then
+                matches = {}
+            end
+            table.insert(matches, 1, text)
+            trigger.callback(matches)
+        end
+    end
+end
+
 -- Reset all state between tests
 function M.resetAll()
     -- Clear tables in place to maintain references
     for k in pairs(M.triggers) do M.triggers[k] = nil end
     for k in pairs(M.aliases) do M.aliases[k] = nil end
+    for k in pairs(M.outboundTriggers) do M.outboundTriggers[k] = nil end
     for k in pairs(M.sendCalls) do M.sendCalls[k] = nil end
     for k in pairs(M.echoCalls) do M.echoCalls[k] = nil end
     -- Reset gePackage state

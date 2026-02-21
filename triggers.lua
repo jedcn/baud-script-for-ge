@@ -163,6 +163,11 @@ createTrigger("^Navigating SS# (-?\\d+) (-?\\d+)$", function(matches)
     setSector(xSector, ySector)
 end, { type = "regex" })
 
+-- refreshes position when crossing a sector boundary
+createTrigger("^Helm reports leaving Sector (-?\\d+) (-?\\d+) and entering Sector (-?\\d+) (-?\\d+)$", function(matches)
+    send("rep nav")
+end, { type = "regex" })
+
 -- sets warp speed from status display
 createTrigger("^Speed..................Warp (\\d+\\.\\d+)$", function(matches)
     local warpSpeed = matches[2]

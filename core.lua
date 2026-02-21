@@ -160,3 +160,52 @@ function doMaint()
   debugLog("doMaint()");
   send("maint arbor123")
 end
+
+function printState()
+  local sX, sY = getSector()
+  local spX, spY = getSectorPosition()
+  local itemTypes = {}
+  for _, v in pairs(gePackage.constants) do
+    table.insert(itemTypes, v)
+  end
+  table.sort(itemTypes)
+  local inventoryRows = {}
+  for _, itemType in ipairs(itemTypes) do
+    table.insert(inventoryRows, {"getShipInventory[" .. itemType .. "]", tostring(getShipInventory(itemType))})
+  end
+
+  local sections = {
+    {"Navigation", {
+      {"getOrbitingPlanet",     tostring(getOrbitingPlanet())},
+      {"getRotationInProgress", tostring(getRotationInProgress())},
+      {"getSector",             tostring(sX) .. ", " .. tostring(sY)},
+      {"getSectorPosition",     tostring(spX) .. ", " .. tostring(spY)},
+      {"getWarpSpeed",          tostring(getWarpSpeed())},
+    }},
+    {"Ship", {
+      {"getShieldCharge",    tostring(getShieldCharge())},
+      {"getShieldStatus",    tostring(getShieldStatus())},
+      {"getShipHeading",     tostring(getShipHeading())},
+      {"getShipNeutronFlux", tostring(getShipNeutronFlux())},
+      {"getShipStatus",      tostring(getShipStatus())},
+    }},
+    {"Misc", {
+      {"getStoredPlanet", tostring(getStoredPlanet())},
+    }},
+    {"Inventory", inventoryRows},
+  }
+
+  local maxLen = 0
+  for _, section in ipairs(sections) do
+    for _, row in ipairs(section[2]) do
+      if #row[1] > maxLen then maxLen = #row[1] end
+    end
+  end
+
+  for i, section in ipairs(sections) do
+    echo("\n## " .. section[1])
+    for _, row in ipairs(section[2]) do
+      echo(string.format("%-" .. maxLen .. "s  %s", row[1], row[2]))
+    end
+  end
+end

@@ -394,35 +394,9 @@ function navigationTick()
         return
       end
 
-      -- Check if rotation completed by comparing current heading to target
-      local currentHeading = getShipHeading()
-      local targetHeading = nav.targetHeading
-
-      -- If we don't know target heading, wait for heading update then recalculate
-      if not targetHeading then
-        if currentHeading and timeSinceCommand > 2 then
-          -- We got a heading update, assume rotation is done
-          transitionTo(nav, "spl_setting_speed", "rotation complete (no target heading tracked), current heading=" .. currentHeading)
-        end
-        return
-      end
-
-      -- If heading is unknown, keep waiting
-      if not currentHeading then
-        navDebug(state, "waiting for heading update from rotation confirmation")
-        return
-      end
-
-      local headingDiff = math.abs(currentHeading - targetHeading)
-      -- Account for wrap-around (359 vs 1 degree)
-      if headingDiff > 180 then
-        headingDiff = 360 - headingDiff
-      end
-
-      navDebug(state, "currentHeading=" .. currentHeading .. ", targetHeading=" .. targetHeading .. ", diff=" .. headingDiff)
-
-      if headingDiff < 5 then  -- Within 5 degrees is good enough
-        transitionTo(nav, "spl_setting_speed", "rotation complete, heading " .. currentHeading .. " within 5 degrees of target " .. targetHeading)
+      if nav.rotationComplete then
+        local currentHeading = getShipHeading()
+        transitionTo(nav, "spl_setting_speed", "rotation complete, heading " .. tostring(currentHeading))
       end
     end,
 
@@ -1159,6 +1133,14 @@ function setSectorNavRotationCompleteFromTrigger()
   if getSectorNavActive() then
     if getSectorNavState() == "sec_awaiting_rotation" then
       setSectorNavRotationComplete(true)
+    end
+  end
+end
+
+function setSplRotationCompleteFromTrigger()
+  if getNavigationActive() then
+    if getNavigationState() == "spl_awaiting_rotation" then
+      gePackage.navigation.rotationComplete = true
     end
   end
 end

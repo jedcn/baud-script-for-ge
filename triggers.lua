@@ -102,6 +102,7 @@ createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(ma
     setFlipAwayRotationCompleteFromTrigger()
     setRottoRotationCompleteFromTrigger()
     setSectorNavRotationCompleteFromTrigger()
+    setSplRotationCompleteFromTrigger()
 end, { type = "regex" })
 
 -- sets ship heading from engines firing message (when leaving orbit or starting movement)

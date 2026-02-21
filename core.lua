@@ -156,6 +156,25 @@ function getStoredPlanet()
   return gePackage.storedPlanet or 1
 end
 
+function resetData()
+  debugLog("resetData()")
+  gePackage.position = {}
+  gePackage.ship = {}
+  gePackage.ship.rotationInProgress = false
+  gePackage.ship.inventory = {}
+  gePackage.stateMachine = {}
+  gePackage.stateMachine.inbetweenDashes = false
+  gePackage.stateMachine.scanningPlanet = false
+  gePackage.warpSpeed = nil
+  gePackage.shieldStatus = nil
+  gePackage.shieldCharge = nil
+  gePackage.storedPlanet = nil
+  initNavigation()
+  clearFlipAway()
+  clearRotto()
+  clearSectorNav()
+end
+
 function doMaint()
   debugLog("doMaint()");
   send("maint arbor123")

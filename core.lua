@@ -203,8 +203,7 @@ function printState()
   end
 
   for i, section in ipairs(sections) do
-    local header = i > 1 and "\n## " .. section[1] or "## " .. section[1]
-    echo(header)
+    echo("\n## " .. section[1])
     for _, row in ipairs(section[2]) do
       echo(string.format("%-" .. maxLen .. "s  %s", row[1], row[2]))
     end

@@ -19,6 +19,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `triggers.lua` - Pattern-matching triggers that fire on game output
 - `aliases.lua` - Command aliases (shortcuts like `scapl1` -> `sca pl 1`)
 - `test/test_helper.lua` - Mocks Baud framework for testing
+- `test/core_spec.lua` - Core function tests (resetData, etc.)
 - `test/main_spec.lua` - Trigger tests using Busted framework
 
 ## Conventions

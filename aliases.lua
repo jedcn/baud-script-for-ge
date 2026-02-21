@@ -68,6 +68,13 @@ createAlias("^maint$", function()
     doMaint()
 end, { type = "regex" })
 
+-- ^reset$ -> resetData()
+-- Clears all stored data (use when switching ships)
+createAlias("^reset$", function()
+    resetData()
+    echo("All data has been reset.")
+end, { type = "regex" })
+
 --
 -- ^rn$ -> rep nav
 --

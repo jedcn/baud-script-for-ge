@@ -19,6 +19,7 @@ baud-scripts-for-ge/
 │   └── testing-plan.md       -- Implementation plan for tests
 └── test/
     ├── test_helper.lua       -- Mocks for Baud framework functions
+    ├── core_spec.lua         -- Core function tests
     └── main_spec.lua         -- Trigger tests
 ```
 

@@ -412,6 +412,17 @@ describe("GE Triggers", function()
             assert.is_false(getRotationInProgress())
         end)
 
+        it("calls setSplRotationCompleteFromTrigger from 'Helm reports we are now heading'", function()
+            local called = false
+            local original = setSplRotationCompleteFromTrigger
+            _G.setSplRotationCompleteFromTrigger = function() called = true end
+
+            helper.simulateLine("Helm reports we are now heading 270 degrees.")
+
+            assert.is_true(called)
+            _G.setSplRotationCompleteFromTrigger = original
+        end)
+
     end)
 
 end)

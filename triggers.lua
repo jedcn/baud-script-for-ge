@@ -35,6 +35,10 @@ end, { type = "regex" })
 --
 createTrigger("^Repairs and general maintenance have been completed Sir!$", function(matches)
   send("rep sys")
+  -- Notify attack-run that maintenance is complete
+  if gePackage.attackRun and gePackage.attackRun.active then
+    gePackage.attackRun.maintenanceComplete = true
+  end
 end, { type="regex" })
 
 --

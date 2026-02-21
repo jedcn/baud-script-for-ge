@@ -31,4 +31,12 @@ createTimer(3000, function()
             echo("\n\nCaught an error in sectorNavTick:\n\n" .. secErr)
         end
     end
+
+    -- Attack run tick (if function exists)
+    if attackRunTick then
+        local arStatus, arErr = pcall(attackRunTick)
+        if not arStatus then
+            echo("\n\nCaught an error in attackRunTick:\n\n" .. arErr)
+        end
+    end
 end, { name = "mainTick", repeating = true, enabled = true })

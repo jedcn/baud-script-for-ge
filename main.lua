@@ -25,6 +25,8 @@ dofile(scriptDir .. "navigate-config.lua")
 
 dofile(scriptDir .. "navigate.lua")
 
+dofile(scriptDir .. "attack-run.lua")
+
 dofile(scriptDir .. "status.lua")
 
 dofile(scriptDir .. "timers.lua")

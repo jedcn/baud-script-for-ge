@@ -160,3 +160,35 @@ function doMaint()
   debugLog("doMaint()");
   send("maint arbor123")
 end
+
+function printState()
+  local rows = {}
+  table.insert(rows, {"getOrbitingPlanet", tostring(getOrbitingPlanet())})
+  table.insert(rows, {"getRotationInProgress", tostring(getRotationInProgress())})
+  local sX, sY = getSector()
+  table.insert(rows, {"getSector", tostring(sX) .. ", " .. tostring(sY)})
+  local spX, spY = getSectorPosition()
+  table.insert(rows, {"getSectorPosition", tostring(spX) .. ", " .. tostring(spY)})
+  table.insert(rows, {"getShieldCharge", tostring(getShieldCharge())})
+  table.insert(rows, {"getShieldStatus", tostring(getShieldStatus())})
+  table.insert(rows, {"getShipHeading", tostring(getShipHeading())})
+  local itemTypes = {}
+  for _, v in pairs(gePackage.constants) do
+    table.insert(itemTypes, v)
+  end
+  table.sort(itemTypes)
+  for _, itemType in ipairs(itemTypes) do
+    table.insert(rows, {"getShipInventory[" .. itemType .. "]", tostring(getShipInventory(itemType))})
+  end
+  table.insert(rows, {"getShipNeutronFlux", tostring(getShipNeutronFlux())})
+  table.insert(rows, {"getShipStatus", tostring(getShipStatus())})
+  table.insert(rows, {"getStoredPlanet", tostring(getStoredPlanet())})
+  table.insert(rows, {"getWarpSpeed", tostring(getWarpSpeed())})
+  local maxLen = 0
+  for _, row in ipairs(rows) do
+    if #row[1] > maxLen then maxLen = #row[1] end
+  end
+  for _, row in ipairs(rows) do
+    echo(string.format("%-" .. maxLen .. "s  %s", row[1], row[2]))
+  end
+end

@@ -101,14 +101,17 @@ end, { type = "regex" })
 createAlias("^lfg$", function()
     send("tra up 1 flu")
     send("flu")
-    send("tra up 33300 fighters")
+    send("tra up 249980 tro")
     navigateToSector(11, -9, 4300, 1050)
 end, { type = "regex" })
 
--- afg
-createAlias("^afg$", function()
-    send("attack 33300 fighters")
+createAlias("^attack", function()
+    send("attack 249980 tro")
     send("imp 99 0")
+end, { type = "regex" })
+
+createAlias("^gohome", function()
+    navigateToSector(9, -11, 8750, 8500)
 end, { type = "regex" })
 
 --

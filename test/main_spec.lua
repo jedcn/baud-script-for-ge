@@ -220,6 +220,11 @@ describe("GE Triggers", function()
             _G.setSector = original
         end)
 
+        it("sends 'rep nav' when crossing a sector boundary", function()
+            helper.simulateLine("Helm reports leaving Sector 11 -10 and entering Sector 11 -9")
+            assert.is_true(helper.wasSendCalledWith("rep nav"))
+        end)
+
     end)
 
     -- =========================================================================

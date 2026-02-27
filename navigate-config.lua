@@ -31,7 +31,7 @@ gePackage.navigation.config = {
   planetArrivalThreshold = 250,     -- For Phase 2
 
   -- Timing
-  pollingInterval = 3,              -- Seconds between position checks
+  scanInterval = 3,                 -- Seconds between position/scan requests to server
   commandTimeout = 18,              -- Timeout for command responses
   maxStuckTime = 60,               -- Abort if stuck this long
 

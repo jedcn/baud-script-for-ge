@@ -448,6 +448,16 @@ function navigationTick()
         return
       end
 
+      -- Check if a lower speed is now needed based on last known distance
+      local distance = nav.planetScan.distance
+      if distance then
+        local _, speedValue = config.decideSpeed(distance, currentSpeed)
+        if speedValue < targetSpeed then
+          transitionTo(nav, "spl_setting_speed", "speed correction mid-acceleration: " .. targetSpeed .. " -> " .. speedValue .. " at distance " .. distance)
+          return
+        end
+      end
+
       -- Check if speed matches target
       -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
       local speedMatches = false
@@ -464,11 +474,22 @@ function navigationTick()
     end,
 
     spl_traveling = function()
-      local timeSinceCommand = os.time() - nav.lastCommand
-      navDebug(state, "timeSinceCommand=" .. timeSinceCommand .. ", pollingInterval=" .. config.pollingInterval)
+      -- Check if speed needs adjusting based on last known distance (runs every tick)
+      local distance = nav.planetScan.distance
+      if distance then
+        local currentSpeed = getWarpSpeed() or 0
+        local speedType, speedValue = config.decideSpeed(distance, currentSpeed)
+        if math.abs(currentSpeed - speedValue) > 0.1 then
+          transitionTo(nav, "spl_setting_speed", "immediate speed correction: " .. currentSpeed .. " -> " .. speedValue .. " at distance " .. distance)
+          return
+        end
+      end
 
-      if timeSinceCommand >= config.pollingInterval then
-        transitionTo(nav, "spl_scanning", "polling interval " .. config.pollingInterval .. "s elapsed, time to rescan")
+      -- Gate scan requests at scanInterval to avoid flooding server
+      local timeSinceCommand = os.time() - nav.lastCommand
+      navDebug(state, "timeSinceCommand=" .. timeSinceCommand .. ", scanInterval=" .. config.scanInterval)
+      if timeSinceCommand >= config.scanInterval then
+        transitionTo(nav, "spl_scanning", "scan interval " .. config.scanInterval .. "s elapsed, time to rescan")
       end
     end,
 
@@ -723,6 +744,17 @@ function navigationTick()
         return
       end
 
+      -- Check if a lower speed is now needed based on current position
+      local currentX, currentY = getSectorPosition()
+      if currentX and nav.target.sectorPositionX then
+        local distance = calculateDistance(currentX, currentY, nav.target.sectorPositionX, nav.target.sectorPositionY)
+        local _, speedValue = config.decideSpeed(distance, currentSpeed)
+        if speedValue < targetSpeed then
+          transitionTo(nav, "setting_speed", "speed correction mid-acceleration: " .. targetSpeed .. " -> " .. speedValue .. " at distance " .. string.format("%.1f", distance))
+          return
+        end
+      end
+
       -- Check if speed matches target
       -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
       local speedMatches = false
@@ -739,11 +771,23 @@ function navigationTick()
     end,
 
     traveling = function()
-      local timeSinceCheck = os.time() - nav.lastPositionCheck
-      navDebug(state, "timeSinceCheck=" .. timeSinceCheck .. ", pollingInterval=" .. config.pollingInterval)
+      -- Check if speed needs adjusting based on current known position (runs every tick)
+      local currentX, currentY = getSectorPosition()
+      if currentX and nav.target.sectorPositionX then
+        local distance = calculateDistance(currentX, currentY, nav.target.sectorPositionX, nav.target.sectorPositionY)
+        local currentSpeed = getWarpSpeed() or 0
+        local speedType, speedValue = config.decideSpeed(distance, currentSpeed)
+        if math.abs(currentSpeed - speedValue) > 0.1 then
+          transitionTo(nav, "setting_speed", "immediate speed correction: " .. currentSpeed .. " -> " .. speedValue .. " at distance " .. string.format("%.1f", distance))
+          return
+        end
+      end
 
-      if timeSinceCheck >= config.pollingInterval then
-        transitionTo(nav, "requesting_position", "polling interval " .. config.pollingInterval .. "s elapsed, checking position")
+      -- Gate position requests at scanInterval to avoid flooding server
+      local timeSinceCheck = os.time() - nav.lastPositionCheck
+      navDebug(state, "timeSinceCheck=" .. timeSinceCheck .. ", scanInterval=" .. config.scanInterval)
+      if timeSinceCheck >= config.scanInterval then
+        transitionTo(nav, "requesting_position", "scan interval " .. config.scanInterval .. "s elapsed, checking position")
       end
     end,
 
@@ -1311,6 +1355,21 @@ function sectorNavTick()
         return
       end
 
+      -- Check if a lower speed is now needed based on current position
+      local currentSectorX, currentSectorY = getSector()
+      local currentPosX, currentPosY = getSectorPosition()
+      if currentSectorX and currentPosX then
+        local currentAbsX, currentAbsY = calculateAbsolutePosition(currentSectorX, currentSectorY, currentPosX, currentPosY)
+        local targetAbsX, targetAbsY = calculateAbsolutePosition(sec.targetSectorX, sec.targetSectorY, sec.targetPosX, sec.targetPosY)
+        local distance = calculateDistance(currentAbsX, currentAbsY, targetAbsX, targetAbsY)
+        local _, speedValue = config.decideSpeed(distance, currentSpeed)
+        if speedValue < targetSpeed then
+          sec.state = "sec_setting_speed"
+          navLog("[navsec][state] sec_awaiting_speed -> sec_setting_speed (speed correction mid-acceleration: " .. targetSpeed .. " -> " .. speedValue .. " at distance " .. string.format("%.0f", distance) .. ")")
+          return
+        end
+      end
+
       -- Check if speed matches target
       -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
       local speedMatches = false
@@ -1331,7 +1390,7 @@ function sectorNavTick()
       local timeSinceCommand = os.time() - sec.lastCommand
 
       -- Periodically check position
-      if timeSinceCommand >= config.pollingInterval then
+      if timeSinceCommand >= config.scanInterval then
         local currentSectorX, currentSectorY = getSector()
         local currentPosX, currentPosY = getSectorPosition()
 
@@ -1347,7 +1406,7 @@ function sectorNavTick()
 
         -- Recalculate route (course correction)
         sec.state = "sec_requesting_position"
-        navLog("[navsec][state] sec_traveling -> sec_requesting_position (polling interval elapsed, rechecking position)")
+        navLog("[navsec][state] sec_traveling -> sec_requesting_position (scan interval elapsed, rechecking position)")
       end
     end,
 

@@ -1,5 +1,4 @@
--- Set up recurring timer for navigation tick (every 3 seconds = 3000ms)
-createTimer(3000, function()
+function mainTick()
     -- Navigation tick (if function exists)
     if navigationTick then
         local navStatus, navErr = pcall(navigationTick)
@@ -31,4 +30,7 @@ createTimer(3000, function()
             echo("\n\nCaught an error in sectorNavTick:\n\n" .. secErr)
         end
     end
-end, { name = "mainTick", repeating = true, enabled = true })
+end
+
+-- Set up recurring timer for main tick (every 1 second = 1000ms)
+createTimer(1000, mainTick, { name = "mainTick", repeating = true, enabled = true })

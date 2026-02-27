@@ -377,6 +377,7 @@ function navigationTick()
         else
           nav.targetHeading = nil  -- Will need to wait for heading confirmation
         end
+        nav.rotationComplete = false
         navDecision("rot " .. bearing, "planet is " .. bearing .. " degrees off current heading, target heading=" .. tostring(nav.targetHeading))
         sendNavigationCommand("rot " .. bearing)
         transitionTo(nav, "spl_awaiting_rotation", "rotation command sent")

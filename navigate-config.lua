@@ -39,7 +39,7 @@ gePackage.navigation.config = {
   decideSpeed = function(distance, currentSpeed)
     -- Deceleration logic: slow down well before arrival
     -- Thresholds are wide to account for 3-second polling intervals
-    if currentSpeed >= 15 and distance < 10000 then
+    if currentSpeed >= 15 and distance < 13000 then
       return "WARP", 5  -- Start slowing from warp 15
     end
     if currentSpeed >= 5 and distance < 3000 then

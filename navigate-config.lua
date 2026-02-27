@@ -62,10 +62,11 @@ gePackage.navigation.config = {
     if distance > 1000 then return "WARP", 2 end
     if distance > 750 then return "WARP", 1 end
 
-    -- For short distances (≤ 1000), use impulse
+    -- For short distances (≤ 750), use impulse
     -- IMPORTANT: Can't go directly from WARP to IMPULSE
     -- Must stop at warp 0 first, then engage impulse
-    if currentSpeed > 0 then
+    -- But if already in impulse (0 < speed < 1), no stop needed
+    if currentSpeed >= 1 then
       return "WARP", 0  -- Drop out of warp first
     end
 

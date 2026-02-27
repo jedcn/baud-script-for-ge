@@ -84,14 +84,14 @@ describe("Navigation System", function()
     it("uses impulse when stopped at short distance", function()
       local speedType, speedValue = decideSpeed(394, 0)
       assert.equals("IMPULSE", speedType)
-      assert.equals(99, speedValue)
+      assert.equals(0.99, speedValue)
     end)
 
     it("uses impulse when already in impulse at short distance", function()
       -- Bug fix: ship at impulse (0.99) should NOT stop before re-engaging impulse
       local speedType, speedValue = decideSpeed(394, 0.99)
       assert.equals("IMPULSE", speedType)
-      assert.equals(99, speedValue)
+      assert.equals(0.99, speedValue)
     end)
 
     it("stops ship when in warp at short distance", function()

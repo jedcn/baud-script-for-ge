@@ -70,6 +70,6 @@ gePackage.navigation.config = {
       return "WARP", 0  -- Drop out of warp first
     end
 
-    return "IMPULSE", 99  -- Safe to use impulse (we're stopped)
+    return "IMPULSE", 0.99  -- Safe to use impulse (we're stopped); 0.99 = warp representation of imp 99
   end
 }

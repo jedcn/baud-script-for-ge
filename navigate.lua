@@ -415,12 +415,13 @@ function navigationTick()
         nav.speedType = speedType
         nav.lastObservedSpeed = currentSpeed
         nav.lastSpeedChange = os.time()
-        local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
+        local cmdValue = speedType == "IMPULSE" and math.floor(speedValue * 100) or speedValue
+        local cmd = speedType == "WARP" and ("warp " .. cmdValue) or ("imp " .. cmdValue)
         navDecision(cmd, "distance=" .. distance .. ", changing from speed " .. currentSpeed .. " to " .. speedValue)
         if speedType == "WARP" then
-          sendNavigationCommand("warp " .. speedValue)
+          sendNavigationCommand("warp " .. cmdValue)
         else
-          sendNavigationCommand("imp " .. speedValue)
+          sendNavigationCommand("imp " .. cmdValue)
         end
         transitionTo(nav, "spl_awaiting_speed", "speed command sent, waiting for speed=" .. speedValue)
       else
@@ -459,14 +460,7 @@ function navigationTick()
       end
 
       -- Check if speed matches target
-      -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
-      local speedMatches = false
-      if speedType == "IMPULSE" then
-        -- Impulse is active when warp speed is between 0 and 1
-        speedMatches = currentSpeed > 0 and currentSpeed < 1
-      else
-        speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
-      end
+      local speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
 
       if speedMatches then
         transitionTo(nav, "spl_traveling", "speed confirmed at " .. currentSpeed .. " (target was " .. targetSpeed .. ")")
@@ -711,12 +705,13 @@ function navigationTick()
         nav.speedType = speedType
         nav.lastObservedSpeed = currentSpeed
         nav.lastSpeedChange = os.time()
-        local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
+        local cmdValue = speedType == "IMPULSE" and math.floor(speedValue * 100) or speedValue
+        local cmd = speedType == "WARP" and ("warp " .. cmdValue) or ("imp " .. cmdValue)
         navDecision(cmd, "distance=" .. string.format("%.1f", distance) .. ", changing from speed " .. currentSpeed .. " to " .. speedValue)
         if speedType == "WARP" then
-          sendNavigationCommand("warp " .. speedValue)
+          sendNavigationCommand("warp " .. cmdValue)
         else
-          sendNavigationCommand("imp " .. speedValue)
+          sendNavigationCommand("imp " .. cmdValue)
         end
         transitionTo(nav, "awaiting_speed_confirmation", "speed command sent")
       else
@@ -756,14 +751,7 @@ function navigationTick()
       end
 
       -- Check if speed matches target
-      -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
-      local speedMatches = false
-      if speedType == "IMPULSE" then
-        -- Impulse is active when warp speed is between 0 and 1
-        speedMatches = currentSpeed > 0 and currentSpeed < 1
-      else
-        speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
-      end
+      local speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
 
       if speedMatches then
         transitionTo(nav, "traveling", "speed confirmed at " .. currentSpeed .. " (target was " .. targetSpeed .. ")")
@@ -1323,7 +1311,8 @@ function sectorNavTick()
         sec.speedType = speedType
         sec.lastObservedSpeed = currentSpeed
         sec.lastSpeedChange = os.time()
-        local cmd = speedType == "WARP" and ("warp " .. speedValue) or ("imp " .. speedValue)
+        local cmdValue = speedType == "IMPULSE" and math.floor(speedValue * 100) or speedValue
+        local cmd = speedType == "WARP" and ("warp " .. cmdValue) or ("imp " .. cmdValue)
         navLog("[navsec] Distance " .. string.format("%.0f", distance) .. ", setting " .. cmd)
         send(cmd)
         sec.state = "sec_awaiting_speed"
@@ -1371,14 +1360,7 @@ function sectorNavTick()
       end
 
       -- Check if speed matches target
-      -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
-      local speedMatches = false
-      if speedType == "IMPULSE" then
-        -- Impulse is active when warp speed is between 0 and 1
-        speedMatches = currentSpeed > 0 and currentSpeed < 1
-      else
-        speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
-      end
+      local speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
 
       if speedMatches then
         sec.state = "sec_traveling"

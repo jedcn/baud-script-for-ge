@@ -422,7 +422,7 @@ describe("Navigation System", function()
     it("rescans after traveling", function()
       navigateToPlanetSimple(1)
       gePackage.navigation.state = "spl_traveling"
-      gePackage.navigation.lastCommand = os.time() - 4  -- past pollingInterval of 1s
+      gePackage.navigation.lastCommand = os.time() - 4  -- past scanInterval of 3s
 
       navigationTick()
 
@@ -432,7 +432,7 @@ describe("Navigation System", function()
     it("stays in spl_traveling if not enough time has passed", function()
       navigateToPlanetSimple(1)
       gePackage.navigation.state = "spl_traveling"
-      gePackage.navigation.lastCommand = os.time() - 1  -- not past pollingInterval
+      gePackage.navigation.lastCommand = os.time() - 1  -- not past scanInterval
 
       navigationTick()
 

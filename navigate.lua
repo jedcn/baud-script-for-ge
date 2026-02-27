@@ -434,7 +434,7 @@ function navigationTick()
       local lastObserved = nav.lastObservedSpeed or 0
 
       -- Check if speed has changed since last observation
-      if math.abs(currentSpeed - lastObserved) > 0.1 then
+      if math.abs(currentSpeed - lastObserved) > 0.01 then
         nav.lastSpeedChange = os.time()
         nav.lastObservedSpeed = currentSpeed
       end
@@ -709,7 +709,7 @@ function navigationTick()
       local lastObserved = nav.lastObservedSpeed or 0
 
       -- Check if speed has changed since last observation
-      if math.abs(currentSpeed - lastObserved) > 0.1 then
+      if math.abs(currentSpeed - lastObserved) > 0.01 then
         nav.lastSpeedChange = os.time()
         nav.lastObservedSpeed = currentSpeed
       end
@@ -1296,7 +1296,7 @@ function sectorNavTick()
       local lastObserved = sec.lastObservedSpeed or 0
 
       -- Track speed progress
-      if math.abs(currentSpeed - lastObserved) > 0.1 then
+      if math.abs(currentSpeed - lastObserved) > 0.01 then
         sec.lastSpeedChange = os.time()
         sec.lastObservedSpeed = currentSpeed
       end

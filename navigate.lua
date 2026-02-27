@@ -448,6 +448,16 @@ function navigationTick()
         return
       end
 
+      -- Check if a lower speed is now needed based on last known distance
+      local distance = nav.planetScan.distance
+      if distance then
+        local _, speedValue = config.decideSpeed(distance, currentSpeed)
+        if speedValue < targetSpeed then
+          transitionTo(nav, "spl_setting_speed", "speed correction mid-acceleration: " .. targetSpeed .. " -> " .. speedValue .. " at distance " .. distance)
+          return
+        end
+      end
+
       -- Check if speed matches target
       -- For IMPULSE, warp speed shows as ~0.xx (e.g., imp 99 -> warp 0.99)
       local speedMatches = false
@@ -732,6 +742,17 @@ function navigationTick()
       if timeSinceSpeedChange > config.commandTimeout then
         transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s with no speed progress")
         return
+      end
+
+      -- Check if a lower speed is now needed based on current position
+      local currentX, currentY = getSectorPosition()
+      if currentX and nav.target.sectorPositionX then
+        local distance = calculateDistance(currentX, currentY, nav.target.sectorPositionX, nav.target.sectorPositionY)
+        local _, speedValue = config.decideSpeed(distance, currentSpeed)
+        if speedValue < targetSpeed then
+          transitionTo(nav, "setting_speed", "speed correction mid-acceleration: " .. targetSpeed .. " -> " .. speedValue .. " at distance " .. string.format("%.1f", distance))
+          return
+        end
       end
 
       -- Check if speed matches target
@@ -1332,6 +1353,21 @@ function sectorNavTick()
         sec.active = false
         sec.state = "sec_failed"
         return
+      end
+
+      -- Check if a lower speed is now needed based on current position
+      local currentSectorX, currentSectorY = getSector()
+      local currentPosX, currentPosY = getSectorPosition()
+      if currentSectorX and currentPosX then
+        local currentAbsX, currentAbsY = calculateAbsolutePosition(currentSectorX, currentSectorY, currentPosX, currentPosY)
+        local targetAbsX, targetAbsY = calculateAbsolutePosition(sec.targetSectorX, sec.targetSectorY, sec.targetPosX, sec.targetPosY)
+        local distance = calculateDistance(currentAbsX, currentAbsY, targetAbsX, targetAbsY)
+        local _, speedValue = config.decideSpeed(distance, currentSpeed)
+        if speedValue < targetSpeed then
+          sec.state = "sec_setting_speed"
+          navLog("[navsec][state] sec_awaiting_speed -> sec_setting_speed (speed correction mid-acceleration: " .. targetSpeed .. " -> " .. speedValue .. " at distance " .. string.format("%.0f", distance) .. ")")
+          return
+        end
       end
 
       -- Check if speed matches target

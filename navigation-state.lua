@@ -28,6 +28,7 @@ function initNavigation()
   gePackage.navigation.targetSpeed = nil
   gePackage.navigation.lastObservedSpeed = nil
   gePackage.navigation.lastSpeedChange = nil
+  gePackage.navigation.rotationComplete = false
   gePackage.navigation.planetScan = { bearing = nil, distance = nil }
 end
 
@@ -226,6 +227,7 @@ function clearNavigation()
     gePackage.navigation.targetSpeed = nil
     gePackage.navigation.lastObservedSpeed = nil
     gePackage.navigation.lastSpeedChange = nil
+    gePackage.navigation.rotationComplete = false
     if gePackage.navigation.planetScan then
       gePackage.navigation.planetScan.bearing = nil
       gePackage.navigation.planetScan.distance = nil

@@ -422,7 +422,7 @@ describe("Navigation System", function()
     it("rescans after traveling", function()
       navigateToPlanetSimple(1)
       gePackage.navigation.state = "spl_traveling"
-      gePackage.navigation.lastCommand = os.time() - 4  -- past pollingInterval of 3s
+      gePackage.navigation.lastCommand = os.time() - 4  -- past pollingInterval of 1s
 
       navigationTick()
 

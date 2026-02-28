@@ -133,7 +133,7 @@ createAlias("^assault-cancel$", function()
 end, { type = "regex" })
 
 createAlias("^assault-status$", function()
-    assaultStatus()
+    printStatusAssault()
 end, { type = "regex" })
 
 --

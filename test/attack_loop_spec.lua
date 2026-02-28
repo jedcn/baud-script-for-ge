@@ -63,10 +63,10 @@ describe("Attack loop", function()
 
     end)
 
-    describe("assaultStatus", function()
+    describe("printStatusAssault", function()
 
         it("reports inactive when not running", function()
-            assaultStatus()
+            printStatusAssault()
 
             assert.is_true(helper.wasEchoCalledWith("Assault loop: inactive"))
         end)
@@ -75,7 +75,7 @@ describe("Attack loop", function()
             startAssault()
             helper.echoCalls = {}
 
-            assaultStatus()
+            printStatusAssault()
 
             -- Should contain the current state
             local found = false

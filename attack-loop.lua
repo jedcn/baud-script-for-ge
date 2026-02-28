@@ -101,7 +101,7 @@ function cancelAssault()
   gePackage.attackLoop.state = "idle"
 end
 
-function assaultStatus()
+function printStatusAssault()
   if not getAttackLoopActive() then
     echo("Assault loop: inactive")
     return

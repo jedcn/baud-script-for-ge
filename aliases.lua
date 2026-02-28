@@ -118,7 +118,7 @@ createAlias("^attack", function()
 end, { type = "regex" })
 
 createAlias("^gohome", function()
-    navigateToSector(9, -11, 8750, 8500)
+    navigateToSectorAndPlanet(9, -11, 8750, 8500, 3)
 end, { type = "regex" })
 
 --

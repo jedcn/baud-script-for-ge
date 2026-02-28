@@ -32,7 +32,7 @@ gePackage.navigation.config = {
 
   -- Timing
   scanInterval = 3,                 -- Seconds between position/scan requests to server
-  commandTimeout = 18,              -- Timeout for command responses
+  commandTimeout = 30,              -- Timeout for command responses
   maxStuckTime = 60,               -- Abort if stuck this long
 
   -- Speed decision function (distance-based, user can customize)

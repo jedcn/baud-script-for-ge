@@ -25,6 +25,17 @@ local assaultConfig = {
 }
 
 -- ============================================================================
+-- Helpers
+-- ============================================================================
+
+local function isOrbitingPlanetInSector(planet, sectorX, sectorY)
+  local orbiting = getOrbitingPlanet()
+  if orbiting ~= planet then return false end
+  local sX, sY = getSector()
+  return sX == sectorX and sY == sectorY
+end
+
+-- ============================================================================
 -- State Management
 -- ============================================================================
 
@@ -69,7 +80,14 @@ function startAssault()
   gePackage.attackLoop.startedAt = os.time()
 
   cecho("#ff00ff", "[assault] Starting assault loop")
-  setAttackLoopState("going_home")
+
+  -- Detect current location and start in the appropriate state
+  if isOrbitingPlanetInSector(assaultConfig.target.planet, assaultConfig.target.sectorX, assaultConfig.target.sectorY) then
+    setAttackLoopState("rotating")
+    rotateToHeading(assaultConfig.escapeHeading)
+  else
+    setAttackLoopState("going_home")
+  end
 end
 
 function cancelAssault()
@@ -106,9 +124,8 @@ function attackLoopTick()
   local cfg = assaultConfig
 
   if state == "going_home" then
-    -- Check if already orbiting supply planet
-    local orbiting = getOrbitingPlanet()
-    if orbiting == cfg.supply.planet then
+    -- Check if already orbiting supply planet in the correct sector
+    if isOrbitingPlanetInSector(cfg.supply.planet, cfg.supply.sectorX, cfg.supply.sectorY) then
       setAttackLoopState("repairing")
       flipAwayFromPlanet()
       doMaint()
@@ -128,9 +145,8 @@ function attackLoopTick()
     end
 
   elseif state == "loading" then
-    -- Check if already orbiting target planet
-    local orbiting = getOrbitingPlanet()
-    if orbiting == cfg.target.planet then
+    -- Check if already orbiting target planet in the correct sector
+    if isOrbitingPlanetInSector(cfg.target.planet, cfg.target.sectorX, cfg.target.sectorY) then
       setAttackLoopState("rotating")
       rotateToHeading(cfg.escapeHeading)
     elseif not getNavigationActive() and not getSectorNavActive() then

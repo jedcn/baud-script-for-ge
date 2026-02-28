@@ -19,6 +19,20 @@ describe("Attack loop", function()
             assert.are.equal("going_home", getAttackLoopState())
         end)
 
+        it("starts in rotating state when at target planet", function()
+            setSector(11, -9)
+            setOrbitingPlanet(3)
+
+            local rottoArg = nil
+            _G.rotateToHeading = function(heading) rottoArg = heading end
+
+            startAssault()
+
+            assert.is_true(getAttackLoopActive())
+            assert.are.equal("rotating", getAttackLoopState())
+            assert.are.equal(0, rottoArg)
+        end)
+
         it("does not start if already running", function()
             startAssault()
             helper.echoCalls = {}
@@ -88,6 +102,7 @@ describe("Attack loop", function()
         describe("going_home -> repairing", function()
 
             it("transitions immediately when already orbiting supply planet", function()
+                setSector(9, -11)
                 setOrbitingPlanet(3)
                 startAssault()
 
@@ -102,6 +117,18 @@ describe("Attack loop", function()
                 assert.are.equal("repairing", getAttackLoopState())
                 assert.is_true(flipCalled)
                 assert.is_true(maintCalled)
+            end)
+
+            it("does not match supply planet when orbiting same planet number in wrong sector", function()
+                setSector(11, -9)  -- target sector, not supply
+                setOrbitingPlanet(3)
+
+                -- startAssault detects target planet, goes to rotating
+                _G.rotateToHeading = function() end
+                startAssault()
+
+                -- Should NOT be in repairing (that would mean it confused target for supply)
+                assert.are_not.equal("repairing", getAttackLoopState())
             end)
 
             it("starts navigation when not at supply planet", function()
@@ -183,6 +210,7 @@ describe("Attack loop", function()
             it("transitions when already orbiting target planet", function()
                 startAssault()
                 setAttackLoopState("loading")
+                setSector(11, -9)
                 setOrbitingPlanet(3)
 
                 -- Mock rotateToHeading

@@ -127,8 +127,8 @@ function attackLoopTick()
     -- Check if already orbiting supply planet in the correct sector
     if isOrbitingPlanetInSector(cfg.supply.planet, cfg.supply.sectorX, cfg.supply.sectorY) then
       setAttackLoopState("repairing")
-      flipAwayFromPlanet()
       doMaint()
+      flipAwayFromPlanet()
     elseif not getNavigationActive() and not getSectorNavActive() then
       -- Not there yet and no nav running, start navigation
       navigateToSectorAndPlanet(cfg.supply.sectorX, cfg.supply.sectorY, cfg.supply.posX, cfg.supply.posY, cfg.supply.planet)

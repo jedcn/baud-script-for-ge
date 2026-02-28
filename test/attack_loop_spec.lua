@@ -112,11 +112,14 @@ describe("Attack loop", function()
                 _G.flipAwayFromPlanet = function() flipCalled = true end
                 _G.doMaint = function() maintCalled = true end
 
+                -- First tick: going_home detects orbit, transitions to repairing
                 attackLoopTick()
-
                 assert.are.equal("repairing", getAttackLoopState())
-                assert.is_true(flipCalled)
+
+                -- Second tick: repairing sends repair commands
+                attackLoopTick()
                 assert.is_true(maintCalled)
+                assert.is_true(flipCalled)
             end)
 
             it("does not match supply planet when orbiting same planet number in wrong sector", function()

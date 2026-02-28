@@ -145,7 +145,7 @@ describe("Attack loop", function()
                 startAssault()
                 setAttackLoopState("repairing")
 
-                setShipStatus("No damage")
+                setShipStatus("no damage")
 
                 -- Mock navigateToSectorAndPlanet
                 local navArgs = {}

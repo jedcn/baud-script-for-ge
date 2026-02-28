@@ -119,7 +119,7 @@ function attackLoopTick()
 
   elseif state == "repairing" then
     -- Wait for ship to be fully repaired
-    if getShipStatus() == "No damage" then
+    if getShipStatus() == "no damage" then
       setAttackLoopState("loading")
       send("tra up 1 flu")
       send("flu")

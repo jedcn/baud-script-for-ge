@@ -27,6 +27,8 @@ dofile(scriptDir .. "navigate.lua")
 
 dofile(scriptDir .. "status.lua")
 
+dofile(scriptDir .. "attack-loop.lua")
+
 dofile(scriptDir .. "timers.lua")
 
 echo("Finishing reading main.lua")

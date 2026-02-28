@@ -9,6 +9,13 @@
 -- =========================================================================
 
 --
+-- auto nonstop: bypass the server's pager prompt automatically
+--
+createTrigger("^\\(N\\)onstop", function()
+    send("n")
+end, { type = "regex" })
+
+--
 -- auto orbit
 --
 createTrigger("^In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)

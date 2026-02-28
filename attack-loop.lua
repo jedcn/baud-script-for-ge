@@ -142,6 +142,13 @@ function attackLoopTick()
       send("flu")
       send("tra up " .. cfg.troopCount .. " tro")
       navigateToSectorAndPlanet(cfg.target.sectorX, cfg.target.sectorY, cfg.target.posX, cfg.target.posY, cfg.target.planet)
+    else
+      -- Poll for status updates every 5 seconds
+      local lastCheck = gePackage.attackLoop.lastRepairCheck or 0
+      if os.time() - lastCheck >= 5 then
+        gePackage.attackLoop.lastRepairCheck = os.time()
+        send("rep sys")
+      end
     end
 
   elseif state == "loading" then

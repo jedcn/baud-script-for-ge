@@ -109,7 +109,7 @@ createAlias("^lfg$", function()
     send("tra up 1 flu")
     send("flu")
     send("tra up 249980 tro")
-    navigateToSector(11, -9, 4300, 1050)
+    navigateToSectorAndPlanet(11, -9, 4300, 1050, 3)
 end, { type = "regex" })
 
 createAlias("^attack", function()
@@ -183,4 +183,14 @@ createAlias("^navsec (-?\\d+) (-?\\d+) (\\d+) (\\d+)$", function(matches)
     local posX = matches[4]
     local posY = matches[5]
     navigateToSector(sectorX, sectorY, posX, posY)
+end, { type = "regex" })
+
+-- navsecpl X Y posX posY N -> navigateToSectorAndPlanet(X, Y, posX, posY, N)
+createAlias("^navsecpl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$", function(matches)
+    local sectorX      = matches[2]
+    local sectorY      = matches[3]
+    local posX         = matches[4]
+    local posY         = matches[5]
+    local planetNumber = matches[6]
+    navigateToSectorAndPlanet(sectorX, sectorY, posX, posY, planetNumber)
 end, { type = "regex" })

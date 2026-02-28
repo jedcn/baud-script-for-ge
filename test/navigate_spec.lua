@@ -439,4 +439,92 @@ describe("Navigation System", function()
       assert.equals("spl_traveling", gePackage.navigation.state)
     end)
   end)
+
+  -- ===== navigateToSectorAndPlanet Tests =====
+  describe("navigateToSectorAndPlanet", function()
+    it("rejects planet number 0", function()
+      local result = navigateToSectorAndPlanet(11, -9, 4300, 1050, 0)
+      assert.is_false(result)
+      assert.is_false(getSectorNavActive())
+    end)
+
+    it("rejects planet number 1000", function()
+      local result = navigateToSectorAndPlanet(11, -9, 4300, 1050, 1000)
+      assert.is_false(result)
+      assert.is_false(getSectorNavActive())
+    end)
+
+    it("rejects nil planet number", function()
+      local result = navigateToSectorAndPlanet(11, -9, 4300, 1050, nil)
+      assert.is_false(result)
+      assert.is_false(getSectorNavActive())
+    end)
+
+    it("starts sector nav for valid inputs", function()
+      local result = navigateToSectorAndPlanet(11, -9, 4300, 1050, 3)
+      assert.is_true(result)
+      assert.is_true(getSectorNavActive())
+      assert.is_true(helper.wasSendCalledWith("rep nav"))
+    end)
+
+    it("stores followUpPlanet on sectorNav", function()
+      navigateToSectorAndPlanet(11, -9, 4300, 1050, 3)
+      assert.equals(3, gePackage.sectorNav.followUpPlanet)
+    end)
+
+    it("accepts planet number 1 and 999 as boundary values", function()
+      local result1 = navigateToSectorAndPlanet(11, -9, 4300, 1050, 1)
+      assert.is_true(result1)
+      helper.resetAll()
+      dofile("main.lua")
+      local result2 = navigateToSectorAndPlanet(11, -9, 4300, 1050, 999)
+      assert.is_true(result2)
+    end)
+  end)
+
+  -- ===== sec_completed follow-up planet Tests =====
+  describe("sec_completed with followUpPlanet", function()
+    before_each(function()
+      -- Set up current position so sector nav has something to work with
+      setSector(11, -9)
+      setSectorPosition(4300, 1050)
+    end)
+
+    it("starts planet nav when followUpPlanet is set", function()
+      navigateToSectorAndPlanet(11, -9, 4300, 1050, 3)
+      gePackage.sectorNav.state = "sec_completed"
+
+      sectorNavTick()
+
+      assert.is_false(getSectorNavActive())
+      assert.is_true(gePackage.navigation.active)
+      assert.equals("planet_simple", gePackage.navigation.phase)
+      assert.equals(3, gePackage.navigation.target.planetNumber)
+    end)
+
+    it("clears stale orbitingPlanet before starting planet nav", function()
+      -- Ship was orbiting planet 3 in origin sector; state carries over
+      setOrbitingPlanet(3)
+      navigateToSectorAndPlanet(11, -9, 4300, 1050, 3)
+      gePackage.sectorNav.state = "sec_completed"
+
+      sectorNavTick()
+
+      -- orbit state must be cleared so the early-exit in navigationTick doesn't
+      -- falsely declare arrival before any scan happens
+      assert.is_nil(getOrbitingPlanet())  -- clearOrbitingPlanet() was called
+      -- planet nav should be scanning, not already complete
+      assert.equals("spl_scanning", gePackage.navigation.state)
+    end)
+
+    it("does not start planet nav when followUpPlanet is absent", function()
+      navigateToSector(11, -9, 4300, 1050)
+      gePackage.sectorNav.state = "sec_completed"
+
+      sectorNavTick()
+
+      assert.is_false(getSectorNavActive())
+      assert.is_false(gePackage.navigation.active)
+    end)
+  end)
 end)

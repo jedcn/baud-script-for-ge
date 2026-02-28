@@ -294,8 +294,19 @@ function navigateToSector(sectorX, sectorY)
   navLog("Phase 3 not yet implemented")
 end
 
-function navigateToSectorAndPlanet(sectorX, sectorY, planetNumber)
-  navLog("Phase 5 not yet implemented")
+function navigateToSectorAndPlanet(sectorX, sectorY, posX, posY, planetNumber)
+  planetNumber = tonumber(planetNumber)
+  if not planetNumber or planetNumber < 1 or planetNumber > 999 then
+    navError("[navsec] Invalid planet number. Must be 1-999.")
+    return false
+  end
+
+  local success = navigateToSector(sectorX, sectorY, posX, posY)
+  if success then
+    gePackage.sectorNav.followUpPlanet = planetNumber
+    navLog("[navsec] Will navigate to planet " .. planetNumber .. " upon arrival")
+  end
+  return success
 end
 
 -- ============================================================================
@@ -1410,7 +1421,13 @@ function sectorNavTick()
     sec_completed = function()
       local currentSectorX, currentSectorY = getSector()
       navLog("[navsec] Sector navigation complete! Now in sector (" .. currentSectorX .. ", " .. currentSectorY .. ")")
+      local followUpPlanet = sec.followUpPlanet
       sec.active = false
+      if followUpPlanet then
+        clearOrbitingPlanet()  -- clear stale orbit state from origin sector
+        navLog("[navsec] Starting planet navigation to planet " .. followUpPlanet)
+        navigateToPlanetSimple(followUpPlanet)
+      end
     end,
 
     sec_failed = function()

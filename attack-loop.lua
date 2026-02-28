@@ -126,7 +126,10 @@ function attackLoopTick()
   if state == "going_home" then
     -- Check if already orbiting supply planet in the correct sector
     if isOrbitingPlanetInSector(cfg.supply.planet, cfg.supply.sectorX, cfg.supply.sectorY) then
-      cecho("#ff00ff", "[assault] At supply planet, resetting repairInitiated to false")
+      -- Cancel any navigation that was started before we detected orbit
+      if getNavigationActive() then cancelNavigation() end
+      if getSectorNavActive() then setSectorNavActive(false) end
+      if getFlipAwayActive() then setFlipAwayActive(false) end
       gePackage.attackLoop.repairInitiated = false
       setAttackLoopState("repairing")
     elseif not getNavigationActive() and not getSectorNavActive() then
@@ -139,12 +142,8 @@ function attackLoopTick()
     local initiated = gePackage.attackLoop.repairInitiated
     if not initiated then
       gePackage.attackLoop.repairInitiated = true
-      cecho("#ff00ff", "[assault] Sending repair commands (v2)")
-      cecho("#ff00ff", "[assault] calling doMaint()")
+      cecho("#ff00ff", "[assault] Sending repair commands")
       doMaint()
-      cecho("#ff00ff", "[assault] calling flipAwayFromPlanet()")
-      flipAwayFromPlanet()
-      cecho("#ff00ff", "[assault] repair init complete")
     end
 
     -- Wait for ship to be fully repaired

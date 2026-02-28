@@ -106,20 +106,17 @@ describe("Attack loop", function()
                 setOrbitingPlanet(3)
                 startAssault()
 
-                -- Mock flipAwayFromPlanet and doMaint
-                local flipCalled = false
+                -- Mock doMaint
                 local maintCalled = false
-                _G.flipAwayFromPlanet = function() flipCalled = true end
                 _G.doMaint = function() maintCalled = true end
 
                 -- First tick: going_home detects orbit, transitions to repairing
                 attackLoopTick()
                 assert.are.equal("repairing", getAttackLoopState())
 
-                -- Second tick: repairing sends repair commands
+                -- Second tick: repairing sends repair commands (stays in orbit)
                 attackLoopTick()
                 assert.is_true(maintCalled)
-                assert.is_true(flipCalled)
             end)
 
             it("does not match supply planet when orbiting same planet number in wrong sector", function()

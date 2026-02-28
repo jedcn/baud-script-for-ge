@@ -69,10 +69,10 @@ describe("Navigation System", function()
       decideSpeed = gePackage.navigation.config.decideSpeed
     end)
 
-    it("uses warp 15 for very long distances", function()
+    it("uses warp 10 for very long distances", function()
       local speedType, speedValue = decideSpeed(15000, 0)
       assert.equals("WARP", speedType)
-      assert.equals(15, speedValue)
+      assert.equals(10, speedValue)
     end)
 
     it("uses warp 5 for distances over 5000", function()
@@ -101,8 +101,8 @@ describe("Navigation System", function()
       assert.equals(0, speedValue)
     end)
 
-    it("decelerates from warp 15 when within 10000", function()
-      local speedType, speedValue = decideSpeed(9000, 15)
+    it("decelerates from warp 10 when within 13000", function()
+      local speedType, speedValue = decideSpeed(12000, 10)
       assert.equals("WARP", speedType)
       assert.equals(5, speedValue)
     end)

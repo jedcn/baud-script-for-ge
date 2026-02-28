@@ -70,8 +70,6 @@ function startAssault()
 
   cecho("#ff00ff", "[assault] Starting assault loop")
   setAttackLoopState("going_home")
-  local cfg = assaultConfig.supply
-  navigateToSectorAndPlanet(cfg.sectorX, cfg.sectorY, cfg.posX, cfg.posY, cfg.planet)
 end
 
 function cancelAssault()
@@ -108,14 +106,15 @@ function attackLoopTick()
   local cfg = assaultConfig
 
   if state == "going_home" then
-    -- Wait for navigation to complete and orbit supply planet
-    if not getNavigationActive() and not getSectorNavActive() then
-      local orbiting = getOrbitingPlanet()
-      if orbiting == cfg.supply.planet then
-        setAttackLoopState("repairing")
-        flipAwayFromPlanet()
-        doMaint()
-      end
+    -- Check if already orbiting supply planet
+    local orbiting = getOrbitingPlanet()
+    if orbiting == cfg.supply.planet then
+      setAttackLoopState("repairing")
+      flipAwayFromPlanet()
+      doMaint()
+    elseif not getNavigationActive() and not getSectorNavActive() then
+      -- Not there yet and no nav running, start navigation
+      navigateToSectorAndPlanet(cfg.supply.sectorX, cfg.supply.sectorY, cfg.supply.posX, cfg.supply.posY, cfg.supply.planet)
     end
 
   elseif state == "repairing" then
@@ -129,13 +128,14 @@ function attackLoopTick()
     end
 
   elseif state == "loading" then
-    -- Wait for navigation to complete and orbit target planet
-    if not getNavigationActive() and not getSectorNavActive() then
-      local orbiting = getOrbitingPlanet()
-      if orbiting == cfg.target.planet then
-        setAttackLoopState("rotating")
-        rotateToHeading(cfg.escapeHeading)
-      end
+    -- Check if already orbiting target planet
+    local orbiting = getOrbitingPlanet()
+    if orbiting == cfg.target.planet then
+      setAttackLoopState("rotating")
+      rotateToHeading(cfg.escapeHeading)
+    elseif not getNavigationActive() and not getSectorNavActive() then
+      -- Not there yet and no nav running, start navigation
+      navigateToSectorAndPlanet(cfg.target.sectorX, cfg.target.sectorY, cfg.target.posX, cfg.target.posY, cfg.target.planet)
     end
 
   elseif state == "rotating" then
@@ -168,7 +168,6 @@ function attackLoopTick()
     if sX and sY then
       if sX ~= cfg.target.sectorX or sY ~= cfg.target.sectorY then
         setAttackLoopState("going_home")
-        navigateToSectorAndPlanet(cfg.supply.sectorX, cfg.supply.sectorY, cfg.supply.posX, cfg.supply.posY, cfg.supply.planet)
       end
     end
   end

@@ -12,25 +12,11 @@ describe("Attack loop", function()
 
     describe("startAssault", function()
 
-        it("sets state to going_home and starts navigation", function()
-            -- Mock navigateToSectorAndPlanet to track the call
-            local navCalled = false
-            local navArgs = {}
-            _G.navigateToSectorAndPlanet = function(sX, sY, pX, pY, planet)
-                navCalled = true
-                navArgs = {sX, sY, pX, pY, planet}
-            end
-
+        it("sets state to going_home", function()
             startAssault()
 
             assert.is_true(getAttackLoopActive())
             assert.are.equal("going_home", getAttackLoopState())
-            assert.is_true(navCalled)
-            assert.are.equal(9, navArgs[1])
-            assert.are.equal(-11, navArgs[2])
-            assert.are.equal(5000, navArgs[3])
-            assert.are.equal(8000, navArgs[4])
-            assert.are.equal(3, navArgs[5])
         end)
 
         it("does not start if already running", function()
@@ -101,13 +87,9 @@ describe("Attack loop", function()
 
         describe("going_home -> repairing", function()
 
-            it("transitions when orbiting supply planet and nav is inactive", function()
-                startAssault()
-
-                -- Simulate: navigation is done, orbiting supply planet 3
-                _G.getNavigationActive = function() return false end
-                _G.getSectorNavActive = function() return false end
+            it("transitions immediately when already orbiting supply planet", function()
                 setOrbitingPlanet(3)
+                startAssault()
 
                 -- Mock flipAwayFromPlanet and doMaint
                 local flipCalled = false
@@ -122,16 +104,37 @@ describe("Attack loop", function()
                 assert.is_true(maintCalled)
             end)
 
-            it("does not transition while nav is still active", function()
+            it("starts navigation when not at supply planet", function()
                 startAssault()
 
-                _G.getNavigationActive = function() return true end
+                _G.getNavigationActive = function() return false end
                 _G.getSectorNavActive = function() return false end
-                setOrbitingPlanet(3)
+
+                local navArgs = {}
+                _G.navigateToSectorAndPlanet = function(sX, sY, pX, pY, planet)
+                    navArgs = {sX, sY, pX, pY, planet}
+                end
 
                 attackLoopTick()
 
                 assert.are.equal("going_home", getAttackLoopState())
+                assert.are.equal(9, navArgs[1])
+                assert.are.equal(-11, navArgs[2])
+            end)
+
+            it("does not start nav while nav is still active", function()
+                startAssault()
+
+                _G.getNavigationActive = function() return true end
+                _G.getSectorNavActive = function() return false end
+
+                local navCalled = false
+                _G.navigateToSectorAndPlanet = function() navCalled = true end
+
+                attackLoopTick()
+
+                assert.are.equal("going_home", getAttackLoopState())
+                assert.is_false(navCalled)
             end)
 
         end)
@@ -177,12 +180,9 @@ describe("Attack loop", function()
 
         describe("loading -> rotating", function()
 
-            it("transitions when orbiting target planet and nav is inactive", function()
+            it("transitions when already orbiting target planet", function()
                 startAssault()
                 setAttackLoopState("loading")
-
-                _G.getNavigationActive = function() return false end
-                _G.getSectorNavActive = function() return false end
                 setOrbitingPlanet(3)
 
                 -- Mock rotateToHeading
@@ -193,6 +193,25 @@ describe("Attack loop", function()
 
                 assert.are.equal("rotating", getAttackLoopState())
                 assert.are.equal(0, rottoArg)
+            end)
+
+            it("starts navigation when not at target planet", function()
+                startAssault()
+                setAttackLoopState("loading")
+
+                _G.getNavigationActive = function() return false end
+                _G.getSectorNavActive = function() return false end
+
+                local navArgs = {}
+                _G.navigateToSectorAndPlanet = function(sX, sY, pX, pY, planet)
+                    navArgs = {sX, sY, pX, pY, planet}
+                end
+
+                attackLoopTick()
+
+                assert.are.equal("loading", getAttackLoopState())
+                assert.are.equal(11, navArgs[1])
+                assert.are.equal(-9, navArgs[2])
             end)
 
         end)
@@ -277,14 +296,9 @@ describe("Attack loop", function()
                 -- Simulate being in a different sector than the target (11, -9)
                 setSector(12, -9)
 
-                -- Mock navigateToSectorAndPlanet
-                local navCalled = false
-                _G.navigateToSectorAndPlanet = function() navCalled = true end
-
                 attackLoopTick()
 
                 assert.are.equal("going_home", getAttackLoopState())
-                assert.is_true(navCalled)
             end)
 
             it("does not transition while still in target sector", function()

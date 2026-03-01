@@ -9,15 +9,15 @@ local assaultConfig = {
   supply = {
     sectorX = 9,
     sectorY = -11,
-    posX = 5000,
+    posX = 8000,
     posY = 8000,
     planet = 3
   },
   target = {
     sectorX = 11,
     sectorY = -9,
-    posX = 3000,
-    posY = 1000,
+    posX = 2500,
+    posY = 500,
     planet = 3
   },
   escapeHeading = 0,
@@ -157,7 +157,7 @@ function attackLoopTick()
     else
       -- Poll for status updates every 5 seconds
       local lastCheck = gePackage.attackLoop.lastRepairCheck or 0
-      if os.time() - lastCheck >= 5 then
+      if os.time() - lastCheck >= 15 then
         gePackage.attackLoop.lastRepairCheck = os.time()
         send("rep sys")
       end

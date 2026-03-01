@@ -48,7 +48,7 @@ end, { type="regex" })
 --
 -- Storage Management
 --
-createTrigger("^Leaving orbit Sir!$", function(matches)
+createTrigger("Leaving orbit Sir!$", function(matches)
     clearOrbitingPlanet()
 end, { type = "regex" })
 

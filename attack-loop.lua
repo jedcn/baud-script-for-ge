@@ -66,6 +66,16 @@ function setAttackLoopState(newState)
   end
 end
 
+function recordAssaultKill(killed)
+  if not getAttackLoopActive() then return end
+  local entry = {
+    time = os.date("%H:%M:%S"),
+    killed = killed
+  }
+  table.insert(gePackage.attackLoop.killHistory, entry)
+  cecho("#ff00ff", "[assault] Defenders killed: " .. killed)
+end
+
 -- ============================================================================
 -- Start / Cancel / Status
 -- ============================================================================
@@ -217,16 +227,6 @@ function attackLoopTick()
     end
 
   elseif state == "attacking" then
-    -- Record kill count from this attack
-    local killed = getTroopsKilledInAttack()
-    if killed then
-      local entry = {
-        time = os.date("%H:%M:%S"),
-        killed = killed
-      }
-      table.insert(gePackage.attackLoop.killHistory, entry)
-      cecho("#ff00ff", "[assault] Defenders killed: " .. killed)
-    end
     setAttackLoopState("escaping")
 
   elseif state == "escaping" then

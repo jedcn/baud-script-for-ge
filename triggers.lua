@@ -265,6 +265,7 @@ end, { type="regex" })
 createTrigger("^In the attack our troops killed (\\d+), and suffered losses$", function(matches)
     local defendersKilled = tonumber(matches[2])
     setTroopsKilledInAttack(defendersKilled)
+    recordAssaultKill(defendersKilled)
 end, { type = "regex" })
 
 -- =========================================================================

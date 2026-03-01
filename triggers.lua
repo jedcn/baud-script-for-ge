@@ -11,8 +11,10 @@
 --
 -- auto nonstop: bypass the server's pager prompt automatically
 --
-createTrigger("^\\(N\\)onstop", function()
-    send("n")
+createTrigger("^\\(N\\)onstop", function(matches, context)
+    if context.isLastLine then
+        send("n")
+    end
 end, { type = "regex" })
 
 --
@@ -230,7 +232,12 @@ createTrigger("^Shields are at (\\d+) percent charge, Sir!", function(matches)
     setShieldCharge(shieldCharge)
 end, { type="regex" })
 
--- set shield strength
+-- set shield strength to 100 when fully charged
+createTrigger("^Shields are now fully charged, Sir!", function(matches)
+    setShieldCharge(100)
+end, { type="regex" })
+
+-- set shield strength from systems report
 createTrigger("^Shield Bank Charge .... (\\d+)", function(matches)
     local shieldCharge = matches[2]
     setShieldCharge(shieldCharge)

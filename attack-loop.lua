@@ -193,6 +193,13 @@ function attackLoopTick()
       setAttackLoopState("attacking")
       send("attack " .. cfg.troopCount .. " tro")
       send("imp 99 " .. cfg.escapeHeading)
+    else
+      -- Poll for shield status every 15 seconds
+      local lastCheck = gePackage.attackLoop.lastShieldCheck or 0
+      if os.time() - lastCheck >= 15 then
+        gePackage.attackLoop.lastShieldCheck = os.time()
+        send("rep sys")
+      end
     end
 
   elseif state == "attacking" then

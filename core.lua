@@ -156,6 +156,16 @@ function getStoredPlanet()
   return gePackage.storedPlanet or 1
 end
 
+function setAutoOrbit(enabled)
+  debugLog("setAutoOrbit(" .. tostring(enabled) .. ")")
+  gePackage.autoOrbit = enabled
+end
+
+function getAutoOrbit()
+  if gePackage.autoOrbit == nil then return true end
+  return gePackage.autoOrbit
+end
+
 function resetData()
   debugLog("resetData()")
   gePackage.position = {}

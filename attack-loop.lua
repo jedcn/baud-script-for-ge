@@ -96,6 +96,7 @@ function cancelAssault()
     return
   end
 
+  setAutoOrbit(true)
   cecho("#ff00ff", "[assault] Cancelled by user")
   gePackage.attackLoop.active = false
   gePackage.attackLoop.state = "idle"
@@ -188,6 +189,7 @@ function attackLoopTick()
     -- Wait for shields to reach 100%
     local charge = getShieldCharge()
     if charge and charge >= 100 then
+      setAutoOrbit(false)
       setAttackLoopState("attacking")
       send("attack " .. cfg.troopCount .. " tro")
       send("imp 99 " .. cfg.escapeHeading)
@@ -202,6 +204,7 @@ function attackLoopTick()
     local sX, sY = getSector()
     if sX and sY then
       if sX ~= cfg.target.sectorX or sY ~= cfg.target.sectorY then
+        setAutoOrbit(true)
         setAttackLoopState("going_home")
       end
     end

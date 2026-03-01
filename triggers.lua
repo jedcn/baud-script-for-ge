@@ -19,6 +19,7 @@ end, { type = "regex" })
 -- auto orbit
 --
 createTrigger("^In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)
+    if not getAutoOrbit() then return end
     local planetNumber = matches[2]
     send("orbit " .. planetNumber)
 end, { type = "regex" })

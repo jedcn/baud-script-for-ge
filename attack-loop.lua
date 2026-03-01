@@ -16,7 +16,7 @@ local assaultConfig = {
   target = {
     sectorX = 11,
     sectorY = -9,
-    posX = 2500,
+    posX = 3250,
     posY = 500,
     planet = 3
   },

@@ -166,6 +166,15 @@ function getAutoOrbit()
   return gePackage.autoOrbit
 end
 
+function setTroopsKilledInAttack(count)
+  debugLog("setTroopsKilledInAttack(" .. tostring(count) .. ")")
+  gePackage.troopsKilledInAttack = count
+end
+
+function getTroopsKilledInAttack()
+  return gePackage.troopsKilledInAttack
+end
+
 function resetData()
   debugLog("resetData()")
   gePackage.position = {}

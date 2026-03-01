@@ -44,7 +44,8 @@ function initAttackLoop()
     active = false,
     state = "idle",
     startedAt = nil,
-    lastStateChange = nil
+    lastStateChange = nil,
+    killHistory = {}
   }
 end
 
@@ -112,6 +113,19 @@ function printStatusAssault()
   local elapsed = os.time() - (gePackage.attackLoop.startedAt or os.time())
   local stateElapsed = os.time() - (gePackage.attackLoop.lastStateChange or os.time())
   echo("Assault loop: " .. state .. " (running " .. elapsed .. "s, in state " .. stateElapsed .. "s)")
+
+  local history = gePackage.attackLoop.killHistory or {}
+  if #history > 0 then
+    local total = 0
+    echo("  Attack history:")
+    for i, entry in ipairs(history) do
+      echo("    " .. i .. ". [" .. entry.time .. "] killed " .. entry.killed)
+      total = total + entry.killed
+    end
+    echo("  Total killed: " .. total .. " (" .. #history .. " attacks)")
+  else
+    echo("  No attacks yet")
+  end
 end
 
 -- ============================================================================
@@ -203,7 +217,16 @@ function attackLoopTick()
     end
 
   elseif state == "attacking" then
-    -- Transition immediately to escaping
+    -- Record kill count from this attack
+    local killed = getTroopsKilledInAttack()
+    if killed then
+      local entry = {
+        time = os.date("%H:%M:%S"),
+        killed = killed
+      }
+      table.insert(gePackage.attackLoop.killHistory, entry)
+      cecho("#ff00ff", "[assault] Defenders killed: " .. killed)
+    end
     setAttackLoopState("escaping")
 
   elseif state == "escaping" then

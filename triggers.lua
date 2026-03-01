@@ -20,7 +20,7 @@ end, { type = "regex" })
 --
 -- auto orbit
 --
-createTrigger("^In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)
+createTrigger("In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)
     if not getAutoOrbit() then return end
     local planetNumber = matches[2]
     send("orbit " .. planetNumber)
@@ -260,6 +260,12 @@ createTrigger("^DCO reports............ (.+)$", function(matches)
     local shipStatus = matches[2]
     setShipStatus(shipStatus)
 end, { type="regex" })
+
+-- combat results
+createTrigger("^In the attack our troops killed (\\d+), and suffered losses$", function(matches)
+    local defendersKilled = tonumber(matches[2])
+    cecho("#ff00ff", "[assault] Defenders killed: " .. defendersKilled)
+end, { type = "regex" })
 
 -- =========================================================================
 -- Outbound triggers

@@ -122,6 +122,21 @@ createAlias("^gohome", function()
 end, { type = "regex" })
 
 --
+-- Assault loop
+--
+createAlias("^assault$", function()
+    startAssault()
+end, { type = "regex" })
+
+createAlias("^assault-cancel$", function()
+    cancelAssault()
+end, { type = "regex" })
+
+createAlias("^assault-status$", function()
+    printStatusAssault()
+end, { type = "regex" })
+
+--
 -- Navigation commands
 --
 

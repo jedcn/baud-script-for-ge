@@ -11,14 +11,17 @@
 --
 -- auto nonstop: bypass the server's pager prompt automatically
 --
-createTrigger("^\\(N\\)onstop", function()
-    send("n")
+createTrigger("^\\(N\\)onstop", function(matches, context)
+    if context.isLastLine then
+        send("n")
+    end
 end, { type = "regex" })
 
 --
 -- auto orbit
 --
-createTrigger("^In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)
+createTrigger("In gravity pull of planet (\\d+), Helm compensating, Sir!$", function(matches)
+    if not getAutoOrbit() then return end
     local planetNumber = matches[2]
     send("orbit " .. planetNumber)
 end, { type = "regex" })
@@ -47,7 +50,7 @@ end, { type="regex" })
 --
 -- Storage Management
 --
-createTrigger("^Leaving orbit Sir!$", function(matches)
+createTrigger("Leaving orbit Sir!$", function(matches)
     clearOrbitingPlanet()
 end, { type = "regex" })
 
@@ -229,7 +232,12 @@ createTrigger("^Shields are at (\\d+) percent charge, Sir!", function(matches)
     setShieldCharge(shieldCharge)
 end, { type="regex" })
 
--- set shield strength
+-- set shield strength to 100 when fully charged
+createTrigger("^Shields are now fully charged, Sir!", function(matches)
+    setShieldCharge(100)
+end, { type="regex" })
+
+-- set shield strength from systems report
 createTrigger("^Shield Bank Charge .... (\\d+)", function(matches)
     local shieldCharge = matches[2]
     setShieldCharge(shieldCharge)
@@ -252,6 +260,13 @@ createTrigger("^DCO reports............ (.+)$", function(matches)
     local shipStatus = matches[2]
     setShipStatus(shipStatus)
 end, { type="regex" })
+
+-- combat results
+createTrigger("^In the attack our troops killed (\\d+), and suffered losses$", function(matches)
+    local defendersKilled = tonumber(matches[2])
+    setTroopsKilledInAttack(defendersKilled)
+    recordAssaultKill(defendersKilled)
+end, { type = "regex" })
 
 -- =========================================================================
 -- Outbound triggers

@@ -17,6 +17,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `navigation-state.lua` - Navigation state machines (coordinate nav, flip-away, rotto, sector nav)
 - `navigate.lua` - Autonomous navigation system
 - `navigate-config.lua` - User-configurable navigation settings
+- `attack-loop.lua` - Automated assault loop (supply → attack → escape → repeat)
 - `status.lua` - Status bar display function
 - `triggers.lua` - Pattern-matching triggers that fire on game output
 - `aliases.lua` - Command aliases (shortcuts like `scapl1` -> `sca pl 1`)
@@ -25,6 +26,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `test/core_spec.lua` - Core function tests (resetData, etc.)
 - `test/main_spec.lua` - Trigger tests using Busted framework
 - `test/navigate_spec.lua` - Navigation system tests
+- `test/attack_loop_spec.lua` - Attack loop state machine tests
 
 ## Conventions
 

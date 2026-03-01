@@ -30,6 +30,14 @@ function mainTick()
             echo("\n\nCaught an error in sectorNavTick:\n\n" .. secErr)
         end
     end
+
+    -- Attack loop tick (if function exists)
+    if attackLoopTick then
+        local alStatus, alErr = pcall(attackLoopTick)
+        if not alStatus then
+            echo("\n\nCaught an error in attackLoopTick:\n\n" .. alErr)
+        end
+    end
 end
 
 -- Set up recurring timer for main tick (every 1 second = 1000ms)

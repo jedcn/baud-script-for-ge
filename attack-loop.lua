@@ -155,6 +155,7 @@ function attackLoopTick()
       if getNavigationActive() then cancelNavigation() end
       if getSectorNavActive() then setSectorNavActive(false) end
       if getFlipAwayActive() then setFlipAwayActive(false) end
+      say("Arriving at supply planet")
       gePackage.attackLoop.repairInitiated = false
       setAttackLoopState("repairing")
     elseif not getNavigationActive() and not getSectorNavActive() then
@@ -191,6 +192,7 @@ function attackLoopTick()
   elseif state == "loading" then
     -- Check if already orbiting target planet in the correct sector
     if isOrbitingPlanetInSector(cfg.target.planet, cfg.target.sectorX, cfg.target.sectorY) then
+      say("Arrived at target planet")
       setAttackLoopState("rotating")
       rotateToHeading(cfg.escapeHeading)
     elseif not getNavigationActive() and not getSectorNavActive() then
@@ -235,6 +237,7 @@ function attackLoopTick()
     if sX and sY then
       if sX ~= cfg.target.sectorX or sY ~= cfg.target.sectorY then
         setAutoOrbit(true)
+        say("Returning to supply planet")
         setAttackLoopState("going_home")
       end
     end

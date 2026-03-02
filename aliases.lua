@@ -109,7 +109,7 @@ createAlias("^lfg$", function()
     send("tra up 1 flu")
     send("flu")
     send("tra up 249980 tro")
-    navigateToSectorAndPlanet(11, -9, 3000, 1000, 3)
+    navigateToSectorAndPlanet(11, -9, 3250, 500, 3)
 end, { type = "regex" })
 
 createAlias("^attack", function()

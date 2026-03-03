@@ -164,6 +164,26 @@ describe("Attack loop", function()
                 assert.is_false(navCalled)
             end)
 
+            it("announces navigation retry when nav restarts", function()
+                startAssault()
+
+                _G.getNavigationActive = function() return false end
+                _G.getSectorNavActive = function() return false end
+                _G.navigateToSectorAndPlanet = function() end
+
+                local sayCalls = {}
+                _G.say = function(text) table.insert(sayCalls, text) end
+
+                -- First tick starts nav without announcing retry
+                attackLoopTick()
+                assert.are.equal(0, #sayCalls)
+
+                -- Second tick is a retry and should announce
+                attackLoopTick()
+                assert.are.equal(1, #sayCalls)
+                assert.are.equal("Navigation failed, retrying", sayCalls[1])
+            end)
+
         end)
 
         describe("repairing -> loading", function()
@@ -235,11 +255,17 @@ describe("Attack loop", function()
                     navArgs = {sX, sY, pX, pY, planet}
                 end
 
+                local sayCalls = {}
+                _G.say = function(text) table.insert(sayCalls, text) end
+
                 attackLoopTick()
 
                 assert.are.equal("loading", getAttackLoopState())
                 assert.are.equal(11, navArgs[1])
                 assert.are.equal(-9, navArgs[2])
+                -- Nav was started when entering loading, so this is always a retry
+                assert.are.equal(1, #sayCalls)
+                assert.are.equal("Navigation failed, retrying", sayCalls[1])
             end)
 
         end)

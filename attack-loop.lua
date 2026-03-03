@@ -73,6 +73,7 @@ function recordAssaultKill(killed)
     killed = killed
   }
   table.insert(gePackage.attackLoop.killHistory, entry)
+  say("Killed " .. killed .. " defenders")
   cecho("#ff00ff", "[assault] Defenders killed: " .. killed)
 end
 
@@ -90,6 +91,7 @@ function startAssault()
   gePackage.attackLoop.active = true
   gePackage.attackLoop.startedAt = os.time()
 
+  say("Assault loop started")
   cecho("#ff00ff", "[assault] Starting assault loop")
 
   -- Detect current location and start in the appropriate state
@@ -108,6 +110,7 @@ function cancelAssault()
   end
 
   setAutoOrbit(true)
+  say("Assault cancelled")
   cecho("#ff00ff", "[assault] Cancelled by user")
   gePackage.attackLoop.active = false
   gePackage.attackLoop.state = "idle"
@@ -160,6 +163,10 @@ function attackLoopTick()
       setAttackLoopState("repairing")
     elseif not getNavigationActive() and not getSectorNavActive() then
       -- Not there yet and no nav running, start navigation
+      if gePackage.attackLoop.navStarted then
+        say("Navigation failed, retrying")
+      end
+      gePackage.attackLoop.navStarted = true
       navigateToSectorAndPlanet(cfg.supply.sectorX, cfg.supply.sectorY, cfg.supply.posX, cfg.supply.posY, cfg.supply.planet)
     end
 
@@ -175,6 +182,7 @@ function attackLoopTick()
     -- Wait for ship to be fully repaired
     local shipStatus = getShipStatus()
     if shipStatus == "no damage" then
+      say("Repairs complete, loading troops")
       setAttackLoopState("loading")
       send("tra up 1 flu")
       send("flu")
@@ -196,7 +204,8 @@ function attackLoopTick()
       setAttackLoopState("rotating")
       rotateToHeading(cfg.escapeHeading)
     elseif not getNavigationActive() and not getSectorNavActive() then
-      -- Not there yet and no nav running, start navigation
+      -- Nav was already started when entering loading state, so this is a retry
+      say("Navigation failed, retrying")
       navigateToSectorAndPlanet(cfg.target.sectorX, cfg.target.sectorY, cfg.target.posX, cfg.target.posY, cfg.target.planet)
     end
 
@@ -215,6 +224,7 @@ function attackLoopTick()
     -- Wait for shields to reach 100%
     local charge = getShieldCharge()
     if charge and charge >= 100 then
+      say("Shields charged, attacking")
       setAutoOrbit(false)
       setAttackLoopState("attacking")
       send("attack " .. cfg.troopCount .. " tro")
@@ -238,6 +248,7 @@ function attackLoopTick()
       if sX ~= cfg.target.sectorX or sY ~= cfg.target.sectorY then
         setAutoOrbit(true)
         say("Returning to supply planet")
+        gePackage.attackLoop.navStarted = false
         setAttackLoopState("going_home")
       end
     end

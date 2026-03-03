@@ -37,6 +37,7 @@ end, { type = "regex" })
 -- auto rep sys on ion cannon shot
 --
 createTrigger("^We have been hit with a Ion Cannon Burst Sir, the shield$", function()
+    say("Ion cannon hit")
     send("rep sys")
 end, { type = "regex" })
 
@@ -176,6 +177,9 @@ end, { type = "regex" })
 
 -- refreshes position when crossing a sector boundary
 createTrigger("^Helm reports leaving Sector (-?\\d+) (-?\\d+) and entering Sector (-?\\d+) (-?\\d+)$", function(matches)
+    local newSectorX = matches[4]
+    local newSectorY = matches[5]
+    say("Entering sector " .. newSectorX .. " " .. newSectorY)
     send("rep nav")
 end, { type = "regex" })
 

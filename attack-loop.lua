@@ -158,7 +158,7 @@ function attackLoopTick()
       if getNavigationActive() then cancelNavigation() end
       if getSectorNavActive() then setSectorNavActive(false) end
       if getFlipAwayActive() then setFlipAwayActive(false) end
-      say("Arriving at supply planet")
+      say("Arrived at supply planet")
       gePackage.attackLoop.repairInitiated = false
       setAttackLoopState("repairing")
     elseif not getNavigationActive() and not getSectorNavActive() then
@@ -182,7 +182,7 @@ function attackLoopTick()
     -- Wait for ship to be fully repaired
     local shipStatus = getShipStatus()
     if shipStatus == "no damage" then
-      say("Repairs complete, loading troops")
+      say("Repairs complete, loading troops, and Beginning attack run.")
       setAttackLoopState("loading")
       send("tra up 1 flu")
       send("flu")
@@ -200,7 +200,7 @@ function attackLoopTick()
   elseif state == "loading" then
     -- Check if already orbiting target planet in the correct sector
     if isOrbitingPlanetInSector(cfg.target.planet, cfg.target.sectorX, cfg.target.sectorY) then
-      say("Arrived at target planet")
+      say("Arrived at target planet. Preparing to attack.")
       setAttackLoopState("rotating")
       rotateToHeading(cfg.escapeHeading)
     elseif not getNavigationActive() and not getSectorNavActive() then

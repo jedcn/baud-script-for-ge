@@ -119,6 +119,10 @@ function echo(text)
     table.insert(M.echoCalls, text)
 end
 
+-- Mock say: no-op for testing
+function say(text)
+end
+
 -- Test utility: simulate a line of text and fire matching triggers
 function M.simulateLine(text)
     for _, trigger in ipairs(M.triggers) do

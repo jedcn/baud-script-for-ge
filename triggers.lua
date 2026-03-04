@@ -45,6 +45,7 @@ end, { type = "regex" })
 -- auto rep sys on maintenance complete
 --
 createTrigger("^Repairs and general maintenance have been completed Sir!$", function(matches)
+  say("Repairs complete")
   send("rep sys")
 end, { type="regex" })
 
@@ -58,6 +59,7 @@ end, { type = "regex" })
 createTrigger("^We are now in stationary orbit around planet (\\d+)", function(matches)
     local planetNumber = matches[2]
     setOrbitingPlanet(planetNumber)
+    say("We are now in stationary orbit")
 end, { type = "regex" })
 
 createTrigger("^Galactic Pos. Xsect:(-?\\d+)\\s+Ysect:(-?\\d+)$", function(matches)
@@ -258,6 +260,12 @@ end, { type="regex" })
 createTrigger("^Shields \\(Mark-\\d+\\)...... (\\w+)$", function(matches)
     local status = matches[2]
     setShieldStatus(status)
+end, { type="regex" })
+
+-- shields damaged on last hit
+createTrigger("^The last hit damaged the shields Sir!! Damage Control notified\\.$", function()
+    say("Last hit damaged shields")
+    send("rep sys")
 end, { type="regex" })
 
 createTrigger("^DCO reports............ (.+)$", function(matches)

@@ -257,6 +257,10 @@ createTrigger("^Shields are now down, Sir!", function()
     setShieldStatus("DOWN");
 end, { type="regex" })
 
+createTrigger("^Shields shut down, Sir\\.$", function()
+    setShieldStatus("DOWN")
+end, { type="regex" })
+
 createTrigger("^Shields \\(Mark-\\d+\\)...... (\\w+)$", function(matches)
     local status = matches[2]
     setShieldStatus(status)

@@ -372,6 +372,17 @@ describe("GE Triggers", function()
             _G.setShieldStatus = original
         end)
 
+        it("calls setShieldStatus with DOWN when shields shut down", function()
+            local called_with = nil
+            local original = setShieldStatus
+            _G.setShieldStatus = function(status) called_with = status end
+
+            helper.simulateLine("Shields shut down, Sir.")
+
+            assert.equal("DOWN", called_with)
+            _G.setShieldStatus = original
+        end)
+
     end)
 
     -- =========================================================================

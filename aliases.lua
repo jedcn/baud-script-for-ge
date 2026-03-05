@@ -209,3 +209,13 @@ createAlias("^navsecpl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$", function(matche
     local planetNumber = matches[6]
     navigateToSectorAndPlanet(sectorX, sectorY, posX, posY, planetNumber)
 end, { type = "regex" })
+
+-- navsec-fastentry-then-pl X Y posX posY N -> navigateToSectorFastEntry(X, Y, posX, posY, N)
+createAlias("^navsec-fastentry-then-pl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$", function(matches)
+    local sectorX      = matches[2]
+    local sectorY      = matches[3]
+    local entryPosX    = matches[4]
+    local entryPosY    = matches[5]
+    local planetNumber = matches[6]
+    navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
+end, { type = "regex" })

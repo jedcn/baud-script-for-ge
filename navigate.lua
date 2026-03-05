@@ -309,6 +309,50 @@ function navigateToSectorAndPlanet(sectorX, sectorY, posX, posY, planetNumber)
   return success
 end
 
+function navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
+  sectorX      = tonumber(sectorX)
+  sectorY      = tonumber(sectorY)
+  entryPosX    = tonumber(entryPosX)
+  entryPosY    = tonumber(entryPosY)
+  planetNumber = tonumber(planetNumber)
+
+  if not sectorX or not sectorY then
+    navError("[navsec-entry] Invalid sector coordinates")
+    return false
+  end
+  if not entryPosX or not entryPosY or entryPosX < 0 or entryPosX > 10000 or entryPosY < 0 or entryPosY > 10000 then
+    navError("[navsec-entry] Invalid entry position. Must be 0-10000.")
+    return false
+  end
+  if not planetNumber or planetNumber < 1 or planetNumber > 999 then
+    navError("[navsec-entry] Invalid planet number. Must be 1-999.")
+    return false
+  end
+
+  initSectorNav(sectorX, sectorY, entryPosX, entryPosY)
+  gePackage.sectorNav.followUpPlanet = planetNumber
+  gePackage.sectorNav.fastEntry = true
+
+  navLog("[navsec-entry] Fast entry to sector (" .. sectorX .. ", " .. sectorY .. ") at (" .. entryPosX .. ", " .. entryPosY .. "), then planet " .. planetNumber)
+  send("rep nav")
+  return true
+end
+
+function handleSectorEntry(newSectorX, newSectorY)
+  newSectorX = tonumber(newSectorX)
+  newSectorY = tonumber(newSectorY)
+
+  local sec = gePackage.sectorNav
+  if not sec or not sec.active or not sec.fastEntry then return end
+  if sec.targetSectorX ~= newSectorX or sec.targetSectorY ~= newSectorY then return end
+
+  local followUpPlanet = sec.followUpPlanet
+  sec.active = false
+  clearOrbitingPlanet()
+  navLog("[navsec-entry] Entered target sector (" .. newSectorX .. ", " .. newSectorY .. "), starting planet nav to planet " .. followUpPlanet)
+  navigateToPlanetSimple(followUpPlanet)
+end
+
 -- ============================================================================
 -- State Machine Tick Function
 -- ============================================================================
@@ -1316,6 +1360,13 @@ function sectorNavTick()
       local currentSpeed = getWarpSpeed() or 0
 
       local speedType, speedValue = config.decideSpeed(distance, currentSpeed)
+
+      if sec.fastEntry and speedValue < currentSpeed then
+        -- skip deceleration in fast-entry mode; continue at current speed
+        sec.state = "sec_traveling"
+        navLog("[navsec][state] sec_setting_speed -> sec_traveling (fastEntry: skipping deceleration)")
+        return
+      end
 
       if math.abs(currentSpeed - speedValue) > 0.1 then
         sec.targetSpeed = speedValue

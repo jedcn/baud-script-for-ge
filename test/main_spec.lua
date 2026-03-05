@@ -225,6 +225,76 @@ describe("GE Triggers", function()
             assert.is_true(helper.wasSendCalledWith("rep nav"))
         end)
 
+        it("calls handleSectorEntry with new sector coordinates when crossing a sector boundary", function()
+            local calledX, calledY = nil, nil
+            local original = handleSectorEntry
+            _G.handleSectorEntry = function(x, y) calledX = x; calledY = y end
+
+            helper.simulateLine("Helm reports leaving Sector 11 -10 and entering Sector 11 -9")
+
+            assert.equal("11", calledX)
+            assert.equal("-9", calledY)
+            _G.handleSectorEntry = original
+        end)
+
+        it("calls navigateToPlanetSimple when entering target sector with fastEntry active", function()
+            local planetCalledWith = nil
+            local original = navigateToPlanetSimple
+            _G.navigateToPlanetSimple = function(n) planetCalledWith = n end
+
+            gePackage.sectorNav = {
+                active = true,
+                fastEntry = true,
+                targetSectorX = 11,
+                targetSectorY = -9,
+                followUpPlanet = 5,
+            }
+
+            helper.simulateLine("Helm reports leaving Sector 11 -10 and entering Sector 11 -9")
+
+            assert.equal(5, planetCalledWith)
+            assert.is_false(gePackage.sectorNav.active)
+            _G.navigateToPlanetSimple = original
+        end)
+
+        it("does NOT call navigateToPlanetSimple when fastEntry is not set", function()
+            local called = false
+            local original = navigateToPlanetSimple
+            _G.navigateToPlanetSimple = function() called = true end
+
+            gePackage.sectorNav = {
+                active = true,
+                fastEntry = false,
+                targetSectorX = 11,
+                targetSectorY = -9,
+                followUpPlanet = 5,
+            }
+
+            helper.simulateLine("Helm reports leaving Sector 11 -10 and entering Sector 11 -9")
+
+            assert.is_false(called)
+            _G.navigateToPlanetSimple = original
+        end)
+
+        it("does NOT call navigateToPlanetSimple when entering a non-target sector", function()
+            local called = false
+            local original = navigateToPlanetSimple
+            _G.navigateToPlanetSimple = function() called = true end
+
+            gePackage.sectorNav = {
+                active = true,
+                fastEntry = true,
+                targetSectorX = 99,
+                targetSectorY = 99,
+                followUpPlanet = 5,
+            }
+
+            helper.simulateLine("Helm reports leaving Sector 11 -10 and entering Sector 11 -9")
+
+            assert.is_false(called)
+            _G.navigateToPlanetSimple = original
+        end)
+
     end)
 
     -- =========================================================================

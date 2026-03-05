@@ -482,6 +482,61 @@ describe("Navigation System", function()
     end)
   end)
 
+  -- ===== navigateToSectorFastEntry Tests =====
+  describe("navigateToSectorFastEntry", function()
+    it("rejects invalid sector coordinates", function()
+      local result = navigateToSectorFastEntry(nil, -9, 5000, 5000, 3)
+      assert.is_false(result)
+      assert.is_false(getSectorNavActive())
+    end)
+
+    it("rejects entry position below 0", function()
+      local result = navigateToSectorFastEntry(11, -9, -1, 5000, 3)
+      assert.is_false(result)
+      assert.is_false(getSectorNavActive())
+    end)
+
+    it("rejects entry position above 10000", function()
+      local result = navigateToSectorFastEntry(11, -9, 10001, 5000, 3)
+      assert.is_false(result)
+      assert.is_false(getSectorNavActive())
+    end)
+
+    it("rejects planet number 0", function()
+      local result = navigateToSectorFastEntry(11, -9, 5000, 5000, 0)
+      assert.is_false(result)
+      assert.is_false(getSectorNavActive())
+    end)
+
+    it("rejects planet number 1000", function()
+      local result = navigateToSectorFastEntry(11, -9, 5000, 5000, 1000)
+      assert.is_false(result)
+      assert.is_false(getSectorNavActive())
+    end)
+
+    it("starts sector nav for valid inputs", function()
+      local result = navigateToSectorFastEntry(11, -9, 5000, 5000, 3)
+      assert.is_true(result)
+      assert.is_true(getSectorNavActive())
+      assert.is_true(helper.wasSendCalledWith("rep nav"))
+    end)
+
+    it("sets fastEntry to true on sectorNav", function()
+      navigateToSectorFastEntry(11, -9, 5000, 5000, 3)
+      assert.is_true(gePackage.sectorNav.fastEntry)
+    end)
+
+    it("stores followUpPlanet on sectorNav", function()
+      navigateToSectorFastEntry(11, -9, 5000, 5000, 7)
+      assert.equals(7, gePackage.sectorNav.followUpPlanet)
+    end)
+
+    it("accepts boundary entry positions 0 and 10000", function()
+      local result = navigateToSectorFastEntry(11, -9, 0, 10000, 3)
+      assert.is_true(result)
+    end)
+  end)
+
   -- ===== sec_completed follow-up planet Tests =====
   describe("sec_completed with followUpPlanet", function()
     before_each(function()

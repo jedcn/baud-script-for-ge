@@ -68,6 +68,12 @@ createAlias("^maint$", function()
     doMaint()
 end, { type = "regex" })
 
+createAlias("chargeBank", function()
+    send("buy 500 men arbor123")
+    send("tra down 500 men")
+end, { type = "regex" })
+
+
 -- ^reset$ -> resetData()
 -- Clears all stored data (use when switching ships)
 createAlias("^reset$", function()

@@ -226,9 +226,9 @@ createAlias("^navsec-fastentry-then-pl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$",
     navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
 end, { type = "regex" })
 
--- pha <letter> -> fire_phasers_at_ship(letter)
+-- fire.at <letter> -> fire_phasers_at_ship(letter)
 -- Scans the named ship and fires phasers at its bearing
-createAlias("^pha ([a-z])$", function(matches)
+createAlias("^fire%.at ([a-z])$", function(matches)
     local shipLetter = matches[2]
     fire_phasers_at_ship(shipLetter)
 end, { type = "regex" })

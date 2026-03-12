@@ -31,6 +31,12 @@ end
 -- ============================================================================
 
 function fire_phasers_at_ship(shipLetter)
+  local sectorX, sectorY = getSector()
+  if sectorX == 0 and sectorY == 0 then
+    echo("In sector 0 0 - refusing to fire phasers (ship would be destroyed)")
+    return
+  end
+
   if getCombatActive() then
     combatLog("Already in progress (state: " .. getCombatState() .. ")")
     return

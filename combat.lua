@@ -95,6 +95,21 @@ function torpedo_at_ship(shipLetter)
   send("shi up")
 end
 
+-- ============================================================================
+-- missile_at_ship: fire three missiles at target ship, then raise shields
+-- ============================================================================
+
+function missile_at_ship(shipLetter)
+  send("flu")
+  send("missile " .. shipLetter .. " 65000")
+  send("flu")
+  send("missile " .. shipLetter .. " 65000")
+  send("flu")
+  send("missile " .. shipLetter .. " 65000")
+  send("flu")
+  send("shi up")
+end
+
 -- Initialize on load
 if not gePackage.combat then
   initCombat()

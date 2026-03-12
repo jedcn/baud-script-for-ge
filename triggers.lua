@@ -280,7 +280,7 @@ end, { type="regex" })
 
 -- ship scan bearing (e.g. " Bearing: -99 Heading: 0 Dist: 141793")
 -- distinct from planet scan bearing which starts at column 0 and has no "Heading:" field
-createTrigger("^ Bearing: (-?\\d+) Heading:", function(matches)
+createTrigger("^\\s+Bearing:\\s+(-?\\d+)\\s+Heading:", function(matches)
     local bearing = matches[2]
     setCombatShipBearingFromTrigger(bearing)
 end, { type = "regex" })

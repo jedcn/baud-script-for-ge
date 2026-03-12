@@ -226,6 +226,13 @@ createAlias("^navsec-fastentry-then-pl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$",
     navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
 end, { type = "regex" })
 
+-- torpedo.at <letter> -> torpedo_at_ship(letter)
+-- Fires three torpedoes at the named ship, then raises shields
+createAlias("^torpedo\\.at ([a-z])$", function(matches)
+    local shipLetter = matches[2]
+    torpedo_at_ship(shipLetter)
+end, { type = "regex" })
+
 -- fire.at <letter> -> fire_phasers_at_ship(letter)
 -- Scans the named ship and fires phasers at its bearing
 createAlias("^fire\\.at ([a-z])$", function(matches)

@@ -53,9 +53,24 @@ function setCombatShipBearingFromTrigger(bearing)
   bearing = tonumber(bearing)
   gePackage.combat.shipBearing = bearing
 
-  local cmd = "pha " .. bearing .. " 1"
-  combatLog("Bearing " .. bearing .. ", firing: " .. cmd)
-  send(cmd)
+  local warpSpeed = getWarpSpeed()
+
+  if warpSpeed == nil then
+    -- Unknown speed: send both to cover either case
+    combatLog("Bearing " .. bearing .. ", warp unknown - sending both pha commands")
+    send("pha " .. bearing)
+    send("pha " .. bearing .. " 1")
+  elseif warpSpeed >= 1 then
+    -- In warp: no trailing 1
+    local cmd = "pha " .. bearing
+    combatLog("Bearing " .. bearing .. ", warp " .. warpSpeed .. ", firing: " .. cmd)
+    send(cmd)
+  else
+    -- Stopped or impulse: trailing 1
+    local cmd = "pha " .. bearing .. " 1"
+    combatLog("Bearing " .. bearing .. ", warp " .. warpSpeed .. ", firing: " .. cmd)
+    send(cmd)
+  end
 
   gePackage.combat.active = false
   gePackage.combat.state = "idle"

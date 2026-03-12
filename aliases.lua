@@ -228,7 +228,7 @@ end, { type = "regex" })
 
 -- fire.at <letter> -> fire_phasers_at_ship(letter)
 -- Scans the named ship and fires phasers at its bearing
-createAlias("^fire%.at ([a-z])$", function(matches)
+createAlias("^fire\\.at ([a-z])$", function(matches)
     local shipLetter = matches[2]
     fire_phasers_at_ship(shipLetter)
 end, { type = "regex" })

@@ -101,11 +101,11 @@ end
 
 function missile_at_ship(shipLetter)
   send("flu")
-  send("missile " .. shipLetter .. " 65000")
+  send("missile " .. shipLetter .. " 50000")
   send("flu")
-  send("missile " .. shipLetter .. " 65000")
+  send("missile " .. shipLetter .. " 50000")
   send("flu")
-  send("missile " .. shipLetter .. " 65000")
+  send("missile " .. shipLetter .. " 50000")
   send("flu")
   send("shi up")
 end

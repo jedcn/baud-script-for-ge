@@ -232,3 +232,9 @@ createAlias("^fire\\.at ([a-z])$", function(matches)
     local shipLetter = matches[2]
     fire_phasers_at_ship(shipLetter)
 end, { type = "regex" })
+
+-- combat.cancel -> resets combat state machine
+createAlias("^combat\\.cancel$", function()
+    initCombat()
+    echo("[combat] Cancelled - state reset to idle")
+end, { type = "regex" })

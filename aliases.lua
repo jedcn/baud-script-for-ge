@@ -225,3 +225,9 @@ createAlias("^navsec-fastentry-then-pl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$",
     local planetNumber = matches[6]
     navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
 end, { type = "regex" })
+
+-- pha a -> phaA()
+-- Scans nearest enemy ship and fires phasers at its bearing
+createAlias("^pha a$", function()
+    phaA()
+end, { type = "regex" })

@@ -278,6 +278,13 @@ createTrigger("^DCO reports............ (.+)$", function(matches)
     setShipStatus(shipStatus)
 end, { type="regex" })
 
+-- ship scan bearing (e.g. " Bearing: -99 Heading: 0 Dist: 141793")
+-- distinct from planet scan bearing which starts at column 0 and has no "Heading:" field
+createTrigger("^ Bearing: (-?\\d+) Heading:", function(matches)
+    local bearing = matches[2]
+    setCombatShipBearingFromTrigger(bearing)
+end, { type = "regex" })
+
 -- combat results
 createTrigger("^In the attack our troops killed (\\d+), and suffered losses$", function(matches)
     local defendersKilled = tonumber(matches[2])

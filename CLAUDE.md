@@ -18,6 +18,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `navigate.lua` - Autonomous navigation system
 - `navigate-config.lua` - User-configurable navigation settings
 - `attack-loop.lua` - Automated assault loop (supply → attack → escape → repeat)
+- `combat.lua` - Ship-to-ship combat commands (e.g. `pha a` scans nearest ship and fires phasers)
 - `status.lua` - Status bar display function
 - `triggers.lua` - Pattern-matching triggers that fire on game output
 - `aliases.lua` - Command aliases (shortcuts like `scapl1` -> `sca pl 1`)

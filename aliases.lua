@@ -225,3 +225,16 @@ createAlias("^navsec-fastentry-then-pl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$",
     local planetNumber = matches[6]
     navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
 end, { type = "regex" })
+
+-- fire.at <letter> -> fire_phasers_at_ship(letter)
+-- Scans the named ship and fires phasers at its bearing
+createAlias("^fire\\.at ([a-z])$", function(matches)
+    local shipLetter = matches[2]
+    fire_phasers_at_ship(shipLetter)
+end, { type = "regex" })
+
+-- combat.cancel -> resets combat state machine
+createAlias("^combat\\.cancel$", function()
+    initCombat()
+    echo("[combat] Cancelled - state reset to idle")
+end, { type = "regex" })

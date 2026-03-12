@@ -110,6 +110,18 @@ function missile_at_ship(shipLetter)
   send("shi up")
 end
 
+-- ============================================================================
+-- deploy_decoys: send decoy command five times
+-- ============================================================================
+
+function deploy_decoys()
+  send("decoy")
+  send("decoy")
+  send("decoy")
+  send("decoy")
+  send("decoy")
+end
+
 -- Initialize on load
 if not gePackage.combat then
   initCombat()

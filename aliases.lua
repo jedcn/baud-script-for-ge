@@ -226,6 +226,12 @@ createAlias("^navsec-fastentry-then-pl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$",
     navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
 end, { type = "regex" })
 
+-- decoy.launch -> deploy_decoys()
+-- Sends the decoy command five times
+createAlias("^decoy\\.launch$", function(matches)
+    deploy_decoys()
+end, { type = "regex" })
+
 -- missile.at <letter> -> missile_at_ship(letter)
 -- Fires three missiles at the named ship (with flu between each), then raises shields
 createAlias("^missile\\.at ([a-z])$", function(matches)

@@ -27,10 +27,10 @@ function getCombatState()
 end
 
 -- ============================================================================
--- pha a: scan nearest enemy ship and fire phasers at its bearing
+-- fire_phasers_at_ship: scan target ship and fire phasers at its bearing
 -- ============================================================================
 
-function phaA()
+function fire_phasers_at_ship(shipLetter)
   if getCombatActive() then
     combatLog("Already in progress (state: " .. getCombatState() .. ")")
     return
@@ -39,10 +39,11 @@ function phaA()
   initCombat()
   gePackage.combat.active = true
   gePackage.combat.state = "scanning"
+  gePackage.combat.shipLetter = shipLetter
   gePackage.combat.lastCommand = os.time()
 
-  combatLog("Scanning nearest ship")
-  send("scan sh a")
+  combatLog("Scanning ship " .. shipLetter)
+  send("scan sh " .. shipLetter)
 end
 
 -- Called from trigger when ship scan bearing line is parsed

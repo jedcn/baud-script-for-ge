@@ -84,6 +84,44 @@ function setCombatShipBearingFromTrigger(bearing)
   gePackage.combat.state = "idle"
 end
 
+-- ============================================================================
+-- torpedo_at_ship: fire three torpedoes at target ship, then raise shields
+-- ============================================================================
+
+function torpedo_at_ship(shipLetter)
+  send("tor " .. shipLetter)
+  send("tor " .. shipLetter)
+  send("tor " .. shipLetter)
+  send("shi up")
+end
+
+-- ============================================================================
+-- missile_at_ship: fire three missiles at target ship, then raise shields
+-- ============================================================================
+
+function missile_at_ship(shipLetter)
+  send("flu")
+  send("missile " .. shipLetter .. " 50000")
+  send("flu")
+  send("missile " .. shipLetter .. " 50000")
+  send("flu")
+  send("missile " .. shipLetter .. " 50000")
+  send("flu")
+  send("shi up")
+end
+
+-- ============================================================================
+-- deploy_decoys: send decoy command five times
+-- ============================================================================
+
+function deploy_decoys()
+  send("decoy")
+  send("decoy")
+  send("decoy")
+  send("decoy")
+  send("decoy")
+end
+
 -- Initialize on load
 if not gePackage.combat then
   initCombat()

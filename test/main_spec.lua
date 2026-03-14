@@ -506,4 +506,24 @@ describe("GE Triggers", function()
 
     end)
 
+    -- =========================================================================
+    -- Ship type/name triggers
+    -- =========================================================================
+
+    describe("Ship type and name trigger", function()
+
+        it("parses ship type and name from systems report header", function()
+            helper.simulateLine(" Star Cruiser: The Arbitrage")
+            assert.are.equal("Star Cruiser", getShipType())
+            assert.are.equal("The Arbitrage", getShipName())
+        end)
+
+        it("parses a different ship type", function()
+            helper.simulateLine(" Heavy Freighter: The Merchant Prince")
+            assert.are.equal("Heavy Freighter", getShipType())
+            assert.are.equal("The Merchant Prince", getShipName())
+        end)
+
+    end)
+
 end)

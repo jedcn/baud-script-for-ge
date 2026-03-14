@@ -10,6 +10,19 @@ if not gePackage then
   gePackage.ship.inventory = {}
 end
 
+gePackage.shipSpecs = {
+  ["Interceptor"]                 = { maxWarp = 10, acceleration = 5000  },
+  ["Stealth Fighter"]             = { maxWarp = 20, acceleration = 5000  },
+  ["Heavy Freighter"]             = { maxWarp = 8,  acceleration = 3000  },
+  ["Destroyer"]                   = { maxWarp = 25, acceleration = 5000  },
+  ["Star Cruiser"]                = { maxWarp = 25, acceleration = 10000 },
+  ["Battle Cruiser"]              = { maxWarp = 30, acceleration = 3000  },
+  ["Frigate"]                     = { maxWarp = 30, acceleration = 10000 },
+  ["Dreadnought"]                 = { maxWarp = 50, acceleration = 15000 },
+  ["Freight Barge"]               = { maxWarp = 15, acceleration = 1000  },
+  ["Constitution Class Starship"] = { maxWarp = 30, acceleration = 20000 },
+}
+
 gePackage.constants = {
   MEN = "Men",
   MISSILES = "Missiles",
@@ -110,6 +123,34 @@ end
 function clearShipInventory()
   debugLog("clearShipInventory()")
   gePackage.ship.inventory = {}
+end
+
+function setShipType(newType)
+  debugLog("setShipType(" .. tostring(newType) .. ")")
+  gePackage.ship.type = newType
+end
+
+function getShipType()
+  return gePackage.ship.type
+end
+
+function setShipName(newName)
+  debugLog("setShipName(" .. tostring(newName) .. ")")
+  gePackage.ship.name = newName
+end
+
+function getShipName()
+  return gePackage.ship.name
+end
+
+function getShipMaxWarp()
+  local specs = gePackage.shipSpecs[getShipType() or ""]
+  return specs and specs.maxWarp or 10
+end
+
+function getShipAcceleration()
+  local specs = gePackage.shipSpecs[getShipType() or ""]
+  return specs and specs.acceleration or 5000
 end
 
 function setShipStatus(newStatus)
@@ -221,11 +262,15 @@ function printState()
       {"getWarpSpeed",          tostring(getWarpSpeed())},
     }},
     {"Ship", {
-      {"getShieldCharge",    tostring(getShieldCharge())},
-      {"getShieldStatus",    tostring(getShieldStatus())},
-      {"getShipHeading",     tostring(getShipHeading())},
-      {"getShipNeutronFlux", tostring(getShipNeutronFlux())},
-      {"getShipStatus",      tostring(getShipStatus())},
+      {"getShieldCharge",       tostring(getShieldCharge())},
+      {"getShieldStatus",       tostring(getShieldStatus())},
+      {"getShipAcceleration",   tostring(getShipAcceleration())},
+      {"getShipHeading",        tostring(getShipHeading())},
+      {"getShipMaxWarp",        tostring(getShipMaxWarp())},
+      {"getShipName",           tostring(getShipName())},
+      {"getShipNeutronFlux",    tostring(getShipNeutronFlux())},
+      {"getShipStatus",         tostring(getShipStatus())},
+      {"getShipType",           tostring(getShipType())},
     }},
     {"Misc", {
       {"getStoredPlanet", tostring(getStoredPlanet())},

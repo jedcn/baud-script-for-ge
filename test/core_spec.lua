@@ -94,3 +94,79 @@ describe("Core functions", function()
     end)
 
 end)
+
+describe("Ship type and specs", function()
+
+    before_each(function()
+        helper.resetAll()
+        dofile("main.lua")
+    end)
+
+    describe("setShipType / getShipType", function()
+
+        it("stores and retrieves ship type", function()
+            setShipType("Star Cruiser")
+            assert.are.equal("Star Cruiser", getShipType())
+        end)
+
+        it("returns nil when not set", function()
+            assert.is_nil(getShipType())
+        end)
+
+    end)
+
+    describe("setShipName / getShipName", function()
+
+        it("stores and retrieves ship name", function()
+            setShipName("The Arbitrage")
+            assert.are.equal("The Arbitrage", getShipName())
+        end)
+
+        it("returns nil when not set", function()
+            assert.is_nil(getShipName())
+        end)
+
+    end)
+
+    describe("getShipMaxWarp", function()
+
+        it("returns correct max warp for known ship types", function()
+            setShipType("Star Cruiser")
+            assert.are.equal(25, getShipMaxWarp())
+
+            setShipType("Heavy Freighter")
+            assert.are.equal(8, getShipMaxWarp())
+
+            setShipType("Dreadnought")
+            assert.are.equal(50, getShipMaxWarp())
+        end)
+
+        it("returns 10 as default for unknown ship type", function()
+            setShipType("Unknown Ship")
+            assert.are.equal(10, getShipMaxWarp())
+        end)
+
+        it("returns 10 as default when ship type is not set", function()
+            assert.are.equal(10, getShipMaxWarp())
+        end)
+
+    end)
+
+    describe("getShipAcceleration", function()
+
+        it("returns correct acceleration for known ship types", function()
+            setShipType("Star Cruiser")
+            assert.are.equal(10000, getShipAcceleration())
+
+            setShipType("Freight Barge")
+            assert.are.equal(1000, getShipAcceleration())
+        end)
+
+        it("returns 5000 as default for unknown ship type", function()
+            setShipType("Unknown Ship")
+            assert.are.equal(5000, getShipAcceleration())
+        end)
+
+    end)
+
+end)

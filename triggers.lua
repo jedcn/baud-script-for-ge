@@ -273,6 +273,14 @@ createTrigger("^The last hit damaged the shields Sir!! Damage Control notified\\
     send("rep sys")
 end, { type="regex" })
 
+-- sets ship type and name from systems report header (e.g. " Star Cruiser: The Arbitrage")
+createTrigger("^\\s*([\\w][\\w ]+): (The .+)$", function(matches)
+    local shipType = matches[2]
+    local shipName = matches[3]
+    setShipType(shipType)
+    setShipName(shipName)
+end, { type = "regex" })
+
 createTrigger("^DCO reports............ (.+)$", function(matches)
     local shipStatus = matches[2]
     setShipStatus(shipStatus)

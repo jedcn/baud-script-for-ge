@@ -54,41 +54,32 @@ gePackage.navigation.config = {
   decideSpeed = function(distance, currentSpeed)
     local maxWarp = getShipMaxWarp()
     local decelRate = getShipDecelRate()
-    -- 2× stop distance as buffer to account for tick-polling latency
-    local decelThreshold = computeStopDistance(maxWarp, decelRate) * 2.0
 
-    -- Deceleration logic: slow down well before arrival
-    if currentSpeed >= maxWarp and distance < decelThreshold then
-      return "WARP", 5  -- Start slowing from max warp
-    end
-    if currentSpeed >= 5 and distance < 3000 then
-      return "WARP", 3  -- Start slowing from warp 5
-    end
-    if currentSpeed >= 3 and distance < 2000 then
-      return "WARP", 2  -- Slow from warp 3
-    end
-    if currentSpeed >= 2 and distance < 1000 then
-      return "WARP", 1  -- Slow from warp 2
-    end
-    if currentSpeed >= 1 and distance < 500 then
-      return "WARP", 0  -- Drop out of warp before impulse
+    -- Threshold for a given warp: start decelerating (or stop accelerating) when within this distance.
+    -- Uses the larger of 2× computed stop distance or one tick of travel at that warp.
+    -- The one-tick floor ensures we always have at least one tick to react before overshooting.
+    local function threshold(warp)
+      return math.max(computeStopDistance(warp, decelRate) * 2.0, warp * DISTANCE_PER_WARP)
     end
 
-    -- Acceleration logic: speed up for long distances
-    if distance > 10000 then return "WARP", maxWarp end
-    if distance > 5000 then return "WARP", 5 end
-    if distance > 3000 then return "WARP", 3 end
-    if distance > 1000 then return "WARP", 2 end
-    if distance > 750 then return "WARP", 1 end
+    -- Deceleration: drop to next lower tier when within that tier's threshold
+    if currentSpeed >= maxWarp and distance < threshold(maxWarp) then return "WARP", 5 end
+    if currentSpeed >= 5      and distance < threshold(5)       then return "WARP", 3 end
+    if currentSpeed >= 3      and distance < threshold(3)       then return "WARP", 2 end
+    if currentSpeed >= 2      and distance < threshold(2)       then return "WARP", 1 end
+    if currentSpeed >= 1      and distance < threshold(1)       then return "WARP", 0 end
 
-    -- For short distances (≤ 750), use impulse
-    -- IMPORTANT: Can't go directly from WARP to IMPULSE
-    -- Must stop at warp 0 first, then engage impulse
-    -- But if already in impulse (0 < speed < 1), no stop needed
-    if currentSpeed >= 1 then
-      return "WARP", 0  -- Drop out of warp first
-    end
+    -- Acceleration: speed up when farther than that tier's threshold
+    if distance > threshold(maxWarp) then return "WARP", maxWarp end
+    if distance > threshold(5)       then return "WARP", 5 end
+    if distance > threshold(3)       then return "WARP", 3 end
+    if distance > threshold(2)       then return "WARP", 2 end
+    if distance > threshold(1)       then return "WARP", 1 end
 
-    return "IMPULSE", 0.99  -- Safe to use impulse (we're stopped); 0.99 = warp representation of imp 99
+    -- Short range: use impulse
+    -- IMPORTANT: Can't go directly from WARP to IMPULSE — must stop at warp 0 first.
+    -- If already in impulse (0 < speed < 1), no stop needed.
+    if currentSpeed >= 1 then return "WARP", 0 end
+    return "IMPULSE", 0.99  -- 0.99 = warp representation of imp 99
   end
 }

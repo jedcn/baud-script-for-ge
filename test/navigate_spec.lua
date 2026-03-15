@@ -69,34 +69,42 @@ describe("Navigation System", function()
       decideSpeed = gePackage.navigation.config.decideSpeed
     end)
 
-    it("uses warp 10 for very long distances", function()
+    -- Default ship: maxWarp=10, decelRate=10
+    -- threshold(10) = max(computeStopDistance(10,10)*2=0, 10*154=1540) = 1540
+    -- threshold(1)  = max(0, 1*154=154) = 154
+
+    it("uses max warp for distances beyond computed threshold", function()
+      -- 15000 > threshold(maxWarp=10)=1540 → max warp
       local speedType, speedValue = decideSpeed(15000, 0)
       assert.equals("WARP", speedType)
       assert.equals(10, speedValue)
     end)
 
-    it("uses warp 5 for distances over 5000", function()
+    it("uses max warp once past the computed threshold (not just 10000)", function()
+      -- 6000 > threshold(10)=1540 → max warp (not warp 5)
       local speedType, speedValue = decideSpeed(6000, 0)
       assert.equals("WARP", speedType)
-      assert.equals(5, speedValue)
+      assert.equals(10, speedValue)
     end)
 
-    it("uses impulse when stopped at short distance", function()
-      local speedType, speedValue = decideSpeed(394, 0)
+    it("uses impulse when stopped within threshold(1)", function()
+      -- 100 < threshold(1)=154, all accel checks fail → impulse
+      local speedType, speedValue = decideSpeed(100, 0)
       assert.equals("IMPULSE", speedType)
       assert.equals(0.99, speedValue)
     end)
 
-    it("uses impulse when already in impulse at short distance", function()
+    it("uses impulse when already in impulse within threshold(1)", function()
       -- Bug fix: ship at impulse (0.99) should NOT stop before re-engaging impulse
-      local speedType, speedValue = decideSpeed(394, 0.99)
+      local speedType, speedValue = decideSpeed(100, 0.99)
       assert.equals("IMPULSE", speedType)
       assert.equals(0.99, speedValue)
     end)
 
-    it("stops ship when in warp at short distance", function()
+    it("stops ship when in warp within threshold(1)", function()
       -- Must drop out of warp before engaging impulse
-      local speedType, speedValue = decideSpeed(394, 1)
+      -- 100 < threshold(1)=154 and currentSpeed(1) >= 1 → WARP 0
+      local speedType, speedValue = decideSpeed(100, 1)
       assert.equals("WARP", speedType)
       assert.equals(0, speedValue)
     end)
@@ -127,15 +135,17 @@ describe("Navigation System", function()
 
     it("does not decelerate Star Cruiser from max warp outside computed threshold", function()
       setShipType("Star Cruiser")
-      -- 2000 > decelThreshold (1540), so no max-warp decel
-      -- but 2000 < 3000 and speed(25) >= 5 → intermediate decel kicks in
-      local speedType, speedValue = decideSpeed(2000, 25)
+      -- threshold(25) = max(770*2=1540, 25*154=3850) = 3850
+      -- 5000 > 3850 → accelerate to max warp
+      local speedType, speedValue = decideSpeed(5000, 25)
       assert.equals("WARP", speedType)
-      assert.equals(3, speedValue)
+      assert.equals(25, speedValue)
     end)
 
-    it("decelerates from warp 5 when within 3000", function()
-      local speedType, speedValue = decideSpeed(2000, 5)
+    -- Freight Barge: threshold(5) = max(computeStopDistance(5,2)*2=616*2=1232, 5*154=770) = 1232
+    it("decelerates Freight Barge from warp 5 when within computed threshold", function()
+      setShipType("Freight Barge")
+      local speedType, speedValue = decideSpeed(1000, 5)
       assert.equals("WARP", speedType)
       assert.equals(3, speedValue)
     end)

@@ -169,4 +169,27 @@ describe("Ship type and specs", function()
 
     end)
 
+    describe("getShipDecelRate", function()
+
+        it("returns confirmed decel rate for Freight Barge", function()
+            setShipType("Freight Barge")
+            assert.are.equal(2, getShipDecelRate())
+        end)
+
+        it("returns confirmed decel rate for Star Cruiser", function()
+            setShipType("Star Cruiser")
+            assert.are.equal(20, getShipDecelRate())
+        end)
+
+        it("returns 10 as default for unknown ship type", function()
+            setShipType("Unknown Ship")
+            assert.are.equal(10, getShipDecelRate())
+        end)
+
+        it("returns 10 as default when ship type is not set", function()
+            assert.are.equal(10, getShipDecelRate())
+        end)
+
+    end)
+
 end)

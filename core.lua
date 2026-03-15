@@ -10,17 +10,20 @@ if not gePackage then
   gePackage.ship.inventory = {}
 end
 
+-- decelRate = warp levels dropped per tick when stopping (2 × accel rate)
+-- Confirmed via observation: Freight Barge (decelRate=2), Star Cruiser (decelRate=20)
+-- All others derived from the 2× formula; verify before trusting for precision navigation
 gePackage.shipSpecs = {
-  ["Interceptor"]                 = { maxWarp = 10, acceleration = 5000  },
-  ["Stealth Fighter"]             = { maxWarp = 20, acceleration = 5000  },
-  ["Heavy Freighter"]             = { maxWarp = 8,  acceleration = 3000  },
-  ["Destroyer"]                   = { maxWarp = 25, acceleration = 5000  },
-  ["Star Cruiser"]                = { maxWarp = 25, acceleration = 10000 },
-  ["Battle Cruiser"]              = { maxWarp = 30, acceleration = 3000  },
-  ["Frigate"]                     = { maxWarp = 30, acceleration = 10000 },
-  ["Dreadnought"]                 = { maxWarp = 50, acceleration = 15000 },
-  ["Freight Barge"]               = { maxWarp = 15, acceleration = 1000  },
-  ["Constitution Class Starship"] = { maxWarp = 30, acceleration = 20000 },
+  ["Interceptor"]                 = { maxWarp = 10, acceleration = 5000,  decelRate = 10 },
+  ["Stealth Fighter"]             = { maxWarp = 20, acceleration = 5000,  decelRate = 10 },
+  ["Heavy Freighter"]             = { maxWarp = 8,  acceleration = 3000,  decelRate = 6  },
+  ["Destroyer"]                   = { maxWarp = 25, acceleration = 5000,  decelRate = 10 },
+  ["Star Cruiser"]                = { maxWarp = 25, acceleration = 10000, decelRate = 20 },
+  ["Battle Cruiser"]              = { maxWarp = 30, acceleration = 3000,  decelRate = 6  },
+  ["Frigate"]                     = { maxWarp = 30, acceleration = 10000, decelRate = 20 },
+  ["Dreadnought"]                 = { maxWarp = 50, acceleration = 15000, decelRate = 30 },
+  ["Freight Barge"]               = { maxWarp = 15, acceleration = 1000,  decelRate = 2  },
+  ["Constitution Class Starship"] = { maxWarp = 30, acceleration = 20000, decelRate = 40 },
 }
 
 gePackage.constants = {
@@ -151,6 +154,11 @@ end
 function getShipAcceleration()
   local specs = gePackage.shipSpecs[getShipType() or ""]
   return specs and specs.acceleration or 5000
+end
+
+function getShipDecelRate()
+  local specs = gePackage.shipSpecs[getShipType() or ""]
+  return specs and specs.decelRate or 10
 end
 
 function setShipStatus(newStatus)

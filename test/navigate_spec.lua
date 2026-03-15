@@ -109,12 +109,13 @@ describe("Navigation System", function()
       assert.equals(0, speedValue)
     end)
 
-    -- Freight Barge: decelRate=2, stopDist(15,2)=154*49=7546, threshold=15092
-    it("decelerates Freight Barge from max warp when within computed threshold", function()
+    -- Freight Barge: decelRate=2, tiers={15,13,11,...,1,0}, threshold(15)=15092
+    it("decelerates Freight Barge from max warp by one decel step", function()
       setShipType("Freight Barge")
+      -- drops to next tier (13), not a hardcoded value like 5
       local speedType, speedValue = decideSpeed(12000, 15)
       assert.equals("WARP", speedType)
-      assert.equals(5, speedValue)
+      assert.equals(13, speedValue)
     end)
 
     it("does not decelerate Freight Barge from max warp outside computed threshold", function()
@@ -142,12 +143,22 @@ describe("Navigation System", function()
       assert.equals(25, speedValue)
     end)
 
-    -- Freight Barge: threshold(5) = max(computeStopDistance(5,2)*2=616*2=1232, 5*154=770) = 1232
-    it("decelerates Freight Barge from warp 5 when within computed threshold", function()
+    -- Freight Barge: threshold(5) = max(computeStopDistance(5,2)*2=1232, 5*154=770) = 1232
+    it("decelerates Freight Barge from warp 5 by one decel step", function()
       setShipType("Freight Barge")
+      -- next tier after 5 is 3 (decelRate=2: 5-2=3)
       local speedType, speedValue = decideSpeed(1000, 5)
       assert.equals("WARP", speedType)
       assert.equals(3, speedValue)
+    end)
+
+    -- Constitution Class: decelRate=40, tiers={30,0} — drops straight to stop
+    it("decelerates Constitution Class directly to warp 0 from max warp", function()
+      setShipType("Constitution Class Starship")
+      -- threshold(30) = max(0, 30*154=4620) = 4620; next tier is 0
+      local speedType, speedValue = decideSpeed(3000, 30)
+      assert.equals("WARP", speedType)
+      assert.equals(0, speedValue)
     end)
   end)
 

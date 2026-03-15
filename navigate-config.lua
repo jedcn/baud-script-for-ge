@@ -62,19 +62,31 @@ gePackage.navigation.config = {
       return math.max(computeStopDistance(warp, decelRate) * 2.0, warp * DISTANCE_PER_WARP)
     end
 
-    -- Deceleration: drop to next lower tier when within that tier's threshold
-    if currentSpeed >= maxWarp and distance < threshold(maxWarp) then return "WARP", 5 end
-    if currentSpeed >= 5      and distance < threshold(5)       then return "WARP", 3 end
-    if currentSpeed >= 3      and distance < threshold(3)       then return "WARP", 2 end
-    if currentSpeed >= 2      and distance < threshold(2)       then return "WARP", 1 end
-    if currentSpeed >= 1      and distance < threshold(1)       then return "WARP", 0 end
+    -- Build speed tiers: the natural deceleration steps from maxWarp down to 0.
+    -- e.g. FB (decelRate=2):  {15, 13, 11, 9, 7, 5, 3, 1, 0}
+    --      SC (decelRate=20): {25, 5, 0}
+    --      Constitution (decelRate=40): {30, 0}  -- drops straight to stop
+    local tiers = {}
+    local w = maxWarp
+    while w > 0 do
+      table.insert(tiers, w)
+      w = math.max(0, w - decelRate)
+    end
+    table.insert(tiers, 0)
 
-    -- Acceleration: speed up when farther than that tier's threshold
-    if distance > threshold(maxWarp) then return "WARP", maxWarp end
-    if distance > threshold(5)       then return "WARP", 5 end
-    if distance > threshold(3)       then return "WARP", 3 end
-    if distance > threshold(2)       then return "WARP", 2 end
-    if distance > threshold(1)       then return "WARP", 1 end
+    -- Deceleration: if within threshold for current tier, drop to next tier down
+    for i = 1, #tiers - 1 do
+      if currentSpeed >= tiers[i] and distance < threshold(tiers[i]) then
+        return "WARP", tiers[i + 1]
+      end
+    end
+
+    -- Acceleration: speed up to the highest tier whose threshold we exceed
+    for i = 1, #tiers - 1 do
+      if distance > threshold(tiers[i]) then
+        return "WARP", tiers[i]
+      end
+    end
 
     -- Short range: use impulse
     -- IMPORTANT: Can't go directly from WARP to IMPULSE — must stop at warp 0 first.

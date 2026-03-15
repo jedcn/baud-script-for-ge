@@ -101,10 +101,37 @@ describe("Navigation System", function()
       assert.equals(0, speedValue)
     end)
 
-    it("decelerates from warp 10 when within 13000", function()
-      local speedType, speedValue = decideSpeed(12000, 10)
+    -- Freight Barge: decelRate=2, stopDist(15,2)=154*49=7546, threshold=15092
+    it("decelerates Freight Barge from max warp when within computed threshold", function()
+      setShipType("Freight Barge")
+      local speedType, speedValue = decideSpeed(12000, 15)
       assert.equals("WARP", speedType)
       assert.equals(5, speedValue)
+    end)
+
+    it("does not decelerate Freight Barge from max warp outside computed threshold", function()
+      setShipType("Freight Barge")
+      -- 16000 > decelThreshold (15092), so no decel — falls through to accel ladder
+      local speedType, speedValue = decideSpeed(16000, 15)
+      assert.equals("WARP", speedType)
+      assert.equals(15, speedValue)  -- maxWarp
+    end)
+
+    -- Star Cruiser: decelRate=20, stopDist(25,20)=154*5=770, threshold=1540
+    it("decelerates Star Cruiser from max warp when within computed threshold", function()
+      setShipType("Star Cruiser")
+      local speedType, speedValue = decideSpeed(1000, 25)
+      assert.equals("WARP", speedType)
+      assert.equals(5, speedValue)
+    end)
+
+    it("does not decelerate Star Cruiser from max warp outside computed threshold", function()
+      setShipType("Star Cruiser")
+      -- 2000 > decelThreshold (1540), so no max-warp decel
+      -- but 2000 < 3000 and speed(25) >= 5 → intermediate decel kicks in
+      local speedType, speedValue = decideSpeed(2000, 25)
+      assert.equals("WARP", speedType)
+      assert.equals(3, speedValue)
     end)
 
     it("decelerates from warp 5 when within 3000", function()

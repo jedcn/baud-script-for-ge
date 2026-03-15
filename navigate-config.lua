@@ -21,6 +21,21 @@ if not gePackage.navigation then
   }
 end
 
+-- Distance covered per warp level per tick (confirmed via Freight Barge and Star Cruiser observation)
+local DISTANCE_PER_WARP = 154
+
+-- Returns total distance needed to stop from fromWarp at the given decelRate.
+-- Each decel tick: warp drops by decelRate, ship travels new_warp * DISTANCE_PER_WARP.
+local function computeStopDistance(fromWarp, decelRate)
+  local dist = 0
+  local w = fromWarp
+  while w > 0 do
+    w = math.max(0, w - decelRate)
+    dist = dist + w * DISTANCE_PER_WARP
+  end
+  return dist
+end
+
 -- Set configuration (will be available to navigate.lua)
 gePackage.navigation.config = {
   -- show debug output?
@@ -38,10 +53,12 @@ gePackage.navigation.config = {
   -- Speed decision function (distance-based, user can customize)
   decideSpeed = function(distance, currentSpeed)
     local maxWarp = getShipMaxWarp()
+    local decelRate = getShipDecelRate()
+    -- 2× stop distance as buffer to account for tick-polling latency
+    local decelThreshold = computeStopDistance(maxWarp, decelRate) * 2.0
 
     -- Deceleration logic: slow down well before arrival
-    -- Thresholds are wide to account for 1-second polling intervals
-    if currentSpeed >= maxWarp and distance < 13000 then
+    if currentSpeed >= maxWarp and distance < decelThreshold then
       return "WARP", 5  -- Start slowing from max warp
     end
     if currentSpeed >= 5 and distance < 3000 then

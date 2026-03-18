@@ -14,7 +14,9 @@ function initCombat()
     active = false,
     state = "idle",
     shipBearing = nil,
-    lastCommand = 0
+    lastCommand = 0,
+    warpAndFirePendingShip = nil,
+    dropWarpAfterFire = false
   }
 end
 
@@ -80,6 +82,11 @@ function setCombatShipBearingFromTrigger(bearing)
     send("shi up")
   end
 
+  if gePackage.combat.dropWarpAfterFire then
+    gePackage.combat.dropWarpAfterFire = false
+    send("warp 0")
+  end
+
   gePackage.combat.active = false
   gePackage.combat.state = "idle"
 end
@@ -120,6 +127,37 @@ function deploy_decoys()
   send("decoy")
   send("decoy")
   send("decoy")
+end
+
+-- ============================================================================
+-- warp_and_fire_at_ship: go to warp 1, fire phasers, then drop back to impulse
+-- ============================================================================
+
+function warp_and_fire_at_ship(shipLetter)
+  if getCombatActive() then
+    combatLog("Already in progress (state: " .. getCombatState() .. ")")
+    return
+  end
+  if gePackage.combat.warpAndFirePendingShip then
+    combatLog("Warp-and-fire already pending for ship " .. gePackage.combat.warpAndFirePendingShip)
+    return
+  end
+  combatLog("Warp-and-fire: going to warp 1, then firing at " .. shipLetter)
+  gePackage.combat.warpAndFirePendingShip = shipLetter
+  send("warp 1")
+end
+
+-- Called from warp-speed trigger when warp speed changes
+function handleWarpSpeedForCombat(warpSpeed)
+  local pendingShip = gePackage.combat and gePackage.combat.warpAndFirePendingShip
+  if not pendingShip then return end
+  if tonumber(warpSpeed) >= 1 then
+    gePackage.combat.warpAndFirePendingShip = nil
+    fire_phasers_at_ship(pendingShip)
+    -- fire_phasers_at_ship calls initCombat() which resets dropWarpAfterFire,
+    -- so we re-set it here after that call
+    gePackage.combat.dropWarpAfterFire = true
+  end
 end
 
 -- Initialize on load

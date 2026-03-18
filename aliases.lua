@@ -253,6 +253,13 @@ createAlias("^fire\\.at ([a-z])$", function(matches)
     fire_phasers_at_ship(shipLetter)
 end, { type = "regex" })
 
+-- warp.and.fire.at <letter> -> warp_and_fire_at_ship(letter)
+-- Goes to warp 1, fires phasers at the named ship, then drops back to warp 0
+createAlias("^warp\\.and\\.fire\\.at ([a-z])$", function(matches)
+    local shipLetter = matches[2]
+    warp_and_fire_at_ship(shipLetter)
+end, { type = "regex" })
+
 -- combat.cancel -> resets combat state machine
 createAlias("^combat\\.cancel$", function()
     initCombat()

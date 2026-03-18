@@ -28,6 +28,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `test/main_spec.lua` - Trigger tests using Busted framework
 - `test/navigate_spec.lua` - Navigation system tests
 - `test/attack_loop_spec.lua` - Attack loop state machine tests
+- `test/combat_spec.lua` - Combat command tests (warp-and-fire)
 
 ## Conventions
 

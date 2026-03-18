@@ -151,6 +151,7 @@ end, { type = "regex" })
 createTrigger("^Helm reports WARP (\\d+)$", function(matches)
     local warpSpeed = matches[2]
     setWarpSpeed(warpSpeed)
+    handleWarpSpeedForCombat(warpSpeed)
 end, { type = "regex" })
 
 

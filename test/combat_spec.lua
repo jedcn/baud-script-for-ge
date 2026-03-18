@@ -35,11 +35,21 @@ describe("warp_and_fire_at_ship", function()
         assert.are.equal("b", gePackage.combat.warpAndFirePendingShip)
     end)
 
-    it("scans target ship when warp kicks in", function()
+    it("scans target ship when warp kicks in via interim message", function()
         warp_and_fire_at_ship("a")
         helper.sendCalls = {}
 
         helper.simulateLine("Helm reports WARP 1")
+
+        assert.is_true(helper.wasSendCalledWith("scan sh a"))
+        assert.is_nil(gePackage.combat.warpAndFirePendingShip)
+    end)
+
+    it("scans target ship when warp kicks in via final speed message", function()
+        warp_and_fire_at_ship("a")
+        helper.sendCalls = {}
+
+        helper.simulateLine("Helm reports speed is now Warp 1.00, Sir!")
 
         assert.is_true(helper.wasSendCalledWith("scan sh a"))
         assert.is_nil(gePackage.combat.warpAndFirePendingShip)

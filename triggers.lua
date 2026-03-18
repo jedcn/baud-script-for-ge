@@ -159,6 +159,7 @@ end, { type = "regex" })
 createTrigger("^Helm reports speed is now Warp (\\d+\\.\\d+), Sir!$", function(matches)
     local warpSpeed = matches[2]
     setWarpSpeed(warpSpeed)
+    handleWarpSpeedForCombat(warpSpeed)
 end, { type = "regex" })
 
 createTrigger("^Speed..................Warp (\\d+\\.\\d+)$", function(matches)

@@ -147,32 +147,33 @@ describe("navigate-nav", function()
       assert.is_true(#helper.sendCalls > 0)
     end)
 
-    it("navpl_setting_warp: stores a decelDeadline when warp >= 1", function()
+    it("navpl_setting_warp: sends warp and transitions to cruising", function()
       navToPlanet(3)
       navNavTick()
       setNavigationPlanetScanBearing(1)
       setNavigationPlanetScanDistance(5000)
       navNavTick()  -- → navpl_rotating
       navNavTick()  -- → navpl_setting_warp
-      navNavTick()  -- → navpl_cruising, stores deadline
-      assert.is_not_nil(gePackage.navigation.decelDeadline)
-      assert.is_true(gePackage.navigation.decelDeadline > os.time())
+      helper.sendCalls = {}
+      navNavTick()  -- → sends warp, state = navpl_cruising
+      assert.are.equal("navpl_cruising", getNavigationState())
+      assert.is_true(#helper.sendCalls > 0)
     end)
 
-    it("navpl_cruising: sends warp 0 and transitions to decelerating when deadline passes", function()
+    it("navpl_cruising: scans every TICK_SECONDS regardless of trip length", function()
       navToPlanet(3)
       navNavTick()
       setNavigationPlanetScanBearing(1)
       setNavigationPlanetScanDistance(5000)
       navNavTick()  -- → navpl_rotating
       navNavTick()  -- → navpl_setting_warp
-      navNavTick()  -- → navpl_cruising
-      -- Force deadline to be in the past
-      gePackage.navigation.decelDeadline = os.time() - 1
+      navNavTick()  -- → navpl_cruising, lastCommand=now
+      -- Force lastCommand to be TICK_SECONDS ago
+      gePackage.navigation.lastCommand = os.time() - TICK_SECONDS
       helper.sendCalls = {}
-      navNavTick()  -- deadline reached → warp 0, navpl_decelerating
-      assert.is_true(helper.wasSendCalledWith("warp 0"))
-      assert.are.equal("navpl_decelerating", getNavigationState())
+      navNavTick()  -- scan fires
+      assert.is_true(helper.wasSendCalledWith("scan planet 3"))
+      assert.are.equal("navpl_awaiting_cruise_scan", getNavigationState())
     end)
 
     it("navpl_decelerating: scans planet when speed reaches 0", function()

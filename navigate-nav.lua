@@ -74,7 +74,6 @@ function navToPlanet(N)
   setNavigationLastCommand(0)
   clearNavigationPlanetScan()
   gePackage.navigation.plan = nil
-  gePackage.navigation.decelDeadline = nil
   gePackage.navigation.rotationComplete = false
   gePackage.navigation.orbitAttempts = 0
 
@@ -264,29 +263,18 @@ function navNavTick()
       local plan = nav.plan
       if plan and plan.warp >= 1 then
         send("warp " .. plan.warp)
-        -- Deadline: issue warp 0 after accel+cruise ticks have elapsed, regardless of scan data
-        nav.decelDeadline = os.time() + (plan.accelTicks + plan.cruiseTicks) * TICK_SECONDS
       else
         send("imp 99")
-        nav.decelDeadline = nil
       end
       nav.lastCommand = os.time()
       nav.state = "navpl_cruising"
 
     elseif state == "navpl_cruising" then
-      -- Deadline check: if we've cruised long enough, issue warp 0 regardless of scan data.
-      -- This handles the case where scan results lag and we'd otherwise miss the decel point.
-      if nav.decelDeadline and os.time() >= nav.decelDeadline then
-        send("warp 0")
-        nav.lastCommand = os.time()
-        nav.decelDeadline = nil
-        nav.state = "navpl_decelerating"
-        navLog("Decel deadline reached, stopping")
-        return
-      end
-      local repEvery  = nav.plan and nav.plan.repNavEvery or 5
+      -- Scan every tick (TICK_SECONDS) so decel detection is at most 1 tick stale.
+      -- Game ticks are async so a time-based deadline is unreliable; distance is the
+      -- only safe decel trigger.
       local timeSince = os.time() - nav.lastCommand
-      if timeSince >= repEvery * TICK_SECONDS then
+      if timeSince >= TICK_SECONDS then
         clearNavigationPlanetScan()
         nav.lastCommand = os.time()
         send("scan planet " .. targetPlanet)
@@ -294,15 +282,6 @@ function navNavTick()
       end
 
     elseif state == "navpl_awaiting_cruise_scan" then
-      -- Also check deadline while waiting for scan response
-      if nav.decelDeadline and os.time() >= nav.decelDeadline then
-        send("warp 0")
-        nav.lastCommand = os.time()
-        nav.decelDeadline = nil
-        nav.state = "navpl_decelerating"
-        navLog("Decel deadline reached mid-scan, stopping")
-        return
-      end
       if os.time() - nav.lastCommand > config.commandTimeout then
         navError("Cruise scan timed out, continuing at current warp")
         nav.lastCommand = os.time()
@@ -317,19 +296,16 @@ function navNavTick()
         if distance < config.planetArrivalThreshold then
           send("warp 0")
           nav.lastCommand = os.time()
-          nav.decelDeadline = nil
           nav.state = "navpl_decelerating"
         elseif decelAtDist > 0 and distance < decelAtDist then
           send("warp 0")
           nav.lastCommand = os.time()
-          nav.decelDeadline = nil
           nav.state = "navpl_decelerating"
         else
           -- Check if course correction needed (bearing drifted significantly)
           local bearing = nav.planetScan.bearing
           if bearing ~= nil and math.abs(bearing) > 5 then
             send("warp 0")
-            nav.decelDeadline = nil
             nav.state = "navpl_scanning"
             navLog("Course correction needed (bearing=" .. bearing .. "), rescanning")
           else

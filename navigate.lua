@@ -1460,10 +1460,16 @@ function sectorNavTick()
     end,
 
     sec_arrived = function()
-      navLog("[navsec] Stopping ship")
-      send("warp 0")
-      sec.state = "sec_stopping"
-      navLog("[navsec][state] sec_arrived -> sec_stopping (stop command sent)")
+      if getOrbitingPlanet() then
+        -- Already in orbit (e.g. gravity well pulled us in); skip warp 0 to stay in orbit
+        sec.state = "sec_completed"
+        navLog("[navsec][state] sec_arrived -> sec_completed (already in orbit, skipping warp 0)")
+      else
+        navLog("[navsec] Stopping ship")
+        send("warp 0")
+        sec.state = "sec_stopping"
+        navLog("[navsec][state] sec_arrived -> sec_stopping (stop command sent)")
+      end
     end,
 
     sec_stopping = function()

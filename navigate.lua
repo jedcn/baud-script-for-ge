@@ -259,7 +259,7 @@ end
 
 function setPlanetBearingAndDistance(bearing, distance)
   local phase = getNavigationPhase()
-  if phase == "planet" or phase == "planet_simple" then
+  if phase == "planet" or phase == "planet_simple" or phase == "nav_planet" then
     setNavigationPlanetScanBearing(bearing)
     setNavigationPlanetScanDistance(distance)
     setNavigationLastScanUpdate(os.time())

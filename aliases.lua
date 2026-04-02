@@ -265,3 +265,83 @@ createAlias("^combat\\.cancel$", function()
     initCombat()
     echo("[combat] Cancelled - state reset to idle")
 end, { type = "regex" })
+
+-- ============================================================================
+-- New navigation aliases (nav.to API)
+-- ============================================================================
+
+-- nav.to <N>  →  navToPlanet(N)
+-- Navigate to planet N (1-9) in the current sector
+createAlias("^nav\\.to ([1-9])$", function(matches)
+    local planetNumber = tonumber(matches[2])
+    navToPlanet(planetNumber)
+end, { type = "regex" })
+
+-- nav.to <letter>  →  navToShip(letter)
+-- Scan ship <letter>, get its bearing, and move toward it
+createAlias("^nav\\.to ([a-z])$", function(matches)
+    local shipLetter = matches[2]
+    navToShip(shipLetter)
+end, { type = "regex" })
+
+-- nav.to <X> <Y>  →  navToSector(X, Y)
+-- Navigate to sector X,Y arriving at center (5000, 5000)
+-- Sector range: -1000 to 1000
+createAlias("^nav\\.to (-?\\d+) (-?\\d+)$", function(matches)
+    local sectorX = tonumber(matches[2])
+    local sectorY = tonumber(matches[3])
+    navToSector(sectorX, sectorY)
+end, { type = "regex" })
+
+-- nav.to <X> <Y> <N>  →  navToSectorAndPlanet(X, Y, N)
+-- Navigate to sector X,Y then orbit planet N (1-9)
+createAlias("^nav\\.to (-?\\d+) (-?\\d+) ([1-9])$", function(matches)
+    local sectorX      = tonumber(matches[2])
+    local sectorY      = tonumber(matches[3])
+    local planetNumber = tonumber(matches[4])
+    navToSectorAndPlanet(sectorX, sectorY, nil, nil, planetNumber)
+end, { type = "regex" })
+
+-- nav.to <X> <Y> <posX> <posY>  →  navToSector(X, Y, posX, posY)
+-- Navigate to sector X,Y arriving at in-sector position posX,posY
+createAlias("^nav\\.to (-?\\d+) (-?\\d+) (\\d+) (\\d+)$", function(matches)
+    local sectorX = tonumber(matches[2])
+    local sectorY = tonumber(matches[3])
+    local posX    = tonumber(matches[4])
+    local posY    = tonumber(matches[5])
+    navToSector(sectorX, sectorY, posX, posY)
+end, { type = "regex" })
+
+-- nav.to <X> <Y> <posX> <posY> <N>  →  navToSectorAndPlanet(X, Y, posX, posY, N)
+-- Navigate to sector X,Y at posX,posY then orbit planet N (1-9)
+createAlias("^nav\\.to (-?\\d+) (-?\\d+) (\\d+) (\\d+) ([1-9])$", function(matches)
+    local sectorX      = tonumber(matches[2])
+    local sectorY      = tonumber(matches[3])
+    local posX         = tonumber(matches[4])
+    local posY         = tonumber(matches[5])
+    local planetNumber = tonumber(matches[6])
+    navToSectorAndPlanet(sectorX, sectorY, posX, posY, planetNumber)
+end, { type = "regex" })
+
+-- flip.away  →  flipAwayFromPlanet()
+-- Rotate so the orbited planet is at bearing 180 (directly behind)
+createAlias("^flip\\.away$", function()
+    flipAwayFromPlanet()
+end, { type = "regex" })
+
+-- rot.to <N>  →  rotateToHeading(N)
+-- Rotate to absolute heading N
+createAlias("^rot\\.to (\\d+)$", function(matches)
+    local heading = tonumber(matches[2])
+    rotateToHeading(heading)
+end, { type = "regex" })
+
+-- nav.cancel  →  cancelAllNavigation()
+createAlias("^nav\\.cancel$", function()
+    cancelAllNavigation()
+end, { type = "regex" })
+
+-- nav.status  →  getAllNavigationStatusText()
+createAlias("^nav\\.status$", function()
+    cecho("green", getAllNavigationStatusText())
+end, { type = "regex" })

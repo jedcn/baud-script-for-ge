@@ -28,6 +28,8 @@ Update this section and README.md when files are added, removed, or renamed.
 - `test/core_spec.lua` - Core function tests (resetData, etc.)
 - `test/main_spec.lua` - Trigger tests using Busted framework
 - `test/navigate_spec.lua` - Navigation system tests
+- `test/navigate_physics_spec.lua` - Physics math tests (trajectory planner, stop/accel distance)
+- `test/aliases_spec.lua` - nav.to alias dispatch tests
 - `test/attack_loop_spec.lua` - Attack loop state machine tests
 - `test/combat_spec.lua` - Combat command tests (warp-and-fire)
 

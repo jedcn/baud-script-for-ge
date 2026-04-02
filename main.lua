@@ -23,6 +23,8 @@ dofile(scriptDir .. "navigation-state.lua")
 
 dofile(scriptDir .. "navigate-config.lua")
 
+dofile(scriptDir .. "navigate-physics.lua")
+
 dofile(scriptDir .. "navigate.lua")
 
 dofile(scriptDir .. "status.lua")

@@ -17,6 +17,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `navigation-state.lua` - Navigation state machines (coordinate nav, flip-away, rotto, sector nav)
 - `navigate.lua` - Autonomous navigation system
 - `navigate-config.lua` - User-configurable navigation settings
+- `navigate-physics.lua` - Pure physics math: stop/accel distance, rotation ticks, trajectory planner
 - `attack-loop.lua` - Automated assault loop (supply → attack → escape → repeat)
 - `combat.lua` - Ship-to-ship combat commands (e.g. `pha a` scans nearest ship and fires phasers)
 - `status.lua` - Status bar display function

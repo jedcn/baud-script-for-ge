@@ -364,6 +364,11 @@ function navigationTick()
 
   local nav = gePackage.navigation
 
+  -- New-style phases (nav_planet, nav_ship) are handled by navNavTick in navigate-nav.lua
+  if nav.phase == "nav_planet" or nav.phase == "nav_ship" then
+    return
+  end
+
   -- Early exit: if we're doing planet navigation and already orbiting the target, we're done!
   if (nav.phase == "planet" or nav.phase == "planet_simple") and nav.target.planetNumber then
     local orbitingPlanet = getOrbitingPlanet()

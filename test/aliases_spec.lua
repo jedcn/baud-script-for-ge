@@ -9,8 +9,10 @@ describe("nav.to aliases", function()
 
     before_each(function()
         helper.resetAll()
-        -- Stub new nav functions (don't exist yet) before dofile so they're
-        -- available when aliases.lua loads and registers callbacks
+        dofile("main.lua")
+        calls = {}
+        -- Stub functions defined by navigate.lua / navigate-nav.lua (set AFTER dofile
+        -- so we override the real implementations for these dispatch tests)
         _G.navToPlanet = function(n)
             table.insert(calls, { fn = "navToPlanet", n = n })
         end
@@ -23,10 +25,6 @@ describe("nav.to aliases", function()
         _G.navToSectorAndPlanet = function(x, y, posX, posY, n)
             table.insert(calls, { fn = "navToSectorAndPlanet", x = x, y = y, posX = posX, posY = posY, n = n })
         end
-        dofile("main.lua")
-        calls = {}
-        -- Stub functions that navigate.lua defines (set AFTER dofile so we
-        -- override the real implementations for these tests)
         _G.flipAwayFromPlanet = function()
             table.insert(calls, { fn = "flipAwayFromPlanet" })
         end

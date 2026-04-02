@@ -27,6 +27,8 @@ dofile(scriptDir .. "navigate-physics.lua")
 
 dofile(scriptDir .. "navigate.lua")
 
+dofile(scriptDir .. "navigate-nav.lua")
+
 dofile(scriptDir .. "status.lua")
 
 dofile(scriptDir .. "attack-loop.lua")

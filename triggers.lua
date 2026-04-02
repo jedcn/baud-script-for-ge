@@ -116,6 +116,7 @@ createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(ma
     setRottoRotationCompleteFromTrigger()
     setSectorNavRotationCompleteFromTrigger()
     setSplRotationCompleteFromTrigger()
+    setNavNavRotationCompleteFromTrigger()
 end, { type = "regex" })
 
 -- sets ship heading from engines firing message (when leaving orbit or starting movement)
@@ -293,6 +294,13 @@ end, { type="regex" })
 createTrigger("Bearing:\\s+(-?\\d+)\\s+Heading:", function(matches)
     local bearing = matches[2]
     setCombatShipBearingFromTrigger(bearing)
+end, { type = "regex" })
+
+-- ship scan bearing + distance for navToShip (captures both fields from the same line)
+createTrigger("Bearing:\\s+(-?\\d+)\\s+Heading:\\s+(-?\\d+)\\s+Dist:\\s+(\\d+)", function(matches)
+    local bearing  = matches[2]
+    local distance = matches[4]
+    setNavShipScanFromTrigger(bearing, distance)
 end, { type = "regex" })
 
 -- combat results

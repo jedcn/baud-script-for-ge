@@ -15,7 +15,8 @@ Update this section and README.md when files are added, removed, or renamed.
 - `core.lua` - Ship state management (setSector, setOrbitingPlanet, setShipHeading, etc.)
 - `state-machine-core.lua` - Parsing state for multi-line output (scanning planets, reports)
 - `navigation-state.lua` - Navigation state machines (coordinate nav, flip-away, rotto, sector nav)
-- `navigate.lua` - Autonomous navigation system
+- `navigate.lua` - Autonomous navigation system (old-style: coordinate, planet-simple, sector, flipaway, rotto)
+- `navigate-nav.lua` - New nav.to API: navToPlanet, navToShip, navToSector, navToSectorAndPlanet
 - `navigate-config.lua` - User-configurable navigation settings
 - `navigate-physics.lua` - Pure physics math: stop/accel distance, rotation ticks, trajectory planner
 - `attack-loop.lua` - Automated assault loop (supply → attack → escape → repeat)
@@ -30,6 +31,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `test/navigate_spec.lua` - Navigation system tests
 - `test/navigate_physics_spec.lua` - Physics math tests (trajectory planner, stop/accel distance)
 - `test/aliases_spec.lua` - nav.to alias dispatch tests
+- `test/navigate_nav_spec.lua` - navToPlanet, navToShip, navToSector state machine tests
 - `test/attack_loop_spec.lua` - Attack loop state machine tests
 - `test/combat_spec.lua` - Combat command tests (warp-and-fire)
 

@@ -147,6 +147,102 @@ describe("navigate-nav", function()
       assert.is_true(#helper.sendCalls > 0)
     end)
 
+    it("navpl_setting_warp: stores a decelDeadline when warp >= 1", function()
+      navToPlanet(3)
+      navNavTick()
+      setNavigationPlanetScanBearing(1)
+      setNavigationPlanetScanDistance(5000)
+      navNavTick()  -- → navpl_rotating
+      navNavTick()  -- → navpl_setting_warp
+      navNavTick()  -- → navpl_cruising, stores deadline
+      assert.is_not_nil(gePackage.navigation.decelDeadline)
+      assert.is_true(gePackage.navigation.decelDeadline > os.time())
+    end)
+
+    it("navpl_cruising: sends warp 0 and transitions to decelerating when deadline passes", function()
+      navToPlanet(3)
+      navNavTick()
+      setNavigationPlanetScanBearing(1)
+      setNavigationPlanetScanDistance(5000)
+      navNavTick()  -- → navpl_rotating
+      navNavTick()  -- → navpl_setting_warp
+      navNavTick()  -- → navpl_cruising
+      -- Force deadline to be in the past
+      gePackage.navigation.decelDeadline = os.time() - 1
+      helper.sendCalls = {}
+      navNavTick()  -- deadline reached → warp 0, navpl_decelerating
+      assert.is_true(helper.wasSendCalledWith("warp 0"))
+      assert.are.equal("navpl_decelerating", getNavigationState())
+    end)
+
+    it("navpl_decelerating: scans planet when speed reaches 0", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_decelerating"
+      setWarpSpeed(0)
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("scan planet 3"))
+      assert.are.equal("navpl_post_stop_scan", getNavigationState())
+    end)
+
+    it("navpl_post_stop_scan: transitions to orbiting when within threshold", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_post_stop_scan"
+      gePackage.navigation.lastCommand = os.time()
+      setNavigationPlanetScanBearing(0)
+      setNavigationPlanetScanDistance(200)  -- within 250 threshold
+      navNavTick()
+      assert.are.equal("navpl_orbiting", getNavigationState())
+    end)
+
+    it("navpl_post_stop_scan: starts impulse approach when too far", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_post_stop_scan"
+      gePackage.navigation.lastCommand = os.time()
+      setNavigationPlanetScanBearing(0)
+      setNavigationPlanetScanDistance(495)  -- beyond 250 threshold
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("imp 99"))
+      assert.are.equal("navpl_impulse_approach", getNavigationState())
+    end)
+
+    it("navpl_impulse_approach: scans planet each tick", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_impulse_approach"
+      gePackage.navigation.lastCommand = 0  -- force immediate scan
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("scan planet 3"))
+      assert.are.equal("navpl_awaiting_impulse_scan", getNavigationState())
+    end)
+
+    it("navpl_awaiting_impulse_scan: stops and moves to orbiting when close enough", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_awaiting_impulse_scan"
+      gePackage.navigation.lastCommand = os.time()
+      setNavigationPlanetScanBearing(0)
+      setNavigationPlanetScanDistance(100)  -- within threshold
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("warp 0"))
+      assert.are.equal("navpl_impulse_stopping", getNavigationState())
+    end)
+
+    it("navpl_awaiting_impulse_scan: continues approach when still too far", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_awaiting_impulse_scan"
+      gePackage.navigation.lastCommand = os.time()
+      setNavigationPlanetScanBearing(0)
+      setNavigationPlanetScanDistance(400)  -- still too far
+      navNavTick()
+      assert.are.equal("navpl_impulse_approach", getNavigationState())
+    end)
+
+    it("navpl_impulse_stopping: transitions to orbiting when stopped", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_impulse_stopping"
+      setWarpSpeed(0)
+      navNavTick()
+      assert.are.equal("navpl_orbiting", getNavigationState())
+    end)
+
     it("navpl_orbiting: sends orb command and completes when orbit confirmed", function()
       navToPlanet(3)
       -- Jump straight to orbiting state
@@ -154,6 +250,16 @@ describe("navigate-nav", function()
       gePackage.navigation.lastCommand = 0  -- force immediate send
       navNavTick()  -- sends orb 3
       assert.is_true(helper.wasSendCalledWith("orb 3"))
+    end)
+
+    it("navpl_orbiting: re-approaches after too many failures", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_orbiting"
+      gePackage.navigation.lastCommand = 0
+      gePackage.navigation.orbitAttempts = 8  -- one more will trigger re-approach
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("scan planet 3"))
+      assert.are.equal("navpl_post_stop_scan", getNavigationState())
     end)
 
     it("completes when orbit is confirmed mid-tick", function()

@@ -470,7 +470,6 @@ function navNavTick()
       local plan = nav.plan
       local warp = plan and plan.warp or 0
       local eta  = plan and plan.etaSeconds or 10
-      nav.deadline = os.time() + eta + 10  -- 10s buffer for rotation time
       if warp >= 1 then
         send("warp " .. warp)
         navLog("Launched toward ship " .. letter .. " at warp " .. warp ..
@@ -479,15 +478,8 @@ function navNavTick()
         send("imp 99")
         navLog("Launched toward ship " .. letter .. " at impulse, ETA ~" .. etaString(eta))
       end
-      nav.lastCommand = os.time()
-      nav.state = "navsh_traveling"
-
-    elseif state == "navsh_traveling" then
-      if os.time() >= nav.deadline then
-        navLog("Ship nav: ETA reached")
-        nav.active = false
-        nav.state  = "idle"
-      end
+      nav.active = false
+      nav.state  = "idle"
 
     elseif state == "navsh_failed" then
       navError("Ship navigation failed, stopping")

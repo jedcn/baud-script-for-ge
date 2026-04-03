@@ -352,41 +352,15 @@ describe("navigate-nav", function()
       assert.are.equal("navsh_launching", getNavigationState())
     end)
 
-    it("navsh_launching: sends warp command and transitions to traveling", function()
+    it("navsh_launching: sends warp command and finishes immediately", function()
       navToShip("a")
       navNavTick()
       setNavShipScanFromTrigger(0, 50000)
       navNavTick()  -- → navsh_rotating
       navNavTick()  -- → navsh_launching
       helper.sendCalls = {}
-      navNavTick()  -- sends warp N → navsh_traveling
-      assert.are.equal("navsh_traveling", getNavigationState())
+      navNavTick()  -- sends warp N → done
       assert.is_true(#helper.sendCalls > 0)
-    end)
-
-    it("navsh_launching: sets a deadline for stopping", function()
-      navToShip("a")
-      navNavTick()
-      setNavShipScanFromTrigger(0, 50000)
-      navNavTick()  -- → navsh_rotating
-      navNavTick()  -- → navsh_launching
-      navNavTick()  -- → navsh_traveling, sets deadline
-      assert.is_not_nil(gePackage.navigation.deadline)
-      assert.is_true(gePackage.navigation.deadline > os.time())
-    end)
-
-    it("navsh_traveling: stops when deadline is reached", function()
-      navToShip("a")
-      navNavTick()
-      setNavShipScanFromTrigger(0, 50000)
-      navNavTick()  -- → navsh_rotating
-      navNavTick()  -- → navsh_launching
-      navNavTick()  -- → navsh_traveling
-      -- Force deadline to be in the past
-      gePackage.navigation.deadline = os.time() - 1
-      helper.sendCalls = {}
-      navNavTick()  -- deadline reached → done (no warp 0, ship keeps flying)
-      assert.is_false(helper.wasSendCalledWith("warp 0"))
       assert.is_false(getNavigationActive())
     end)
 

@@ -109,22 +109,9 @@ createAlias("^repair$", function()
     doMaint()
 end, { type = "regex" })
 
---
--- lfg
-createAlias("^lfg$", function()
-    send("tra up 1 flu")
-    send("flu")
-    send("tra up 249980 tro")
-    navigateToSectorAndPlanet(11, -9, 3250, 500, 3)
-end, { type = "regex" })
-
 createAlias("^attack", function()
     send("attack 249980 tro")
     send("imp 99 0")
-end, { type = "regex" })
-
-createAlias("^gohome", function()
-    navigateToSectorAndPlanet(9, -11, 5000, 8000, 3)
 end, { type = "regex" })
 
 --
@@ -140,90 +127,6 @@ end, { type = "regex" })
 
 createAlias("^assault-status$", function()
     printStatusAssault()
-end, { type = "regex" })
-
---
--- Navigation commands
---
-
--- navto X Y -> navigateToCoordinates(X, Y)
-createAlias("^navto (\\d+) (\\d+)$", function(matches)
-    local x = matches[2]
-    local y = matches[3]
-    navigateToCoordinates(x, y)
-end, { type = "regex" })
-
--- navcpl N -> navigateToPlanet(N) (coordinate-based approach)
-createAlias("^navcpl (\\d+)$", function(matches)
-    local planetNumber = matches[2]
-    navigateToPlanet(planetNumber)
-end, { type = "regex" })
-
--- navspl N -> navigateToPlanetSimple(N) (bearing-following approach)
-createAlias("^navspl (\\d+)$", function(matches)
-    local planetNumber = matches[2]
-    navigateToPlanetSimple(planetNumber)
-end, { type = "regex" })
-
--- navstatus -> getAllNavigationStatusText()
--- Shows status of all navigation types (nav, flipaway, rotto, navsec)
-createAlias("^navstatus$", function()
-    cecho("green", getAllNavigationStatusText())
-end, { type = "regex" })
-
--- navcancel -> cancelAllNavigation()
--- Cancels all navigation types (nav, flipaway, rotto, navsec)
-createAlias("^navcancel$", function()
-    cancelAllNavigation()
-end, { type = "regex" })
-
--- flipaway -> flipAwayFromPlanet()
--- Rotates ship so orbited planet is at bearing 180 (behind ship)
-createAlias("^flipaway$", function()
-    flipAwayFromPlanet()
-end, { type = "regex" })
-
--- rotto N -> rotateToHeading(N)
--- Rotates ship to absolute heading N (only works when not orbiting)
-createAlias("^rotto (\\d+)$", function(matches)
-    local targetHeading = matches[2]
-    rotateToHeading(targetHeading)
-end, { type = "regex" })
-
--- navsec X Y -> navigateToSector(X, Y) - goes to center (5000, 5000)
-createAlias("^navsec (-?\\d+) (-?\\d+)$", function(matches)
-    local sectorX = matches[2]
-    local sectorY = matches[3]
-    navigateToSector(sectorX, sectorY)
-end, { type = "regex" })
-
--- navsec X Y posX posY -> navigateToSector(X, Y, posX, posY)
-createAlias("^navsec (-?\\d+) (-?\\d+) (\\d+) (\\d+)$", function(matches)
-    local sectorX = matches[2]
-    local sectorY = matches[3]
-    local posX = matches[4]
-    local posY = matches[5]
-    navigateToSector(sectorX, sectorY, posX, posY)
-end, { type = "regex" })
-
--- navsecpl X Y posX posY N -> navigateToSectorAndPlanet(X, Y, posX, posY, N)
-createAlias("^navsecpl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$", function(matches)
-    local sectorX      = matches[2]
-    local sectorY      = matches[3]
-    local posX         = matches[4]
-    local posY         = matches[5]
-    local planetNumber = matches[6]
-    navigateToSectorAndPlanet(sectorX, sectorY, posX, posY, planetNumber)
-end, { type = "regex" })
-
--- navsec-fastentry-then-pl X Y posX posY N -> navigateToSectorFastEntry(X, Y, posX, posY, N)
-createAlias("^navsec-fastentry-then-pl (-?\\d+) (-?\\d+) (\\d+) (\\d+) (\\d+)$", function(matches)
-    local sectorX      = matches[2]
-    local sectorY      = matches[3]
-    local entryPosX    = matches[4]
-    local entryPosY    = matches[5]
-    local planetNumber = matches[6]
-    navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
 end, { type = "regex" })
 
 -- decoy.launch -> deploy_decoys()

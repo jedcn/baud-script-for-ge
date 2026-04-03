@@ -15,7 +15,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `core.lua` - Ship state management (setSector, setOrbitingPlanet, setShipHeading, etc.)
 - `state-machine-core.lua` - Parsing state for multi-line output (scanning planets, reports)
 - `navigation-state.lua` - Navigation state machines (coordinate nav, flip-away, rotto, sector nav)
-- `navigate.lua` - Autonomous navigation system (old-style: coordinate, planet-simple, sector, flipaway, rotto)
+- `navigate.lua` - Navigation system: planet-simple (spl_*), sector nav, flipaway, rotto; helper math; cancelAllNavigation
 - `navigate-nav.lua` - New nav.to API: navToPlanet, navToShip, navToSector, navToSectorAndPlanet
 - `navigate-config.lua` - User-configurable navigation settings
 - `navigate-physics.lua` - Pure physics math: stop/accel distance, rotation ticks, trajectory planner

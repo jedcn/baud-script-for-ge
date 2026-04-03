@@ -186,7 +186,6 @@ createTrigger("^Helm reports leaving Sector (-?\\d+) (-?\\d+) and entering Secto
     local newSectorY = matches[5]
     say("Entering sector (" .. newSectorX .. ", " .. newSectorY .. ")")
     send("rep nav")
-    handleSectorEntry(newSectorX, newSectorY)
 end, { type = "regex" })
 
 -- sets warp speed from status display

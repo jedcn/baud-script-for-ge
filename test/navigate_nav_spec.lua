@@ -385,8 +385,8 @@ describe("navigate-nav", function()
       -- Force deadline to be in the past
       gePackage.navigation.deadline = os.time() - 1
       helper.sendCalls = {}
-      navNavTick()  -- deadline reached → warp 0, done
-      assert.is_true(helper.wasSendCalledWith("warp 0"))
+      navNavTick()  -- deadline reached → done (no warp 0, ship keeps flying)
+      assert.is_false(helper.wasSendCalledWith("warp 0"))
       assert.is_false(getNavigationActive())
     end)
 

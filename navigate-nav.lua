@@ -474,18 +474,17 @@ function navNavTick()
       if warp >= 1 then
         send("warp " .. warp)
         navLog("Launched toward ship " .. letter .. " at warp " .. warp ..
-               ", stopping in ~" .. etaString(eta))
+               ", ETA ~" .. etaString(eta))
       else
         send("imp 99")
-        navLog("Launched toward ship " .. letter .. " at impulse, stopping in ~" .. etaString(eta))
+        navLog("Launched toward ship " .. letter .. " at impulse, ETA ~" .. etaString(eta))
       end
       nav.lastCommand = os.time()
       nav.state = "navsh_traveling"
 
     elseif state == "navsh_traveling" then
       if os.time() >= nav.deadline then
-        send("warp 0")
-        navLog("Ship nav: ETA reached, stopping")
+        navLog("Ship nav: ETA reached")
         nav.active = false
         nav.state  = "idle"
       end

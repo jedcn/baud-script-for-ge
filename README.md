@@ -52,6 +52,16 @@
 
 ## Triggers
 
+These fire automatically in response to game output:
+
+* Bypasses the server's pager `(N)onstop` prompt automatically
+* Raises shields when leaving hyperspace
+* Orbits a planet when pulled into its gravity (if auto-orbit is enabled)
+* Runs `rep sys` after maintenance completes
+* Runs `rep sys` when hit by an Ion Cannon burst
+* Runs `rep sys` when shields are damaged on the last hit
+* Requests a navigational report (`rep nav`) when crossing a sector boundary
+
 ## Project Structure
 
 See [README_FILES.md]

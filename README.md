@@ -18,6 +18,38 @@
 
 ## Aliases
 
+### Reports
+
+* Systems report: `rs` -> `rep sys`
+* Inventory report: `ri` -> `rep inv`
+* Accounts report: `ra` -> `rep account`
+* Navigational report: `rn` -> `rep nav`
+
+### Stored Planet
+
+* Set planet 3 as the stored planet: `setpl3`
+* Scan the stored planet: `scapl` (or `sp`)
+* Orbit the stored planet: `orbpl`
+
+### Scanning
+
+* Scan planet N: `scaplN`
+* Scan sector: `ss`
+
+### Combat
+
+* Scan ship A, and fire phasers at it: `fire.at A`
+* Launch 3 missiles at ship A: `missile.at A`
+* Launch 3 torpedoes at ship A: `torpedo.at A`
+* Go into warp, fire phasers at ship A, and then drop out of warp: `warp.and.fire.at A`
+* Launch 10 decoys: `decoy.launch`
+
+### Maintenance
+* Flip away from planet and run maintenance: `repair`
+
+### Admin
+* Reset all stored ship data (use when switching ships): `reset`
+
 ## Triggers
 
 ## Project Structure

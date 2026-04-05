@@ -150,6 +150,11 @@ createAlias("^populate\\.cancel$", function()
     cancelPopulate()
 end, { type = "regex" })
 
+-- populate.status  →  printStatusPopulate()
+createAlias("^populate\\.status$", function()
+    printStatusPopulate()
+end, { type = "regex" })
+
 -- decoy.launch -> deploy_decoys()
 -- Sends the decoy command five times
 createAlias("^decoy\\.launch$", function(matches)

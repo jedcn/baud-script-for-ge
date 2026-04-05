@@ -78,6 +78,7 @@ function startPopulate(srcX, srcY, srcPlanet, destX, destY, destPlanet)
 
   initPopulate()
   gePackage.populate.active = true
+  gePackage.populate.startedAt = os.time()
   gePackage.populate.src  = { sectorX = srcX,  sectorY = srcY,  planet = srcPlanet  }
   gePackage.populate.dest = { sectorX = destX, sectorY = destY, planet = destPlanet }
 
@@ -97,6 +98,25 @@ function cancelPopulate()
   cecho("#00ffff", "[populate] Cancelled by user")
   gePackage.populate.active = false
   gePackage.populate.state = "idle"
+end
+
+function printStatusPopulate()
+  if not getPopulateActive() then
+    echo("[populate] inactive")
+    return
+  end
+
+  local cfg     = gePackage.populate
+  local state   = cfg.state
+  local elapsed = os.time() - (cfg.startedAt or os.time())
+  local stateElapsed = os.time() - (cfg.lastStateChange or os.time())
+
+  local src  = cfg.src.sectorX  .. "," .. cfg.src.sectorY  .. " pl" .. cfg.src.planet
+  local dest = cfg.dest.sectorX .. "," .. cfg.dest.sectorY .. " pl" .. cfg.dest.planet
+
+  echo("[populate] " .. state ..
+       " | src=" .. src .. " dest=" .. dest ..
+       " | running " .. elapsed .. "s, in state " .. stateElapsed .. "s")
 end
 
 -- ============================================================================

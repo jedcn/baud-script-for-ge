@@ -50,6 +50,31 @@ describe("Populate loop", function()
     -- cancelPopulate
     -- =========================================================================
 
+    describe("printStatusPopulate", function()
+
+        it("reports inactive when not running", function()
+            printStatusPopulate()
+
+            assert.is_true(helper.wasEchoCalledWith("[populate] inactive"))
+        end)
+
+        it("reports state and coordinates when running", function()
+            startPopulate(11, -9, 1, 11, -9, 3)
+            helper.echoCalls = {}
+
+            printStatusPopulate()
+
+            local found = false
+            for _, call in ipairs(helper.echoCalls) do
+                if call:find("verifying_ship_type") and call:find("11,%-9 pl1") and call:find("11,%-9 pl3") then
+                    found = true
+                end
+            end
+            assert.is_true(found)
+        end)
+
+    end)
+
     describe("cancelPopulate", function()
 
         it("stops the loop and resets to idle", function()

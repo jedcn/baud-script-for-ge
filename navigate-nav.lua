@@ -345,9 +345,10 @@ function navNavTick()
         if distance <= config.planetArrivalThreshold then
           nav.state = "navpl_orbiting"
         else
+          local bearing = nav.planetScan.bearing or 0
           navLog("Stopped at dist=" .. distance .. " from planet " .. targetPlanet ..
-                 " (orbit needs <" .. config.planetArrivalThreshold .. "), using impulse")
-          send("imp 99")
+                 " (orbit needs <" .. config.planetArrivalThreshold .. "), bearing=" .. bearing .. ", using impulse")
+          send("imp 99 " .. bearing)
           nav.lastCommand = os.time()
           clearNavigationPlanetScan()
           nav.state = "navpl_impulse_approach"
@@ -373,12 +374,15 @@ function navNavTick()
       end
       local distance = nav.planetScan.distance
       if distance then
-        navLog("Impulse approach to planet " .. targetPlanet .. ": dist=" .. distance)
+        local bearing = nav.planetScan.bearing or 0
+        navLog("Impulse approach to planet " .. targetPlanet .. ": dist=" .. distance .. ", bearing=" .. bearing)
         if distance <= config.planetArrivalThreshold then
           send("warp 0")
           nav.lastCommand = os.time()
           nav.state = "navpl_impulse_stopping"
         else
+          send("imp 99 " .. bearing)
+          nav.lastCommand = os.time()
           nav.state = "navpl_impulse_approach"
         end
       end

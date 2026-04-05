@@ -217,7 +217,18 @@ describe("navigate-nav", function()
       setNavigationPlanetScanBearing(0)
       setNavigationPlanetScanDistance(495)  -- beyond 250 threshold
       navNavTick()
-      assert.is_true(helper.wasSendCalledWith("imp 99"))
+      assert.is_true(helper.wasSendCalledWith("imp 99 0"))
+      assert.are.equal("navpl_impulse_approach", getNavigationState())
+    end)
+
+    it("navpl_post_stop_scan: corrects bearing on impulse start when overshot", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_post_stop_scan"
+      gePackage.navigation.lastCommand = os.time()
+      setNavigationPlanetScanBearing(178)  -- planet is behind (overshot)
+      setNavigationPlanetScanDistance(1109)
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("imp 99 178"))
       assert.are.equal("navpl_impulse_approach", getNavigationState())
     end)
 
@@ -248,6 +259,18 @@ describe("navigate-nav", function()
       setNavigationPlanetScanBearing(0)
       setNavigationPlanetScanDistance(400)  -- still too far
       navNavTick()
+      assert.is_true(helper.wasSendCalledWith("imp 99 0"))
+      assert.are.equal("navpl_impulse_approach", getNavigationState())
+    end)
+
+    it("navpl_awaiting_impulse_scan: corrects bearing mid-approach", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_awaiting_impulse_scan"
+      gePackage.navigation.lastCommand = os.time()
+      setNavigationPlanetScanBearing(45)  -- drifted off course
+      setNavigationPlanetScanDistance(400)
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("imp 99 45"))
       assert.are.equal("navpl_impulse_approach", getNavigationState())
     end)
 

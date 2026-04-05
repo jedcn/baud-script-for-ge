@@ -885,6 +885,12 @@ function sectorNavTick()
 
       -- Check if we've already arrived at target sector
       if currentSectorX == sec.targetSectorX and currentSectorY == sec.targetSectorY then
+        -- When a follow-up planet is set, skip positional targeting and hand off to planet nav immediately
+        if sec.followUpPlanet then
+          sec.state = "sec_arrived"
+          navLog("[navsec][state] sec_calculating_route -> sec_arrived (in target sector with followUpPlanet, skipping position check)")
+          return
+        end
         -- In target sector, check if at target position
         local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
         if distToTarget < config.arrivalThreshold then
@@ -1042,6 +1048,12 @@ function sectorNavTick()
 
         -- Check if arrived at target sector
         if currentSectorX == sec.targetSectorX and currentSectorY == sec.targetSectorY then
+          -- When a follow-up planet is set, skip positional targeting and hand off to planet nav immediately
+          if sec.followUpPlanet then
+            sec.state = "sec_arrived"
+            navLog("[navsec][state] sec_traveling -> sec_arrived (in target sector with followUpPlanet, skipping position check)")
+            return
+          end
           local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
           if distToTarget < config.arrivalThreshold then
             sec.state = "sec_arrived"
@@ -1085,7 +1097,7 @@ function sectorNavTick()
       if followUpPlanet then
         clearOrbitingPlanet()  -- clear stale orbit state from origin sector
         navLog("[navsec] Starting planet navigation to planet " .. followUpPlanet)
-        navigateToPlanetSimple(followUpPlanet)
+        navToPlanet(followUpPlanet)
       end
     end,
 

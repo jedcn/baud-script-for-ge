@@ -373,7 +373,7 @@ describe("Navigation System", function()
 
       assert.is_false(getSectorNavActive())
       assert.is_true(gePackage.navigation.active)
-      assert.equals("planet_simple", gePackage.navigation.phase)
+      assert.equals("nav_planet", gePackage.navigation.phase)
       assert.equals(3, gePackage.navigation.target.planetNumber)
     end)
 
@@ -389,7 +389,7 @@ describe("Navigation System", function()
       -- falsely declare arrival before any scan happens
       assert.is_nil(getOrbitingPlanet())  -- clearOrbitingPlanet() was called
       -- planet nav should be scanning, not already complete
-      assert.equals("spl_scanning", gePackage.navigation.state)
+      assert.equals("navpl_scanning", gePackage.navigation.state)
     end)
 
     it("does not start planet nav when followUpPlanet is absent", function()
@@ -400,6 +400,71 @@ describe("Navigation System", function()
 
       assert.is_false(getSectorNavActive())
       assert.is_false(gePackage.navigation.active)
+    end)
+  end)
+
+  -- ===== followUpPlanet early arrival (skip position targeting) =====
+  describe("sec_traveling with followUpPlanet", function()
+    before_each(function()
+      setSector(0, 0)
+      setSectorPosition(1000, 1000)
+    end)
+
+    it("transitions to sec_arrived as soon as ship is in the target sector, without checking position", function()
+      -- Ship is at (9000, 9000), far from the default target (5000, 5000)
+      setSector(11, -9)
+      setSectorPosition(9000, 9000)
+      navigateToSectorAndPlanet(11, -9, 5000, 5000, 3)
+      gePackage.sectorNav.state = "sec_traveling"
+      gePackage.sectorNav.lastCommand = os.time() - 999
+
+      sectorNavTick()
+
+      assert.equals("sec_arrived", gePackage.sectorNav.state)
+    end)
+
+    it("does not transition early when followUpPlanet is absent", function()
+      -- Ship is in the target sector but not at target position
+      setSector(11, -9)
+      setSectorPosition(9000, 9000)
+      navigateToSector(11, -9, 5000, 5000)
+      gePackage.sectorNav.state = "sec_traveling"
+      gePackage.sectorNav.lastCommand = os.time() - 999
+
+      sectorNavTick()
+
+      -- Should recalculate route, not jump to sec_arrived
+      assert.not_equals("sec_arrived", gePackage.sectorNav.state)
+    end)
+  end)
+
+  describe("sec_calculating_route with followUpPlanet", function()
+    before_each(function()
+      setSector(0, 0)
+      setSectorPosition(1000, 1000)
+    end)
+
+    it("transitions to sec_arrived as soon as ship is in the target sector, without checking position", function()
+      -- Ship is at (9000, 9000), far from the default target (5000, 5000)
+      setSector(11, -9)
+      setSectorPosition(9000, 9000)
+      navigateToSectorAndPlanet(11, -9, 5000, 5000, 3)
+      gePackage.sectorNav.state = "sec_calculating_route"
+
+      sectorNavTick()
+
+      assert.equals("sec_arrived", gePackage.sectorNav.state)
+    end)
+
+    it("does not transition early when followUpPlanet is absent", function()
+      setSector(11, -9)
+      setSectorPosition(9000, 9000)
+      navigateToSector(11, -9, 5000, 5000)
+      gePackage.sectorNav.state = "sec_calculating_route"
+
+      sectorNavTick()
+
+      assert.not_equals("sec_arrived", gePackage.sectorNav.state)
     end)
   end)
 end)

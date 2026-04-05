@@ -161,6 +161,16 @@ function getShipDecelRate()
   return specs and specs.decelRate or 10
 end
 
+-- Warp levels gained per tick when accelerating (half the decel rate, derived from source)
+function getShipAccelRate()
+  return getShipDecelRate() / 2
+end
+
+-- Degrees rotated per tick (derived from source: max_accel / 10)
+function getShipRotRate()
+  return getShipAcceleration() / 10
+end
+
 function setShipStatus(newStatus)
   debugLog("setShipSatus(" .. newStatus .. ")")
   gePackage.ship.status = newStatus

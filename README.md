@@ -1,38 +1,76 @@
-# Baud Lua Script for Playing Galactic Empire
+# Baud Scripts for Playing Galactic Empire
 
-Lua scripts for playing Galactic Empire via [baud](https://github.com/jedcn/baud).
+[baud] scripts for playing [GE]
 
-These scripts have tests. Run tests with `busted test`
+## Status Bar
+
+![Status Bar](docs/status-bar.png)
+
+## Navigation
+
+* Navigate to a planet 3 (in the current sector): `nav.to 3`
+* Scan ship A and navigate to it: `nav.to A`
+* Navigate to sector 10, -5: `nav.to 10 -5` (defaults to x = 5000, y = 5000) in that sector
+* Navigate to coordinates x = 3000, y = 7000 in sector 10, 5: `nav.to 10 -5 3000 7000`
+* Navigate to a sector 10, -5 and then orbit planet 3: `nav.to 10 -5 3`
+* Navigate to coordinates x = 3, y = 7000 in sector sector 10, -5 and then orbit planet 3 `nav.to 10 -5 3000 7000 3`
+* Cancel active navigation: `nav.cancel`
+
+## Aliases
+
+### Reports
+
+* Systems report: `rs` -> `rep sys`
+* Inventory report: `ri` -> `rep inv`
+* Accounts report: `ra` -> `rep account`
+* Navigational report: `rn` -> `rep nav`
+
+### Stored Planet
+
+* Set planet 3 as the stored planet: `setpl3`
+* Scan the stored planet: `scapl` (or `sp`)
+* Orbit the stored planet: `orbpl`
+
+### Scanning
+
+* Scan planet N: `scaplN`
+* Scan sector: `ss`
+
+### Combat
+
+* Scan ship A, and fire phasers at it: `fire.at A`
+* Launch 3 missiles at ship A: `missile.at A`
+* Launch 3 torpedoes at ship A: `torpedo.at A`
+* Go into warp, fire phasers at ship A, and then drop out of warp: `warp.and.fire.at A`
+* Launch 10 decoys: `decoy.launch`
+
+### Maintenance
+* Flip away from planet and run maintenance: `repair`
+
+### Admin
+* Reset all stored ship data (use when switching ships): `reset`
+
+## Triggers
+
+These fire automatically in response to game output:
+
+* Bypasses the server's pager `(N)onstop` prompt automatically
+* Raises shields when leaving hyperspace
+* Orbits a planet when pulled into its gravity (if auto-orbit is enabled)
+* Runs `rep sys` after maintenance completes
+* Runs `rep sys` when hit by an Ion Cannon burst
+* Runs `rep sys` when shields are damaged on the last hit
+* Requests a navigational report (`rep nav`) when crossing a sector boundary
 
 ## Project Structure
 
-```
-baud-scripts-for-ge/
-├── README.md                 -- This file
-├── main.lua                  -- Entry point, loads other files via dofile()
-├── core.lua                  -- Ship state management (setSector, setShipHeading, etc.)
-├── state-machine-core.lua    -- Parsing state for multi-line output
-├── navigation-state.lua      -- Navigation state machines (coordinate nav, flip-away, rotto, sector nav)
-├── navigate.lua              -- Autonomous navigation system
-├── navigate-config.lua       -- User-configurable navigation settings
-├── status.lua                -- Status bar display function
-├── triggers.lua              -- Pattern-matching triggers on game output
-├── aliases.lua               -- Command aliases (shortcuts like scapl1 -> sca pl 1)
-├── timers.lua                -- Recurring timers (navigation tick, etc.)
-├── plan/
-│   ├── navigation.md         -- Navigation system implementation plan
-│   └── testing-plan.md       -- Implementation plan for tests
-└── test/
-    ├── test_helper.lua       -- Mocks for Baud framework functions
-    ├── core_spec.lua         -- Core function tests
-    ├── main_spec.lua         -- Trigger tests
-    └── navigate_spec.lua     -- Navigation system tests
-```
+See [README_FILES.md]
 
-## Prerequisites for Running Tests
+## Development
 
-   ```bash
-   brew install lua
-   brew install luarocks
-   luarocks install busted
-   ```
+See [README_DEV.md]
+
+[README_DEV.md]: ./README_DEV.md
+[README_FILES.md]: ./README_FILES.md
+[baud]: https://github.com/jedcn/baud
+[GE]: https://wiki.mbbsemu.com/doku.php?id=modules:mbmgemp

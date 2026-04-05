@@ -123,6 +123,21 @@ end
 function say(text)
 end
 
+-- Test utility: simulate a user alias command and fire the matching alias callback
+function M.simulateAlias(text)
+    for _, alias in ipairs(M.aliases) do
+        local luaPattern = regexToLuaPattern(alias.pattern)
+        local matches = {string.match(text, luaPattern)}
+        if #matches > 0 or string.match(text, luaPattern) ~= nil then
+            if #matches == 0 then matches = {} end
+            table.insert(matches, 1, text)
+            alias.callback(matches)
+            return true  -- first match wins, like a real alias system
+        end
+    end
+    return false
+end
+
 -- Test utility: simulate a line of text and fire matching triggers
 function M.simulateLine(text)
     for _, trigger in ipairs(M.triggers) do

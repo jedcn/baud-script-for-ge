@@ -116,6 +116,7 @@ createTrigger("^Helm reports we are now heading (-?\\d+) degrees.$", function(ma
     setRottoRotationCompleteFromTrigger()
     setSectorNavRotationCompleteFromTrigger()
     setSplRotationCompleteFromTrigger()
+    setNavNavRotationCompleteFromTrigger()
 end, { type = "regex" })
 
 -- sets ship heading from engines firing message (when leaving orbit or starting movement)
@@ -185,7 +186,6 @@ createTrigger("^Helm reports leaving Sector (-?\\d+) (-?\\d+) and entering Secto
     local newSectorY = matches[5]
     say("Entering sector (" .. newSectorX .. ", " .. newSectorY .. ")")
     send("rep nav")
-    handleSectorEntry(newSectorX, newSectorY)
 end, { type = "regex" })
 
 -- sets warp speed from status display
@@ -293,6 +293,18 @@ end, { type="regex" })
 createTrigger("Bearing:\\s+(-?\\d+)\\s+Heading:", function(matches)
     local bearing = matches[2]
     setCombatShipBearingFromTrigger(bearing)
+end, { type = "regex" })
+
+-- ship scan bearing + distance for navToShip (captures both fields from the same line)
+createTrigger("Bearing:\\s+(-?\\d+)\\s+Heading:\\s+(-?\\d+)\\s+Dist:\\s+(\\d+)", function(matches)
+    local bearing  = matches[2]
+    local distance = matches[4]
+    setNavShipScanFromTrigger(bearing, distance)
+end, { type = "regex" })
+
+-- planet scan rejected (planet does not exist in this sector)
+createTrigger("^That would be foolish Sir!$", function()
+    setNavPlanetNotFoundFromTrigger()
 end, { type = "regex" })
 
 -- combat results

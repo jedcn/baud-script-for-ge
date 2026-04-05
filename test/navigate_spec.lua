@@ -162,89 +162,6 @@ describe("Navigation System", function()
     end)
   end)
 
-  describe("navigateToCoordinates", function()
-    it("initializes navigation state", function()
-      navigateToCoordinates(5000, 5000)
-
-      assert.is_true(gePackage.navigation.active)
-      assert.equals("coordinate", gePackage.navigation.phase)
-      assert.equals(5000, gePackage.navigation.target.sectorPositionX)
-      assert.equals(5000, gePackage.navigation.target.sectorPositionY)
-      assert.equals("requesting_position", gePackage.navigation.state)
-    end)
-
-    it("rejects invalid coordinates", function()
-      local result = navigateToCoordinates(-100, 5000)
-      assert.is_false(result)
-      assert.is_false(gePackage.navigation.active)
-    end)
-  end)
-
-  describe("navigationTick state machine", function()
-    it("requests position on first tick", function()
-      navigateToCoordinates(5000, 5000)
-
-      navigationTick()
-
-      assert.is_true(helper.wasSendCalledWith("rep nav"))
-      assert.equals("awaiting_position", gePackage.navigation.state)
-    end)
-
-    it("transitions to calculating_route after position update", function()
-      navigateToCoordinates(5000, 5000)
-      setSectorPosition(4000, 4000)
-
-      gePackage.navigation.state = "awaiting_position"
-      gePackage.navigation.lastPositionCheck = os.time() - 2
-      gePackage.navigation.lastPositionUpdate = os.time()
-
-      navigationTick()
-
-      assert.equals("calculating_route", gePackage.navigation.state)
-    end)
-
-    it("rotates to heading after calculating route", function()
-      navigateToCoordinates(5000, 5000)
-      setSectorPosition(4000, 4000)
-      setShipHeading(0)  -- Currently facing north
-      gePackage.navigation.state = "calculating_route"
-
-      -- Calculate route stores target heading
-      -- From (4000,4000) to (5000,5000) is southeast = 135 degrees
-      navigationTick()
-      assert.equals("rotating_to_heading", gePackage.navigation.state)
-      assert.equals(135, gePackage.navigation.targetHeading)
-
-      -- Rotate to target heading
-      navigationTick()
-      assert.is_true(helper.wasSendCalledWith("rot 135"))
-      assert.equals("awaiting_rotation_confirmation", gePackage.navigation.state)
-    end)
-
-    it("detects arrival when within threshold", function()
-      navigateToCoordinates(5000, 5000)
-      setSectorPosition(4950, 4950)  -- Distance ~71, within threshold of 100
-      gePackage.navigation.state = "calculating_route"
-
-      navigationTick()
-
-      assert.equals("arrived", gePackage.navigation.state)
-    end)
-  end)
-
-  describe("cancelNavigation", function()
-    it("stops active navigation", function()
-      navigateToCoordinates(5000, 5000)
-      assert.is_true(gePackage.navigation.active)
-
-      cancelNavigation()
-
-      assert.is_false(gePackage.navigation.active)
-      assert.equals("aborted", gePackage.navigation.state)
-      assert.is_true(helper.wasSendCalledWith("warp 0"))
-    end)
-  end)
-
   -- ===== Phase 2: Planet Navigation Tests =====
   describe("calculatePlanetCoordinates", function()
     it("calculates planet position due north", function()
@@ -293,96 +210,6 @@ describe("Navigation System", function()
       -- -20 degrees = 340 degrees, should be northwest
       assert.is_true(planetX < 5000)  -- West of current position
       assert.is_true(planetY < 5000)  -- North of current position
-    end)
-  end)
-
-  describe("navigateToPlanet", function()
-    it("initializes planet navigation state", function()
-      navigateToPlanet(1)
-
-      assert.is_true(gePackage.navigation.active)
-      assert.equals("planet", gePackage.navigation.phase)
-      assert.equals(1, gePackage.navigation.target.planetNumber)
-      assert.equals("requesting_planet_scan", gePackage.navigation.state)
-    end)
-
-    it("rejects invalid planet numbers", function()
-      local result1 = navigateToPlanet(0)
-      assert.is_false(result1)
-      assert.is_false(gePackage.navigation.active)
-
-      local result2 = navigateToPlanet(1000)
-      assert.is_false(result2)
-      assert.is_false(gePackage.navigation.active)
-    end)
-  end)
-
-  describe("planet navigation state machine", function()
-    it("requests planet scan on first tick", function()
-      navigateToPlanet(3)
-
-      navigationTick()
-
-      assert.is_true(helper.wasSendCalledWith("scan planet 3"))
-      assert.equals("awaiting_planet_scan", gePackage.navigation.state)
-    end)
-
-    it("transitions to requesting position after scan data received", function()
-      navigateToPlanet(1)
-      gePackage.navigation.state = "awaiting_planet_scan"
-      gePackage.navigation.lastCommand = os.time() - 2
-
-      -- Simulate scan results
-      gePackage.navigation.planetScan.bearing = 45
-      gePackage.navigation.planetScan.distance = 1000
-      gePackage.navigation.lastScanUpdate = os.time()
-
-      navigationTick()
-
-      assert.equals("requesting_position_for_planet", gePackage.navigation.state)
-    end)
-
-    it("calculates planet coordinates after position update", function()
-      navigateToPlanet(1)
-      setSectorPosition(5000, 5000)
-      setShipHeading(0)  -- Heading north
-
-      -- Simulate having scan data (relative to ship heading)
-      -- Relative bearing 90 + ship heading 0 = absolute bearing 90 (due east)
-      gePackage.navigation.planetScan.bearing = 90
-      gePackage.navigation.planetScan.distance = 1000
-      gePackage.navigation.lastScanUpdate = os.time()
-
-      -- Move to awaiting position state
-      gePackage.navigation.state = "awaiting_position_for_planet"
-      gePackage.navigation.lastPositionCheck = os.time() - 2
-      gePackage.navigation.lastPositionUpdate = os.time()
-
-      navigationTick()
-
-      -- Should transition to calculating_planet_coordinates
-      assert.equals("calculating_planet_coordinates", gePackage.navigation.state)
-
-      -- Next tick calculates coordinates
-      navigationTick()
-
-      -- Should have calculated planet at (6000, 5000) and transitioned to coordinate navigation
-      assert.equals(6000, gePackage.navigation.target.sectorPositionX)
-      assert.equals(5000, gePackage.navigation.target.sectorPositionY)
-      assert.equals("calculating_route", gePackage.navigation.state)
-    end)
-
-    it("detects orbit early and completes navigation", function()
-      navigateToPlanet(2)
-      setOrbitingPlanet(2)
-
-      gePackage.navigation.state = "awaiting_orbit"
-
-      navigationTick()
-
-      -- Early orbit detection now goes directly to idle
-      assert.equals("idle", gePackage.navigation.state)
-      assert.equals(false, gePackage.navigation.active)
     end)
   end)
 
@@ -530,61 +357,6 @@ describe("Navigation System", function()
     end)
   end)
 
-  -- ===== navigateToSectorFastEntry Tests =====
-  describe("navigateToSectorFastEntry", function()
-    it("rejects invalid sector coordinates", function()
-      local result = navigateToSectorFastEntry(nil, -9, 5000, 5000, 3)
-      assert.is_false(result)
-      assert.is_false(getSectorNavActive())
-    end)
-
-    it("rejects entry position below 0", function()
-      local result = navigateToSectorFastEntry(11, -9, -1, 5000, 3)
-      assert.is_false(result)
-      assert.is_false(getSectorNavActive())
-    end)
-
-    it("rejects entry position above 10000", function()
-      local result = navigateToSectorFastEntry(11, -9, 10001, 5000, 3)
-      assert.is_false(result)
-      assert.is_false(getSectorNavActive())
-    end)
-
-    it("rejects planet number 0", function()
-      local result = navigateToSectorFastEntry(11, -9, 5000, 5000, 0)
-      assert.is_false(result)
-      assert.is_false(getSectorNavActive())
-    end)
-
-    it("rejects planet number 1000", function()
-      local result = navigateToSectorFastEntry(11, -9, 5000, 5000, 1000)
-      assert.is_false(result)
-      assert.is_false(getSectorNavActive())
-    end)
-
-    it("starts sector nav for valid inputs", function()
-      local result = navigateToSectorFastEntry(11, -9, 5000, 5000, 3)
-      assert.is_true(result)
-      assert.is_true(getSectorNavActive())
-      assert.is_true(helper.wasSendCalledWith("rep nav"))
-    end)
-
-    it("sets fastEntry to true on sectorNav", function()
-      navigateToSectorFastEntry(11, -9, 5000, 5000, 3)
-      assert.is_true(gePackage.sectorNav.fastEntry)
-    end)
-
-    it("stores followUpPlanet on sectorNav", function()
-      navigateToSectorFastEntry(11, -9, 5000, 5000, 7)
-      assert.equals(7, gePackage.sectorNav.followUpPlanet)
-    end)
-
-    it("accepts boundary entry positions 0 and 10000", function()
-      local result = navigateToSectorFastEntry(11, -9, 0, 10000, 3)
-      assert.is_true(result)
-    end)
-  end)
-
   -- ===== sec_completed follow-up planet Tests =====
   describe("sec_completed with followUpPlanet", function()
     before_each(function()
@@ -601,7 +373,7 @@ describe("Navigation System", function()
 
       assert.is_false(getSectorNavActive())
       assert.is_true(gePackage.navigation.active)
-      assert.equals("planet_simple", gePackage.navigation.phase)
+      assert.equals("nav_planet", gePackage.navigation.phase)
       assert.equals(3, gePackage.navigation.target.planetNumber)
     end)
 
@@ -617,7 +389,7 @@ describe("Navigation System", function()
       -- falsely declare arrival before any scan happens
       assert.is_nil(getOrbitingPlanet())  -- clearOrbitingPlanet() was called
       -- planet nav should be scanning, not already complete
-      assert.equals("spl_scanning", gePackage.navigation.state)
+      assert.equals("navpl_scanning", gePackage.navigation.state)
     end)
 
     it("does not start planet nav when followUpPlanet is absent", function()
@@ -628,6 +400,71 @@ describe("Navigation System", function()
 
       assert.is_false(getSectorNavActive())
       assert.is_false(gePackage.navigation.active)
+    end)
+  end)
+
+  -- ===== followUpPlanet early arrival (skip position targeting) =====
+  describe("sec_traveling with followUpPlanet", function()
+    before_each(function()
+      setSector(0, 0)
+      setSectorPosition(1000, 1000)
+    end)
+
+    it("transitions to sec_arrived as soon as ship is in the target sector, without checking position", function()
+      -- Ship is at (9000, 9000), far from the default target (5000, 5000)
+      setSector(11, -9)
+      setSectorPosition(9000, 9000)
+      navigateToSectorAndPlanet(11, -9, 5000, 5000, 3)
+      gePackage.sectorNav.state = "sec_traveling"
+      gePackage.sectorNav.lastCommand = os.time() - 999
+
+      sectorNavTick()
+
+      assert.equals("sec_arrived", gePackage.sectorNav.state)
+    end)
+
+    it("does not transition early when followUpPlanet is absent", function()
+      -- Ship is in the target sector but not at target position
+      setSector(11, -9)
+      setSectorPosition(9000, 9000)
+      navigateToSector(11, -9, 5000, 5000)
+      gePackage.sectorNav.state = "sec_traveling"
+      gePackage.sectorNav.lastCommand = os.time() - 999
+
+      sectorNavTick()
+
+      -- Should recalculate route, not jump to sec_arrived
+      assert.not_equals("sec_arrived", gePackage.sectorNav.state)
+    end)
+  end)
+
+  describe("sec_calculating_route with followUpPlanet", function()
+    before_each(function()
+      setSector(0, 0)
+      setSectorPosition(1000, 1000)
+    end)
+
+    it("transitions to sec_arrived as soon as ship is in the target sector, without checking position", function()
+      -- Ship is at (9000, 9000), far from the default target (5000, 5000)
+      setSector(11, -9)
+      setSectorPosition(9000, 9000)
+      navigateToSectorAndPlanet(11, -9, 5000, 5000, 3)
+      gePackage.sectorNav.state = "sec_calculating_route"
+
+      sectorNavTick()
+
+      assert.equals("sec_arrived", gePackage.sectorNav.state)
+    end)
+
+    it("does not transition early when followUpPlanet is absent", function()
+      setSector(11, -9)
+      setSectorPosition(9000, 9000)
+      navigateToSector(11, -9, 5000, 5000)
+      gePackage.sectorNav.state = "sec_calculating_route"
+
+      sectorNavTick()
+
+      assert.not_equals("sec_arrived", gePackage.sectorNav.state)
     end)
   end)
 end)

@@ -107,30 +107,6 @@ end
 -- API Functions
 -- ============================================================================
 
-function navigateToCoordinates(x, y)
-  -- Convert to numbers first
-  x = tonumber(x)
-  y = tonumber(y)
-
-  -- Validate coordinates (0-10000)
-  if x < 0 or x > 10000 or y < 0 or y > 10000 then
-    navError("ERROR: Invalid coordinates. Must be 0-10000.")
-    return false
-  end
-
-  -- Initialize navigation
-  setNavigationActive(true)
-  setNavigationPhase("coordinate")
-  setNavigationTargetCoordinates(x, y)
-  setNavigationStart(os.time())
-  setNavigationLastPositionCheck(0)
-  setNavigationLastPositionUpdate(0)
-
-  navLog("Navigation started to (" .. x .. ", " .. y .. ")")
-  transitionTo(gePackage.navigation, "requesting_position", "coordinate navigation initiated to (" .. x .. ", " .. y .. ")")
-  return true
-end
-
 function cancelNavigation()
   navDebug("cancel", "cancelNavigation()")
   if not getNavigationActive() then
@@ -143,23 +119,6 @@ function cancelNavigation()
   send("warp 0")
   transitionTo(gePackage.navigation, "aborted", "user cancelled navigation")
   navLog("Navigation cancelled")
-end
-
-function isNavigating()
-  return getNavigationActive()
-end
-
-function getNavigationStatusText()
-  if not getNavigationActive() then
-    return "Navigation inactive"
-  end
-
-  local state = getNavigationState()
-  local target = getNavigationTarget()
-  local targetX = target.sectorPositionX
-  local targetY = target.sectorPositionY
-
-  return "Navigating to (" .. targetX .. ", " .. targetY .. ") - " .. state
 end
 
 -- Cancel all types of navigation (coordinate nav, planet nav, flipaway, rotto, sector nav)
@@ -235,31 +194,9 @@ function getAllNavigationStatusText()
   return table.concat(statuses, "\n")
 end
 
-function navigateToPlanet(planetNumber)
-  -- Convert to number and validate
-  planetNumber = tonumber(planetNumber)
-  if not planetNumber or planetNumber < 1 or planetNumber > 999 then
-    navError("ERROR: Invalid planet number. Must be 1-999.")
-    return false
-  end
-
-  -- Initialize navigation
-  setNavigationActive(true)
-  setNavigationPhase("planet")
-  setNavigationTargetPlanet(planetNumber)
-  setNavigationStart(os.time())
-  setNavigationLastScanUpdate(0)
-  setNavigationLastPositionCheck(0)
-  setNavigationLastPositionUpdate(0)
-
-  navLog("Planet navigation started to planet " .. planetNumber)
-  transitionTo(gePackage.navigation, "requesting_planet_scan", "coordinate-based planet navigation initiated to planet " .. planetNumber)
-  return true
-end
-
 function setPlanetBearingAndDistance(bearing, distance)
   local phase = getNavigationPhase()
-  if phase == "planet" or phase == "planet_simple" then
+  if phase == "planet" or phase == "planet_simple" or phase == "nav_planet" then
     setNavigationPlanetScanBearing(bearing)
     setNavigationPlanetScanDistance(distance)
     setNavigationLastScanUpdate(os.time())
@@ -290,10 +227,6 @@ function navigateToPlanetSimple(planetNumber)
   return true
 end
 
-function navigateToSector(sectorX, sectorY)
-  navLog("Phase 3 not yet implemented")
-end
-
 function navigateToSectorAndPlanet(sectorX, sectorY, posX, posY, planetNumber)
   planetNumber = tonumber(planetNumber)
   if not planetNumber or planetNumber < 1 or planetNumber > 999 then
@@ -309,50 +242,6 @@ function navigateToSectorAndPlanet(sectorX, sectorY, posX, posY, planetNumber)
   return success
 end
 
-function navigateToSectorFastEntry(sectorX, sectorY, entryPosX, entryPosY, planetNumber)
-  sectorX      = tonumber(sectorX)
-  sectorY      = tonumber(sectorY)
-  entryPosX    = tonumber(entryPosX)
-  entryPosY    = tonumber(entryPosY)
-  planetNumber = tonumber(planetNumber)
-
-  if not sectorX or not sectorY then
-    navError("[navsec-entry] Invalid sector coordinates")
-    return false
-  end
-  if not entryPosX or not entryPosY or entryPosX < 0 or entryPosX > 10000 or entryPosY < 0 or entryPosY > 10000 then
-    navError("[navsec-entry] Invalid entry position. Must be 0-10000.")
-    return false
-  end
-  if not planetNumber or planetNumber < 1 or planetNumber > 999 then
-    navError("[navsec-entry] Invalid planet number. Must be 1-999.")
-    return false
-  end
-
-  initSectorNav(sectorX, sectorY, entryPosX, entryPosY)
-  gePackage.sectorNav.followUpPlanet = planetNumber
-  gePackage.sectorNav.fastEntry = true
-
-  navLog("[navsec-entry] Fast entry to sector (" .. sectorX .. ", " .. sectorY .. ") at (" .. entryPosX .. ", " .. entryPosY .. "), then planet " .. planetNumber)
-  send("rep nav")
-  return true
-end
-
-function handleSectorEntry(newSectorX, newSectorY)
-  newSectorX = tonumber(newSectorX)
-  newSectorY = tonumber(newSectorY)
-
-  local sec = gePackage.sectorNav
-  if not sec or not sec.active or not sec.fastEntry then return end
-  if sec.targetSectorX ~= newSectorX or sec.targetSectorY ~= newSectorY then return end
-
-  local followUpPlanet = sec.followUpPlanet
-  sec.active = false
-  clearOrbitingPlanet()
-  navLog("[navsec-entry] Entered target sector (" .. newSectorX .. ", " .. newSectorY .. "), starting planet nav to planet " .. followUpPlanet)
-  navigateToPlanetSimple(followUpPlanet)
-end
-
 -- ============================================================================
 -- State Machine Tick Function
 -- ============================================================================
@@ -364,8 +253,13 @@ function navigationTick()
 
   local nav = gePackage.navigation
 
+  -- New-style phases (nav_planet, nav_ship) are handled by navNavTick in navigate-nav.lua
+  if nav.phase == "nav_planet" or nav.phase == "nav_ship" then
+    return
+  end
+
   -- Early exit: if we're doing planet navigation and already orbiting the target, we're done!
-  if (nav.phase == "planet" or nav.phase == "planet_simple") and nav.target.planetNumber then
+  if nav.phase == "planet_simple" and nav.target.planetNumber then
     local orbitingPlanet = getOrbitingPlanet()
     if orbitingPlanet == nav.target.planetNumber then
       navLog("Successfully orbiting planet " .. nav.target.planetNumber .. "!")
@@ -539,298 +433,6 @@ function navigationTick()
       navDebug(state, "timeSinceCommand=" .. timeSinceCommand .. ", scanInterval=" .. config.scanInterval)
       if timeSinceCommand >= config.scanInterval then
         transitionTo(nav, "spl_scanning", "scan interval " .. config.scanInterval .. "s elapsed, time to rescan")
-      end
-    end,
-
-    -- ===== Planet Navigation States (Phase 2 coordinate approach) =====
-    requesting_planet_scan = function()
-      local planetNumber = nav.target.planetNumber
-      navDecision("scan planet " .. planetNumber, "need bearing and distance to calculate planet coordinates")
-      sendNavigationCommand("scan planet " .. planetNumber)
-      nav.lastCommand = os.time()
-      transitionTo(nav, "awaiting_planet_scan", "scan command sent, waiting for scan results")
-    end,
-
-    awaiting_planet_scan = function()
-      local timeSinceCommand = os.time() - nav.lastCommand
-      navDebug(state, "timeSinceCommand=" .. timeSinceCommand .. ", bearing=" .. tostring(nav.planetScan.bearing) .. ", distance=" .. tostring(nav.planetScan.distance))
-
-      -- Check timeout
-      if timeSinceCommand > config.commandTimeout then
-        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for scan")
-        return
-      end
-
-      -- Check if we have both bearing and distance from scan
-      if nav.planetScan.bearing and nav.planetScan.distance then
-        transitionTo(nav, "requesting_position_for_planet", "scan received: bearing=" .. nav.planetScan.bearing .. ", distance=" .. nav.planetScan.distance .. ", need current position")
-      end
-    end,
-
-    requesting_position_for_planet = function()
-      navDecision("rep nav", "need current position to calculate planet absolute coordinates")
-      sendNavigationCommand("rep nav")
-      nav.lastPositionCheck = os.time()
-      transitionTo(nav, "awaiting_position_for_planet", "position request sent")
-    end,
-
-    awaiting_position_for_planet = function()
-      local timeSinceCheck = os.time() - nav.lastPositionCheck
-      navDebug(state, "timeSinceCheck=" .. timeSinceCheck .. ", lastUpdate=" .. (nav.lastPositionUpdate - nav.navigationStart) .. ", lastCheck=" .. (nav.lastPositionCheck - nav.navigationStart))
-
-      -- Check timeout
-      if timeSinceCheck > config.commandTimeout then
-        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for position")
-        return
-      end
-
-      -- Check if position was updated after we requested it
-      if nav.lastPositionUpdate >= nav.lastPositionCheck then
-        transitionTo(nav, "calculating_planet_coordinates", "position data received")
-      end
-    end,
-
-    calculating_planet_coordinates = function()
-      local currentX, currentY = getSectorPosition()
-      local relativeBearing = nav.planetScan.bearing
-      local distance = nav.planetScan.distance
-      local shipHeading = getShipHeading()
-
-      -- If heading is unknown, request position again to get it
-      if not shipHeading then
-        transitionTo(nav, "requesting_position_for_planet", "ship heading unknown, requesting position to get heading")
-        return
-      end
-
-      -- Convert relative bearing to absolute bearing
-      -- Scan bearing is relative to ship's heading
-      local absoluteBearing = (shipHeading + relativeBearing) % 360
-
-      navDebug(state, "current=(" .. currentX .. ", " .. currentY .. "), shipHeading=" .. shipHeading .. ", relativeBearing=" .. relativeBearing .. ", absoluteBearing=" .. absoluteBearing .. ", distance=" .. distance)
-
-      -- Calculate planet coordinates using absolute bearing
-      local planetX, planetY = calculatePlanetCoordinates(currentX, currentY, absoluteBearing, distance)
-
-      -- Store as target coordinates and switch to coordinate navigation
-      nav.target.sectorPositionX = planetX
-      nav.target.sectorPositionY = planetY
-
-      navLog("Planet " .. nav.target.planetNumber .. " calculated at (" .. planetX .. ", " .. planetY .. ")")
-      transitionTo(nav, "calculating_route", "planet coordinates calculated from pos=(" .. currentX .. "," .. currentY .. "), heading=" .. shipHeading .. ", bearing=" .. relativeBearing .. " -> abs=" .. absoluteBearing .. ", dist=" .. distance)
-    end,
-
-    -- ===== Coordinate Navigation States (Phase 1) =====
-    requesting_position = function()
-      navDecision("rep nav", "need current position to calculate route")
-      sendNavigationCommand("rep nav")
-      nav.lastPositionCheck = os.time()
-      transitionTo(nav, "awaiting_position", "position request sent")
-    end,
-
-    awaiting_position = function()
-      local timeSinceCheck = os.time() - nav.lastPositionCheck
-      navDebug(state, "timeSinceCheck=" .. timeSinceCheck .. ", lastUpdate=" .. (nav.lastPositionUpdate - nav.navigationStart) .. ", lastCheck=" .. (nav.lastPositionCheck - nav.navigationStart))
-
-      -- Check timeout
-      if timeSinceCheck > config.commandTimeout then
-        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for position")
-        return
-      end
-
-      -- Check if position was updated after we requested it
-      if nav.lastPositionUpdate >= nav.lastPositionCheck then
-        transitionTo(nav, "calculating_route", "position data received")
-      end
-    end,
-
-    calculating_route = function()
-      local currentX, currentY = getSectorPosition()
-      local targetX = nav.target.sectorPositionX
-      local targetY = nav.target.sectorPositionY
-      navDebug(state, "current=(" .. currentX .. ", " .. currentY .. "), target=(" .. targetX .. ", " .. targetY .. ")")
-
-      local distance = calculateDistance(currentX, currentY, targetX, targetY)
-
-      if distance < config.arrivalThreshold then
-        transitionTo(nav, "arrived", "distance " .. string.format("%.1f", distance) .. " < threshold " .. config.arrivalThreshold .. ", arrived at destination")
-      else
-        -- Calculate and store target heading for rotation
-        nav.targetHeading = calculateHeading(currentX, currentY, targetX, targetY)
-        transitionTo(nav, "rotating_to_heading", "distance=" .. string.format("%.1f", distance) .. ", calculated target heading=" .. nav.targetHeading .. " degrees")
-      end
-    end,
-
-    rotating_to_heading = function()
-      local currentHeading = getShipHeading()
-      local targetHeading = nav.targetHeading
-
-      -- If heading is unknown, we need to get it
-      if not currentHeading then
-        local orbitingPlanet = getOrbitingPlanet()
-        if orbitingPlanet then
-          -- When orbiting, rep nav doesn't show heading. Send war 0 to leave orbit.
-          navDecision("war 0", "leaving orbit to get heading (rep nav doesn't show heading while orbiting)")
-          sendNavigationCommand("war 0")
-          transitionTo(nav, "getting_heading", "left orbit, waiting for heading from helm report")
-        else
-          -- Not orbiting, request position which will include heading via rep nav
-          transitionTo(nav, "requesting_position", "heading unknown, requesting nav report to get heading")
-        end
-        return
-      end
-
-      navDebug(state, "currentHeading=" .. currentHeading .. ", targetHeading=" .. targetHeading)
-
-      local rotation = calculateRotation(currentHeading, targetHeading)
-
-      -- Only rotate if rotation is significant (> 2 degrees)
-      if math.abs(rotation) > 2 then
-        navDecision("rot " .. rotation, "current heading " .. currentHeading .. ", need " .. targetHeading .. ", rotating " .. rotation .. " degrees")
-        sendNavigationCommand("rot " .. rotation)
-        transitionTo(nav, "awaiting_rotation_confirmation", "rotation command sent")
-      else
-        transitionTo(nav, "setting_speed", "already aligned within 2 degrees (rotation=" .. rotation .. ")")
-      end
-    end,
-
-    getting_heading = function()
-      local timeSinceCommand = os.time() - nav.lastCommand
-      navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
-
-      if timeSinceCommand > config.commandTimeout then
-        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for heading")
-        return
-      end
-
-      -- Check if we now have a heading
-      local currentHeading = getShipHeading()
-      if currentHeading then
-        transitionTo(nav, "rotating_to_heading", "heading confirmed: " .. currentHeading .. " degrees")
-      end
-    end,
-
-    awaiting_rotation_confirmation = function()
-      local timeSinceCommand = os.time() - nav.lastCommand
-      navDebug(state, "timeSinceCommand=" .. timeSinceCommand)
-
-      if timeSinceCommand > config.commandTimeout then
-        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s waiting for rotation")
-        return
-      end
-
-      -- Check if rotation completed by comparing current heading to target
-      local currentHeading = getShipHeading()
-      local targetHeading = nav.targetHeading
-
-      -- If heading is unknown, keep waiting for rotation confirmation trigger
-      if not currentHeading then
-        navDebug(state, "waiting for heading update from rotation confirmation")
-        return
-      end
-
-      local headingDiff = math.abs(currentHeading - targetHeading)
-
-      -- Account for wrap-around (359 vs 1 degree)
-      if headingDiff > 180 then
-        headingDiff = 360 - headingDiff
-      end
-
-      navDebug(state, "currentHeading=" .. currentHeading .. ", targetHeading=" .. targetHeading .. ", diff=" .. headingDiff)
-
-      if headingDiff < 5 then  -- Within 5 degrees is good enough
-        transitionTo(nav, "setting_speed", "rotation complete, heading " .. currentHeading .. " within 5 degrees of target " .. targetHeading)
-      end
-    end,
-
-    setting_speed = function()
-      local currentX, currentY = getSectorPosition()
-      local targetX = nav.target.sectorPositionX
-      local targetY = nav.target.sectorPositionY
-      local distance = calculateDistance(currentX, currentY, targetX, targetY)
-      local currentSpeed = getWarpSpeed() or 0
-      navDebug(state, "distance=" .. distance .. ", currentSpeed=" .. currentSpeed)
-
-      local speedType, speedValue = config.decideSpeed(distance, currentSpeed)
-      navDebug(state, "decided: " .. speedType .. " " .. speedValue)
-
-      -- Only send command if speed needs to change
-      if math.abs(currentSpeed - speedValue) > 0.1 then
-        -- Store target speed, speed type, and initial speed for tracking acceleration progress
-        nav.targetSpeed = speedValue
-        nav.speedType = speedType
-        nav.lastObservedSpeed = currentSpeed
-        nav.lastSpeedChange = os.time()
-        local cmdValue = speedType == "IMPULSE" and math.floor(speedValue * 100) or speedValue
-        local cmd = speedType == "WARP" and ("warp " .. cmdValue) or ("imp " .. cmdValue)
-        navDecision(cmd, "distance=" .. string.format("%.1f", distance) .. ", changing from speed " .. currentSpeed .. " to " .. speedValue)
-        if speedType == "WARP" then
-          sendNavigationCommand("warp " .. cmdValue)
-        else
-          sendNavigationCommand("imp " .. cmdValue)
-        end
-        transitionTo(nav, "awaiting_speed_confirmation", "speed command sent")
-      else
-        transitionTo(nav, "traveling", "speed already correct at " .. currentSpeed)
-      end
-    end,
-
-    awaiting_speed_confirmation = function()
-      local currentSpeed = getWarpSpeed() or 0
-      local targetSpeed = nav.targetSpeed or 0
-      local speedType = nav.speedType or "WARP"
-      local lastObserved = nav.lastObservedSpeed or 0
-
-      -- Check if speed has changed since last observation
-      if math.abs(currentSpeed - lastObserved) > 0.01 then
-        nav.lastSpeedChange = os.time()
-        nav.lastObservedSpeed = currentSpeed
-      end
-
-      local timeSinceSpeedChange = os.time() - (nav.lastSpeedChange or nav.lastCommand)
-      navDebug(state, "timeSinceSpeedChange=" .. timeSinceSpeedChange .. ", currentSpeed=" .. currentSpeed .. ", targetSpeed=" .. targetSpeed .. ", speedType=" .. speedType)
-
-      if timeSinceSpeedChange > config.commandTimeout then
-        transitionTo(nav, "stuck", "command timeout after " .. config.commandTimeout .. "s with no speed progress")
-        return
-      end
-
-      -- Check if a lower speed is now needed based on current position
-      local currentX, currentY = getSectorPosition()
-      if currentX and nav.target.sectorPositionX then
-        local distance = calculateDistance(currentX, currentY, nav.target.sectorPositionX, nav.target.sectorPositionY)
-        local _, speedValue = config.decideSpeed(distance, currentSpeed)
-        if speedValue < targetSpeed then
-          transitionTo(nav, "setting_speed", "speed correction mid-acceleration: " .. targetSpeed .. " -> " .. speedValue .. " at distance " .. string.format("%.1f", distance))
-          return
-        end
-      end
-
-      -- Check if speed matches target
-      local speedMatches = math.abs(currentSpeed - targetSpeed) < 0.5
-
-      if speedMatches then
-        transitionTo(nav, "traveling", "speed confirmed at " .. currentSpeed .. " (target was " .. targetSpeed .. ")")
-      end
-    end,
-
-    traveling = function()
-      -- Check if speed needs adjusting based on current known position (runs every tick)
-      local currentX, currentY = getSectorPosition()
-      if currentX and nav.target.sectorPositionX then
-        local distance = calculateDistance(currentX, currentY, nav.target.sectorPositionX, nav.target.sectorPositionY)
-        local currentSpeed = getWarpSpeed() or 0
-        local speedType, speedValue = config.decideSpeed(distance, currentSpeed)
-        if math.abs(currentSpeed - speedValue) > 0.1 then
-          transitionTo(nav, "setting_speed", "immediate speed correction: " .. currentSpeed .. " -> " .. speedValue .. " at distance " .. string.format("%.1f", distance))
-          return
-        end
-      end
-
-      -- Gate position requests at scanInterval to avoid flooding server
-      local timeSinceCheck = os.time() - nav.lastPositionCheck
-      navDebug(state, "timeSinceCheck=" .. timeSinceCheck .. ", scanInterval=" .. config.scanInterval)
-      if timeSinceCheck >= config.scanInterval then
-        transitionTo(nav, "requesting_position", "scan interval " .. config.scanInterval .. "s elapsed, checking position")
       end
     end,
 
@@ -1283,6 +885,12 @@ function sectorNavTick()
 
       -- Check if we've already arrived at target sector
       if currentSectorX == sec.targetSectorX and currentSectorY == sec.targetSectorY then
+        -- When a follow-up planet is set, skip positional targeting and hand off to planet nav immediately
+        if sec.followUpPlanet then
+          sec.state = "sec_arrived"
+          navLog("[navsec][state] sec_calculating_route -> sec_arrived (in target sector with followUpPlanet, skipping position check)")
+          return
+        end
         -- In target sector, check if at target position
         local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
         if distToTarget < config.arrivalThreshold then
@@ -1440,6 +1048,12 @@ function sectorNavTick()
 
         -- Check if arrived at target sector
         if currentSectorX == sec.targetSectorX and currentSectorY == sec.targetSectorY then
+          -- When a follow-up planet is set, skip positional targeting and hand off to planet nav immediately
+          if sec.followUpPlanet then
+            sec.state = "sec_arrived"
+            navLog("[navsec][state] sec_traveling -> sec_arrived (in target sector with followUpPlanet, skipping position check)")
+            return
+          end
           local distToTarget = calculateDistance(currentPosX, currentPosY, sec.targetPosX, sec.targetPosY)
           if distToTarget < config.arrivalThreshold then
             sec.state = "sec_arrived"
@@ -1455,10 +1069,16 @@ function sectorNavTick()
     end,
 
     sec_arrived = function()
-      navLog("[navsec] Stopping ship")
-      send("warp 0")
-      sec.state = "sec_stopping"
-      navLog("[navsec][state] sec_arrived -> sec_stopping (stop command sent)")
+      if getOrbitingPlanet() then
+        -- Already in orbit (e.g. gravity well pulled us in); skip warp 0 to stay in orbit
+        sec.state = "sec_completed"
+        navLog("[navsec][state] sec_arrived -> sec_completed (already in orbit, skipping warp 0)")
+      else
+        navLog("[navsec] Stopping ship")
+        send("warp 0")
+        sec.state = "sec_stopping"
+        navLog("[navsec][state] sec_arrived -> sec_stopping (stop command sent)")
+      end
     end,
 
     sec_stopping = function()
@@ -1477,7 +1097,7 @@ function sectorNavTick()
       if followUpPlanet then
         clearOrbitingPlanet()  -- clear stale orbit state from origin sector
         navLog("[navsec] Starting planet navigation to planet " .. followUpPlanet)
-        navigateToPlanetSimple(followUpPlanet)
+        navToPlanet(followUpPlanet)
       end
     end,
 

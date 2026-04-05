@@ -31,6 +31,14 @@ function mainTick()
         end
     end
 
+    -- New-style navigation tick: nav_planet and nav_ship phases
+    if navNavTick then
+        local navNavStatus, navNavErr = pcall(navNavTick)
+        if not navNavStatus then
+            echo("\n\nCaught an error in navNavTick:\n\n" .. navNavErr)
+        end
+    end
+
     -- Attack loop tick (if function exists)
     if attackLoopTick then
         local alStatus, alErr = pcall(attackLoopTick)

@@ -192,4 +192,53 @@ describe("Ship type and specs", function()
 
     end)
 
+    describe("getShipAccelRate", function()
+
+        it("is half the decel rate for Freight Barge", function()
+            setShipType("Freight Barge")
+            assert.are.equal(1, getShipAccelRate())
+        end)
+
+        it("is half the decel rate for Star Cruiser", function()
+            setShipType("Star Cruiser")
+            assert.are.equal(10, getShipAccelRate())
+        end)
+
+        it("is half the decel rate for Constitution Class Starship", function()
+            setShipType("Constitution Class Starship")
+            assert.are.equal(20, getShipAccelRate())
+        end)
+
+        it("returns 5 as default for unknown ship type", function()
+            setShipType("Unknown Ship")
+            assert.are.equal(5, getShipAccelRate())
+        end)
+
+    end)
+
+    describe("getShipRotRate", function()
+
+        -- rotRate = max_accel / 10 (degrees per 3-second tick, from game source)
+        it("returns 100 degrees/tick for Freight Barge", function()
+            setShipType("Freight Barge")
+            assert.are.equal(100, getShipRotRate())
+        end)
+
+        it("returns 1000 degrees/tick for Star Cruiser", function()
+            setShipType("Star Cruiser")
+            assert.are.equal(1000, getShipRotRate())
+        end)
+
+        it("returns 2000 degrees/tick for Constitution Class Starship", function()
+            setShipType("Constitution Class Starship")
+            assert.are.equal(2000, getShipRotRate())
+        end)
+
+        it("returns 500 as default for unknown ship type", function()
+            setShipType("Unknown Ship")
+            assert.are.equal(500, getShipRotRate())
+        end)
+
+    end)
+
 end)

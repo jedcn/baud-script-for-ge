@@ -13,7 +13,7 @@
 * Navigate to sector 10, -5: `nav.to 10 -5` (defaults to x = 5000, y = 5000) in that sector
 * Navigate to coordinates x = 3000, y = 7000 in sector 10, 5: `nav.to 10 -5 3000 7000`
 * Navigate to a sector 10, -5 and then orbit planet 3: `nav.to 10 -5 3`
-* Navigate to coordinates x = 3, y = 7000 in sector sector 10, -5 and then orbit planet 3 `nav.to 10 -5 3000 7000 3`
+* Navigate to coordinates x = 3000, y = 7000 in sector sector 10, -5 and then orbit planet 3 `nav.to 10 -5 3000 7000 3`
 * Cancel active navigation: `nav.cancel`
 
 ## Aliases

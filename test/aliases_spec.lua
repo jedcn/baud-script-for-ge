@@ -84,6 +84,12 @@ describe("nav.to aliases", function()
             assert.are.equal("z", calls[1].letter)
         end)
 
+        it("accepts uppercase letter and normalizes to lowercase", function()
+            helper.simulateAlias("nav.to A")
+            assert.are.equal("navToShip", calls[1].fn)
+            assert.are.equal("a", calls[1].letter)
+        end)
+
     end)
 
     -- -----------------------------------------------------------------------

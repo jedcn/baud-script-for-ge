@@ -182,8 +182,8 @@ end, { type = "regex" })
 
 -- nav.to <letter>  →  navToShip(letter)
 -- Scan ship <letter>, get its bearing, and move toward it
-createAlias("^nav\\.to ([a-z])$", function(matches)
-    local shipLetter = matches[2]
+createAlias("^nav\\.to ([a-zA-Z])$", function(matches)
+    local shipLetter = string.lower(matches[2])
     navToShip(shipLetter)
 end, { type = "regex" })
 

@@ -129,6 +129,27 @@ createAlias("^assault-status$", function()
     printStatusAssault()
 end, { type = "regex" })
 
+-- ============================================================================
+-- Populate loop aliases
+-- ============================================================================
+
+-- populate.planet src:X Y P dest:X Y P  →  startPopulate(...)
+-- Example: populate.planet src:11 -9 1 dest:11 -9 3
+createAlias("^populate\\.planet src:(-?\\d+) (-?\\d+) (\\d+) dest:(-?\\d+) (-?\\d+) (\\d+)$", function(matches)
+    local srcX      = tonumber(matches[2])
+    local srcY      = tonumber(matches[3])
+    local srcPlanet = tonumber(matches[4])
+    local destX     = tonumber(matches[5])
+    local destY     = tonumber(matches[6])
+    local destPlanet = tonumber(matches[7])
+    startPopulate(srcX, srcY, srcPlanet, destX, destY, destPlanet)
+end, { type = "regex" })
+
+-- populate.cancel  →  cancelPopulate()
+createAlias("^populate\\.cancel$", function()
+    cancelPopulate()
+end, { type = "regex" })
+
 -- decoy.launch -> deploy_decoys()
 -- Sends the decoy command five times
 createAlias("^decoy\\.launch$", function(matches)

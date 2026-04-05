@@ -307,6 +307,16 @@ createTrigger("^That would be foolish Sir!$", function()
     setNavPlanetNotFoundFromTrigger()
 end, { type = "regex" })
 
+-- populate: transfer confirmation (men loaded from planet onto ship)
+createTrigger("^(\\d+) men have been transferred from the planet Sir!$", function(matches)
+    setPopulateTransferUpCompleteFromTrigger()
+end, { type = "regex" })
+
+-- populate: transfer confirmation (men unloaded from ship onto planet)
+createTrigger("^(\\d+) men have been transferred to the planet Sir!$", function(matches)
+    setPopulateTransferDownCompleteFromTrigger()
+end, { type = "regex" })
+
 -- combat results
 createTrigger("^In the attack our troops killed (\\d+), and suffered losses$", function(matches)
     local defendersKilled = tonumber(matches[2])

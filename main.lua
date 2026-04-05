@@ -33,6 +33,8 @@ dofile(scriptDir .. "status.lua")
 
 dofile(scriptDir .. "attack-loop.lua")
 
+dofile(scriptDir .. "populate.lua")
+
 dofile(scriptDir .. "combat.lua")
 
 dofile(scriptDir .. "timers.lua")

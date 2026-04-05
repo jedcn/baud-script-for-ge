@@ -2,13 +2,15 @@
 -- Pure physics calculations for trajectory planning.
 --
 -- Key constants (from game source GEMAIN.H / GEFUNCS.C):
---   TICK_SECONDS = 3   each ship is processed every 3 seconds
+--   TICK_SECONDS = 7   measured empirically: ~7s between consecutive warp speed
+--                      messages during FB acceleration (game source says 3s but
+--                      the MBBS server appears to run at a longer interval)
 --   DISTANCE_PER_WARP = 154   in-sector position units per warp per tick
 --
 -- All functions are pure (no side effects, no game state access) so they
 -- are easy to unit test and reuse across any navigation type.
 
-TICK_SECONDS      = 3
+TICK_SECONDS      = 7
 DISTANCE_PER_WARP = 154
 
 -- ---------------------------------------------------------------------------

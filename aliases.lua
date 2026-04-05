@@ -248,3 +248,34 @@ end, { type = "regex" })
 createAlias("^nav\\.status$", function()
     cecho("green", getAllNavigationStatusText())
 end, { type = "regex" })
+
+-- ============================================================================
+-- measure.tick / measure.tick.stop
+-- Prints an incrementing counter every second so you can count real-world
+-- seconds between game messages (e.g. consecutive warp speed updates).
+-- Usage: measure.tick && warp 15
+-- ============================================================================
+
+measureTickTimer = nil
+measureTickCount = 0
+
+createAlias("^measure\\.tick$", function()
+    if measureTickTimer then
+        removeTimer(measureTickTimer)
+    end
+    measureTickCount = 0
+    measureTickTimer = createTimer(1000, function()
+        measureTickCount = measureTickCount + 1
+        echo("[" .. measureTickCount .. "s]")
+    end, { name = "measure-tick" })
+    echo("[measure.tick started]")
+end, { type = "regex" })
+
+createAlias("^measure\\.tick\\.stop$", function()
+    if measureTickTimer then
+        removeTimer(measureTickTimer)
+        measureTickTimer = nil
+    end
+    echo("[measure.tick stopped at " .. measureTickCount .. "s]")
+    measureTickCount = 0
+end, { type = "regex" })

@@ -73,6 +73,23 @@ describe("Populate loop", function()
             assert.is_true(found)
         end)
 
+        it("includes trip count and men delivered", function()
+            startPopulate(11, -9, 1, 11, -9, 3)
+            gePackage.populate.tripCount = 2
+            gePackage.populate.menDelivered = 999880
+            helper.echoCalls = {}
+
+            printStatusPopulate()
+
+            local found = false
+            for _, call in ipairs(helper.echoCalls) do
+                if call:find("2 trips") and call:find("999880 men delivered") then
+                    found = true
+                end
+            end
+            assert.is_true(found)
+        end)
+
     end)
 
     describe("cancelPopulate", function()
@@ -94,6 +111,23 @@ describe("Populate loop", function()
             cancelPopulate()
 
             assert.is_true(helper.wasEchoCalledWith("Populate loop is not running."))
+        end)
+
+        it("prints summary of trips and men delivered on cancel", function()
+            startPopulate(11, -9, 1, 11, -9, 3)
+            gePackage.populate.tripCount = 3
+            gePackage.populate.menDelivered = 1499820
+            helper.echoCalls = {}
+
+            cancelPopulate()
+
+            local found = false
+            for _, call in ipairs(helper.echoCalls) do
+                if call:find("3 trips") and call:find("1499820 men delivered") then
+                    found = true
+                end
+            end
+            assert.is_true(found)
         end)
 
     end)
@@ -430,6 +464,30 @@ describe("Populate loop", function()
             populateTick()  -- detects flag, loops
 
             assert.are.equal("navigating_to_source", getPopulateState())
+        end)
+
+        it("increments tripCount and menDelivered on each completed drop-off", function()
+            setInState("unloading_men")
+
+            populateTick()
+            setPopulateTransferDownCompleteFromTrigger()
+            populateTick()
+
+            assert.are.equal(1, gePackage.populate.tripCount)
+            assert.are.equal(499940, gePackage.populate.menDelivered)
+        end)
+
+        it("accumulates menDelivered across multiple trips", function()
+            setInState("unloading_men")
+            gePackage.populate.tripCount = 2
+            gePackage.populate.menDelivered = 999880
+
+            populateTick()
+            setPopulateTransferDownCompleteFromTrigger()
+            populateTick()
+
+            assert.are.equal(3, gePackage.populate.tripCount)
+            assert.are.equal(1499820, gePackage.populate.menDelivered)
         end)
 
     end)

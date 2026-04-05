@@ -29,6 +29,8 @@ function initPopulate()
     commandSent = false,
     transferUpComplete = false,
     transferDownComplete = false,
+    tripCount = 0,
+    menDelivered = 0,
     src  = { sectorX = nil, sectorY = nil, planet = nil },
     dest = { sectorX = nil, sectorY = nil, planet = nil }
   }
@@ -94,8 +96,10 @@ function cancelPopulate()
     return
   end
 
+  local cfg = gePackage.populate
   cancelAllNavigation()
-  cecho("#00ffff", "[populate] Cancelled by user")
+  cecho("#00ffff", "[populate] Cancelled — " ..
+        cfg.tripCount .. " trips, " .. cfg.menDelivered .. " men delivered")
   gePackage.populate.active = false
   gePackage.populate.state = "idle"
 end
@@ -116,6 +120,7 @@ function printStatusPopulate()
 
   echo("[populate] " .. state ..
        " | src=" .. src .. " dest=" .. dest ..
+       " | " .. cfg.tripCount .. " trips, " .. cfg.menDelivered .. " men delivered" ..
        " | running " .. elapsed .. "s, in state " .. stateElapsed .. "s")
 end
 
@@ -245,6 +250,10 @@ function populateTick()
 
     if cfg.transferDownComplete then
       cfg.transferDownComplete = false
+      cfg.tripCount = cfg.tripCount + 1
+      cfg.menDelivered = cfg.menDelivered + TRANSFER_COUNT
+      cecho("#00ffff", "[populate] Trip " .. cfg.tripCount .. " complete — " ..
+            cfg.menDelivered .. " men delivered total")
       setPopulateState("navigating_to_source")
     end
   end

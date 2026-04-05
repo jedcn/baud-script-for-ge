@@ -137,29 +137,29 @@ end, { type = "regex" })
 
 -- missile.at <letter> -> missile_at_ship(letter)
 -- Fires three missiles at the named ship (with flu between each), then raises shields
-createAlias("^missile\\.at ([a-z])$", function(matches)
-    local shipLetter = matches[2]
+createAlias("^missile\\.at ([a-zA-Z])$", function(matches)
+    local shipLetter = string.lower(matches[2])
     missile_at_ship(shipLetter)
 end, { type = "regex" })
 
 -- torpedo.at <letter> -> torpedo_at_ship(letter)
 -- Fires three torpedoes at the named ship, then raises shields
-createAlias("^torpedo\\.at ([a-z])$", function(matches)
-    local shipLetter = matches[2]
+createAlias("^torpedo\\.at ([a-zA-Z])$", function(matches)
+    local shipLetter = string.lower(matches[2])
     torpedo_at_ship(shipLetter)
 end, { type = "regex" })
 
 -- fire.at <letter> -> fire_phasers_at_ship(letter)
 -- Scans the named ship and fires phasers at its bearing
-createAlias("^fire\\.at ([a-z])$", function(matches)
-    local shipLetter = matches[2]
+createAlias("^fire\\.at ([a-zA-Z])$", function(matches)
+    local shipLetter = string.lower(matches[2])
     fire_phasers_at_ship(shipLetter)
 end, { type = "regex" })
 
 -- warp.and.fire.at <letter> -> warp_and_fire_at_ship(letter)
 -- Goes to warp 1, fires phasers at the named ship, then drops back to warp 0
-createAlias("^warp\\.and\\.fire\\.at ([a-z])$", function(matches)
-    local shipLetter = matches[2]
+createAlias("^warp\\.and\\.fire\\.at ([a-zA-Z])$", function(matches)
+    local shipLetter = string.lower(matches[2])
     warp_and_fire_at_ship(shipLetter)
 end, { type = "regex" })
 

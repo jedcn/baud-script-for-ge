@@ -37,6 +37,18 @@ describe("nav.to aliases", function()
         _G.getAllNavigationStatusText = function()
             return "No navigation active"
         end
+        _G.missile_at_ship = function(letter)
+            table.insert(calls, { fn = "missile_at_ship", letter = letter })
+        end
+        _G.torpedo_at_ship = function(letter)
+            table.insert(calls, { fn = "torpedo_at_ship", letter = letter })
+        end
+        _G.fire_phasers_at_ship = function(letter)
+            table.insert(calls, { fn = "fire_phasers_at_ship", letter = letter })
+        end
+        _G.warp_and_fire_at_ship = function(letter)
+            table.insert(calls, { fn = "warp_and_fire_at_ship", letter = letter })
+        end
     end)
 
     -- -----------------------------------------------------------------------
@@ -222,6 +234,41 @@ describe("nav.to aliases", function()
         it("echoes navigation status text", function()
             helper.simulateAlias("nav.status")
             assert.is_true(#helper.echoCalls > 0)
+        end)
+
+    end)
+
+    -- -----------------------------------------------------------------------
+    describe("combat aliases (case-insensitive ship letter)", function()
+
+        it("missile.at accepts lowercase", function()
+            helper.simulateAlias("missile.at a")
+            assert.are.equal("missile_at_ship", calls[1].fn)
+            assert.are.equal("a", calls[1].letter)
+        end)
+
+        it("missile.at accepts uppercase and normalizes to lowercase", function()
+            helper.simulateAlias("missile.at A")
+            assert.are.equal("missile_at_ship", calls[1].fn)
+            assert.are.equal("a", calls[1].letter)
+        end)
+
+        it("torpedo.at accepts uppercase and normalizes to lowercase", function()
+            helper.simulateAlias("torpedo.at B")
+            assert.are.equal("torpedo_at_ship", calls[1].fn)
+            assert.are.equal("b", calls[1].letter)
+        end)
+
+        it("fire.at accepts uppercase and normalizes to lowercase", function()
+            helper.simulateAlias("fire.at C")
+            assert.are.equal("fire_phasers_at_ship", calls[1].fn)
+            assert.are.equal("c", calls[1].letter)
+        end)
+
+        it("warp.and.fire.at accepts uppercase and normalizes to lowercase", function()
+            helper.simulateAlias("warp.and.fire.at D")
+            assert.are.equal("warp_and_fire_at_ship", calls[1].fn)
+            assert.are.equal("d", calls[1].letter)
         end)
 
     end)

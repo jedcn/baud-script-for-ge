@@ -66,6 +66,21 @@ describe("navigate-nav", function()
       assert.are.equal(0, #helper.sendCalls)
     end)
 
+    it("navpl_awaiting_scan: transitions to navpl_failed immediately on 'That would be foolish Sir!'", function()
+      navToPlanet(3)
+      navNavTick()  -- navpl_scanning → navpl_awaiting_scan
+      helper.simulateLine("That would be foolish Sir!")
+      assert.are.equal("navpl_failed", getNavigationState())
+    end)
+
+    it("navpl_awaiting_scan: 'That would be foolish Sir!' stops navigation", function()
+      navToPlanet(3)
+      navNavTick()  -- navpl_scanning → navpl_awaiting_scan
+      helper.simulateLine("That would be foolish Sir!")
+      navNavTick()  -- navpl_failed → stops
+      assert.is_false(getNavigationActive())
+    end)
+
     it("navpl_awaiting_scan: transitions to rotating when scan data arrives", function()
       navToPlanet(3)
       navNavTick()  -- navpl_scanning → navpl_awaiting_scan + sends scan

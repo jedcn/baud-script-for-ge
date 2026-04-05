@@ -302,6 +302,11 @@ createTrigger("Bearing:\\s+(-?\\d+)\\s+Heading:\\s+(-?\\d+)\\s+Dist:\\s+(\\d+)",
     setNavShipScanFromTrigger(bearing, distance)
 end, { type = "regex" })
 
+-- planet scan rejected (planet does not exist in this sector)
+createTrigger("^That would be foolish Sir!$", function()
+    setNavPlanetNotFoundFromTrigger()
+end, { type = "regex" })
+
 -- combat results
 createTrigger("^In the attack our troops killed (\\d+), and suffered losses$", function(matches)
     local defendersKilled = tonumber(matches[2])

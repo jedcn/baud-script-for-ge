@@ -40,6 +40,16 @@ function setNavShipScanFromTrigger(bearing, distance)
   gePackage.navigation.navShipDistance = tonumber(distance)
 end
 
+-- Called from trigger when the game rejects a planet scan ("That would be foolish Sir!").
+-- Fails planet navigation immediately rather than waiting for a scan timeout.
+function setNavPlanetNotFoundFromTrigger()
+  if not getNavigationActive() then return end
+  if getNavigationPhase() ~= "nav_planet" then return end
+  if getNavigationState() ~= "navpl_awaiting_scan" and getNavigationState() ~= "navpl_awaiting_cruise_scan" then return end
+  navError("Planet " .. tostring(gePackage.navigation.target.planetNumber) .. " does not exist in this sector")
+  gePackage.navigation.state = "navpl_failed"
+end
+
 -- Called from the "Helm reports we are now heading" trigger when rotation completes.
 -- Signals completion for both nav_planet and nav_ship awaiting-rotation states.
 function setNavNavRotationCompleteFromTrigger()

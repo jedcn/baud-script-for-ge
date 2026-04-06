@@ -307,7 +307,7 @@ function navNavTick()
           send("warp 0")
           nav.lastCommand = os.time()
           nav.state = "navpl_decelerating"
-        elseif decelAtDist > 0 and distance < decelAtDist then
+        elseif decelAtDist > 0 and distance < decelAtDist + (getWarpSpeed() or 0) * DISTANCE_PER_WARP then
           send("warp 0")
           nav.lastCommand = os.time()
           nav.state = "navpl_decelerating"

@@ -191,6 +191,52 @@ describe("navigate-nav", function()
       assert.are.equal("navpl_awaiting_cruise_scan", getNavigationState())
     end)
 
+    describe("navpl_awaiting_cruise_scan decel trigger", function()
+
+      local function setupCruiseScan(warp, distance, decelAtDist)
+        navToPlanet(3)
+        gePackage.navigation.state = "navpl_awaiting_cruise_scan"
+        gePackage.navigation.lastCommand = os.time()
+        gePackage.navigation.plan = { decelAtDist = decelAtDist }
+        setWarpSpeed(warp)
+        setNavigationPlanetScanBearing(0)
+        setNavigationPlanetScanDistance(distance)
+      end
+
+      it("decelerates when distance is already below decelAtDist", function()
+        setupCruiseScan(4, 800, 924)  -- classic case: dist < decelAtDist
+        navNavTick()
+        assert.is_true(helper.wasSendCalledWith("warp 0"))
+        assert.are.equal("navpl_decelerating", getNavigationState())
+      end)
+
+      it("decelerates when ship would overshoot decelAtDist in one tick", function()
+        -- warp 4: travels 4×154=616 per tick; decelAtDist=924; dist=988
+        -- gap to decel point = 988-924 = 64 < 616 → overshoot without fix
+        setupCruiseScan(4, 988, 924)
+        navNavTick()
+        assert.is_true(helper.wasSendCalledWith("warp 0"))
+        assert.are.equal("navpl_decelerating", getNavigationState())
+      end)
+
+      it("decelerates when distance equals decelAtDist plus one full tick of travel", function()
+        -- warp 10: travels 10×154=1540 per tick; decelAtDist=4620; dist=6159 (just inside buffer)
+        setupCruiseScan(10, 4620 + 1540 - 1, 4620)
+        navNavTick()
+        assert.is_true(helper.wasSendCalledWith("warp 0"))
+        assert.are.equal("navpl_decelerating", getNavigationState())
+      end)
+
+      it("does not decelerate when more than one tick of travel remains before decelAtDist", function()
+        -- warp 4: travels 616 per tick; decelAtDist=924; dist=1541 (> 924+616)
+        setupCruiseScan(4, 1541, 924)
+        navNavTick()
+        assert.is_false(helper.wasSendCalledWith("warp 0"))
+        assert.are.equal("navpl_cruising", getNavigationState())
+      end)
+
+    end)
+
     it("navpl_decelerating: scans planet when speed reaches 0", function()
       navToPlanet(3)
       gePackage.navigation.state = "navpl_decelerating"

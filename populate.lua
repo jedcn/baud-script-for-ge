@@ -192,6 +192,7 @@ function populateTick()
 
     if cfg.transferUpComplete then
       cfg.transferUpComplete = false
+      say("colonists picked up from source planet")
       setPopulateState("checking_flux")
     end
 
@@ -250,6 +251,7 @@ function populateTick()
 
     if cfg.transferDownComplete then
       cfg.transferDownComplete = false
+      say("colonists moved to destination planet")
       cfg.tripCount = cfg.tripCount + 1
       cfg.menDelivered = cfg.menDelivered + TRANSFER_COUNT
       cecho("#00ffff", "[populate] Trip " .. cfg.tripCount .. " complete — " ..

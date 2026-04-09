@@ -45,6 +45,19 @@ describe("navigate-nav", function()
       assert.is_true(navToPlanet(1))
     end)
 
+    it("cancels active sector nav before starting", function()
+      -- Set up a mock sector nav in progress
+      gePackage.sectorNav = { active = true, state = "sec_awaiting_rotation" }
+
+      local cancelCalled = false
+      _G.cancelSectorNav = function() cancelCalled = true; gePackage.sectorNav.active = false end
+
+      navToPlanet(3)
+
+      assert.is_true(cancelCalled)
+      assert.is_true(getNavigationActive())
+    end)
+
   end)
 
   -- =========================================================================
@@ -387,6 +400,18 @@ describe("navigate-nav", function()
       assert.is_true(navToShip("a"))
     end)
 
+    it("cancels active sector nav before starting", function()
+      gePackage.sectorNav = { active = true, state = "sec_awaiting_rotation" }
+
+      local cancelCalled = false
+      _G.cancelSectorNav = function() cancelCalled = true; gePackage.sectorNav.active = false end
+
+      navToShip("a")
+
+      assert.is_true(cancelCalled)
+      assert.is_true(getNavigationActive())
+    end)
+
   end)
 
   -- =========================================================================
@@ -540,6 +565,22 @@ describe("navigate-nav", function()
       navToSector(5, -3, 2000, 8000)
       assert.are.equal(2000, calls[1].posX)
       assert.are.equal(8000, calls[1].posY)
+    end)
+
+    it("cancels active planet/ship nav before starting sector nav", function()
+      -- Start planet nav so it's active
+      navToPlanet(3)
+      assert.is_true(getNavigationActive())
+
+      -- Now start sector nav via the real navigateToSector
+      setSector(5, 5)
+      setSectorPosition(5000, 5000)
+      navigateToSector(0, 0, 5000, 5000)
+
+      -- Planet nav should have been cancelled
+      assert.is_false(getNavigationActive())
+      -- Sector nav should now be active
+      assert.is_true(getSectorNavActive())
     end)
 
   end)

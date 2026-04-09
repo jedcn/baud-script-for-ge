@@ -76,6 +76,11 @@ function navToPlanet(N)
     return false
   end
 
+  if getSectorNavActive() then
+    navLog("Cancelling sector nav to start planet nav")
+    cancelSectorNav()
+  end
+
   setNavigationActive(true)
   setNavigationPhase("nav_planet")
   setNavigationTargetPlanet(N)
@@ -99,6 +104,11 @@ function navToShip(letter)
   if getNavigationActive() then
     navError("Navigation already in progress — nav.cancel first")
     return false
+  end
+
+  if getSectorNavActive() then
+    navLog("Cancelling sector nav to start ship nav")
+    cancelSectorNav()
   end
 
   setNavigationActive(true)

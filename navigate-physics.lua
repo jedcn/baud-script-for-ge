@@ -19,12 +19,21 @@ DISTANCE_PER_WARP = 154
 -- Returns the distance (position units) covered from the moment "warp 0" is
 -- issued until the ship reaches speed 0.
 --
--- The ship travels at its current warp this tick (1-tick reaction delay before
--- decel kicks in), then decelerates by decelRate each subsequent tick.
--- This matches in-game observation: FB warp 15 → 0 covers ~9843 units.
+-- When decelRate >= fromWarp the ship drops to warp 0 in a single decel step.
+-- Empirically (Dreadnought warp 14, decelRate 30) the game applies decel
+-- before movement in this case — the ship stops with zero distance covered.
+-- Return 0 for this case.
+--
+-- When decelRate < fromWarp (multiple decel ticks needed), a 1-tick reaction
+-- delay applies: the ship travels at its current warp this tick, then
+-- decelerates by decelRate each subsequent tick.
+-- Validated: FB warp 15 → 0 covers ~9843 units.
 --   Formula: (15+13+11+9+7+5+3+1) × 154 = 9856 ≈ 9843 observed.
 -- ---------------------------------------------------------------------------
 function computeStopDistance(fromWarp, decelRate)
+  if fromWarp <= decelRate then
+    return 0  -- stops in one decel step; game applies decel before movement
+  end
   local dist = 0
   local w = fromWarp
   while w > 0 do

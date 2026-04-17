@@ -45,6 +45,19 @@ describe("navigate-nav", function()
       assert.is_true(navToPlanet(1))
     end)
 
+    it("cancels active sector nav before starting", function()
+      -- Set up a mock sector nav in progress
+      gePackage.sectorNav = { active = true, state = "sec_awaiting_rotation" }
+
+      local cancelCalled = false
+      _G.cancelSectorNav = function() cancelCalled = true; gePackage.sectorNav.active = false end
+
+      navToPlanet(3)
+
+      assert.is_true(cancelCalled)
+      assert.is_true(getNavigationActive())
+    end)
+
   end)
 
   -- =========================================================================
@@ -256,14 +269,27 @@ describe("navigate-nav", function()
       assert.are.equal("navpl_orbiting", getNavigationState())
     end)
 
-    it("navpl_post_stop_scan: starts impulse approach when too far", function()
+    -- chooseImpulseLevel: pick fastest tier where dist - distPerTick >= impulseMinDistance (200)
+    -- imp 99 moves 153/tick, imp 50 moves 77/tick, imp 25 moves 39/tick, imp 10 moves 16/tick
+    it("navpl_post_stop_scan: uses imp 99 when far enough (dist=495, 495-153=342 >= 200)", function()
       navToPlanet(3)
       gePackage.navigation.state = "navpl_post_stop_scan"
       gePackage.navigation.lastCommand = os.time()
       setNavigationPlanetScanBearing(0)
-      setNavigationPlanetScanDistance(495)  -- beyond 250 threshold
+      setNavigationPlanetScanDistance(495)  -- 495-153=342 >= 200 → imp 99
       navNavTick()
       assert.is_true(helper.wasSendCalledWith("imp 99 0"))
+      assert.are.equal("navpl_impulse_approach", getNavigationState())
+    end)
+
+    it("navpl_post_stop_scan: uses imp 25 when close (dist=275, imp 99 would reach 122 < 200)", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_post_stop_scan"
+      gePackage.navigation.lastCommand = os.time()
+      setNavigationPlanetScanBearing(0)
+      setNavigationPlanetScanDistance(275)  -- 275-153=122 < 200, 275-77=198 < 200, 275-39=236 >= 200 → imp 25
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("imp 25 0"))
       assert.are.equal("navpl_impulse_approach", getNavigationState())
     end)
 
@@ -298,25 +324,36 @@ describe("navigate-nav", function()
       assert.are.equal("navpl_impulse_stopping", getNavigationState())
     end)
 
-    it("navpl_awaiting_impulse_scan: continues approach when still too far", function()
+    it("navpl_awaiting_impulse_scan: uses imp 99 when far enough (dist=400, 400-153=247 >= 200)", function()
       navToPlanet(3)
       gePackage.navigation.state = "navpl_awaiting_impulse_scan"
       gePackage.navigation.lastCommand = os.time()
       setNavigationPlanetScanBearing(0)
-      setNavigationPlanetScanDistance(400)  -- still too far
+      setNavigationPlanetScanDistance(400)  -- 400-153=247 >= 200 → imp 99
       navNavTick()
       assert.is_true(helper.wasSendCalledWith("imp 99 0"))
       assert.are.equal("navpl_impulse_approach", getNavigationState())
     end)
 
-    it("navpl_awaiting_impulse_scan: corrects bearing mid-approach", function()
+    it("navpl_awaiting_impulse_scan: corrects bearing mid-approach using appropriate impulse", function()
       navToPlanet(3)
       gePackage.navigation.state = "navpl_awaiting_impulse_scan"
       gePackage.navigation.lastCommand = os.time()
       setNavigationPlanetScanBearing(45)  -- drifted off course
-      setNavigationPlanetScanDistance(400)
+      setNavigationPlanetScanDistance(400)  -- 400-153=247 >= 200 → imp 99
       navNavTick()
       assert.is_true(helper.wasSendCalledWith("imp 99 45"))
+      assert.are.equal("navpl_impulse_approach", getNavigationState())
+    end)
+
+    it("navpl_awaiting_impulse_scan: uses imp 50 at mid-close range (dist=350, imp 99 would reach 197 < 200)", function()
+      navToPlanet(3)
+      gePackage.navigation.state = "navpl_awaiting_impulse_scan"
+      gePackage.navigation.lastCommand = os.time()
+      setNavigationPlanetScanBearing(0)
+      setNavigationPlanetScanDistance(350)  -- 350-153=197 < 200, 350-77=273 >= 200 → imp 50
+      navNavTick()
+      assert.is_true(helper.wasSendCalledWith("imp 50 0"))
       assert.are.equal("navpl_impulse_approach", getNavigationState())
     end)
 
@@ -385,6 +422,18 @@ describe("navigate-nav", function()
 
     it("returns true on success", function()
       assert.is_true(navToShip("a"))
+    end)
+
+    it("cancels active sector nav before starting", function()
+      gePackage.sectorNav = { active = true, state = "sec_awaiting_rotation" }
+
+      local cancelCalled = false
+      _G.cancelSectorNav = function() cancelCalled = true; gePackage.sectorNav.active = false end
+
+      navToShip("a")
+
+      assert.is_true(cancelCalled)
+      assert.is_true(getNavigationActive())
     end)
 
   end)
@@ -540,6 +589,22 @@ describe("navigate-nav", function()
       navToSector(5, -3, 2000, 8000)
       assert.are.equal(2000, calls[1].posX)
       assert.are.equal(8000, calls[1].posY)
+    end)
+
+    it("cancels active planet/ship nav before starting sector nav", function()
+      -- Start planet nav so it's active
+      navToPlanet(3)
+      assert.is_true(getNavigationActive())
+
+      -- Now start sector nav via the real navigateToSector
+      setSector(5, 5)
+      setSectorPosition(5000, 5000)
+      navigateToSector(0, 0, 5000, 5000)
+
+      -- Planet nav should have been cancelled
+      assert.is_false(getNavigationActive())
+      -- Sector nav should now be active
+      assert.is_true(getSectorNavActive())
     end)
 
   end)

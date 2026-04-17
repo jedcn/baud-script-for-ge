@@ -43,7 +43,17 @@ gePackage.navigation.config = {
 
   -- Distance thresholds
   arrivalThreshold = 300,           -- Stop within this distance
-  planetArrivalThreshold = 250,     -- For Phase 2
+  planetArrivalThreshold = 250,     -- Orbit when within this distance
+
+  -- Impulse approach: pick the fastest tier where one tick can't overshoot impulseMinDistance.
+  -- distPerTick = ceil(N * 100 / 65), derived from game source (speed = 1000*N/100, move = speed/65000 * 10000).
+  impulseMinDistance = 200,
+  impulseTiers = {
+    { level = 99, distPerTick = 153 },
+    { level = 50, distPerTick = 77  },
+    { level = 25, distPerTick = 39  },
+    { level = 10, distPerTick = 16  },
+  },
 
   -- Timing
   scanInterval = 3,                 -- Seconds between position/scan requests to server

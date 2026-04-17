@@ -811,6 +811,11 @@ function navigateToSector(targetSectorX, targetSectorY, targetPosX, targetPosY)
     return false
   end
 
+  if getNavigationActive() then
+    navLog("[navsec] Cancelling planet/ship nav to start sector nav")
+    cancelNavigation()
+  end
+
   -- Initialize sector navigation state using setter
   initSectorNav(targetSectorX, targetSectorY, targetPosX, targetPosY)
 

@@ -28,23 +28,29 @@ describe("navigate-physics", function()
             assert.are.equal(0, computeStopDistance(0, 2))
         end)
 
-        it("returns one tick of travel for warp equal to decelRate", function()
-            -- warp 2, decelRate 2: travel at 2 then stop → 2×154 = 308
+        it("travels one tick before stopping when warp equals decelRate", function()
+            -- warp 2, decelRate 2: travels at warp 2 first tick → 2×154 = 308, then stops
             assert.are.equal(308, computeStopDistance(2, 2))
         end)
 
-        it("handles single warp level above decelRate", function()
-            -- warp 3, decelRate 2: travel 3, then 1, then 0 → (3+1)×154 = 616
+        it("handles single warp level above decelRate (multi-step, reaction delay applies)", function()
+            -- warp 3, decelRate 2: 3 > 2, multi-step → travel 3, then 1 → (3+1)×154 = 616
             assert.are.equal(616, computeStopDistance(3, 2))
         end)
 
-        it("Constitution Class stops in one tick from warp 30", function()
-            -- decelRate=40, fromWarp=30: travel 30 then 0 → 30×154 = 4620
+        it("Constitution Class stop distance from warp 30 (decelRate=40, one tick travel)", function()
+            -- decelRate=40 >= fromWarp=30: travels at warp 30 first tick → 30×154 = 4620, then stops
             assert.are.equal(4620, computeStopDistance(30, 40))
         end)
 
-        it("Star Cruiser stop distance from warp 25", function()
-            -- decelRate=20: 25→5→0 → (25+5)×154 = 4620
+        -- NOTE: Dreadnought from warp 14 (decelRate=30) was empirically observed to stop
+        -- with zero distance covered, but the formula gives 14×154 = 2156.
+        -- This discrepancy is unexplained; decelRate=30 may be wrong, or the game
+        -- applies instant-stop logic for fast decelerators that we haven't reverse-engineered.
+        -- No test here to avoid encoding a known-wrong expectation.
+
+        it("Star Cruiser stop distance from warp 25 (decelRate=20 < warp, multi-step)", function()
+            -- decelRate=20 < 25: multi-step → 25→5→0 → (25+5)×154 = 4620
             assert.are.equal(4620, computeStopDistance(25, 20))
         end)
 

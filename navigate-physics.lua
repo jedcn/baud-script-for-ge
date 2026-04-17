@@ -23,6 +23,13 @@ DISTANCE_PER_WARP = 154
 -- decel kicks in), then decelerates by decelRate each subsequent tick.
 -- This matches in-game observation: FB warp 15 → 0 covers ~9843 units.
 --   Formula: (15+13+11+9+7+5+3+1) × 154 = 9856 ≈ 9843 observed.
+--
+-- NOTE: Empirically, Dreadnought at warp 14 (decelRate 30) stopped with zero
+-- distance covered, suggesting instant-stop when fromWarp <= decelRate. An
+-- attempt to implement this as "return 0 when fromWarp <= decelRate" broke FB
+-- navigation when ship type was unknown (default decelRate=10 treated all warps
+-- 1-10 as instant-stop, causing overshoot). Leaving formula unchanged until
+-- Dreadnought decelRate is empirically confirmed and a safe implementation found.
 -- ---------------------------------------------------------------------------
 function computeStopDistance(fromWarp, decelRate)
   local dist = 0

@@ -20,6 +20,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `navigate-config.lua` - User-configurable navigation settings
 - `navigate-physics.lua` - Pure physics math: stop/accel distance, rotation ticks, trajectory planner
 - `attack-loop.lua` - Automated assault loop (supply → attack → escape → repeat)
+- `populate.lua` - Automated population transfer loop (source planet → destination planet → repeat)
 - `combat.lua` - Ship-to-ship combat commands (e.g. `pha a` scans nearest ship and fires phasers)
 - `status.lua` - Status bar display function
 - `triggers.lua` - Pattern-matching triggers that fire on game output
@@ -33,6 +34,7 @@ Update this section and README.md when files are added, removed, or renamed.
 - `test/aliases_spec.lua` - nav.to alias dispatch tests
 - `test/navigate_nav_spec.lua` - navToPlanet, navToShip, navToSector state machine tests
 - `test/attack_loop_spec.lua` - Attack loop state machine tests
+- `test/populate_spec.lua` - Populate loop state machine tests
 - `test/combat_spec.lua` - Combat command tests (warp-and-fire)
 
 ## Conventions

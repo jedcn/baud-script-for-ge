@@ -46,6 +46,14 @@ function mainTick()
             echo("\n\nCaught an error in attackLoopTick:\n\n" .. alErr)
         end
     end
+
+    -- Populate loop tick (if function exists)
+    if populateTick then
+        local popStatus, popErr = pcall(populateTick)
+        if not popStatus then
+            echo("\n\nCaught an error in populateTick:\n\n" .. popErr)
+        end
+    end
 end
 
 -- Set up recurring timer for main tick (every 1 second = 1000ms)

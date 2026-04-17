@@ -301,13 +301,16 @@ function navNavTick()
       local distance = nav.planetScan.distance
       if distance then
         local decelAtDist = nav.plan and nav.plan.decelAtDist or 0
+        local warp = getWarpSpeed() or 0
+        local buffer = warp * DISTANCE_PER_WARP
         navLog("Cruising to planet " .. targetPlanet ..
-               ": dist=" .. distance .. ", decel at " .. decelAtDist)
+               ": dist=" .. distance .. ", decel trigger=" .. (decelAtDist + buffer) ..
+               " (stop=" .. decelAtDist .. ", but warp=" .. warp .. " look ahead=" .. buffer .. ")")
         if distance < config.planetArrivalThreshold then
           send("warp 0")
           nav.lastCommand = os.time()
           nav.state = "navpl_decelerating"
-        elseif decelAtDist > 0 and distance < decelAtDist then
+        elseif decelAtDist > 0 and distance < decelAtDist + (getWarpSpeed() or 0) * DISTANCE_PER_WARP then
           send("warp 0")
           nav.lastCommand = os.time()
           nav.state = "navpl_decelerating"

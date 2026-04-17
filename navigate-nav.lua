@@ -14,6 +14,18 @@ local function navLog(s)
   cecho("#ff00ff", "[nav] " .. s)
 end
 
+-- Pick the fastest impulse level where one tick of movement keeps us >= impulseMinDistance.
+-- Tiers are checked fastest-first; the first safe tier wins.
+local function chooseImpulseLevel(distance, config)
+  local safeMin = config.impulseMinDistance or 200
+  for _, tier in ipairs(config.impulseTiers or {}) do
+    if distance - tier.distPerTick >= safeMin then
+      return tier.level
+    end
+  end
+  return 10  -- fallback: slowest safe speed
+end
+
 local function navError(s)
   cecho("red", "[nav] " .. s)
 end
@@ -359,9 +371,12 @@ function navNavTick()
           nav.state = "navpl_orbiting"
         else
           local bearing = nav.planetScan.bearing or 0
+          local impulseLevel = chooseImpulseLevel(distance, config)
           navLog("Stopped at dist=" .. distance .. " from planet " .. targetPlanet ..
-                 " (orbit needs <" .. config.planetArrivalThreshold .. "), bearing=" .. bearing .. ", using impulse")
-          send("imp 99 " .. bearing)
+                 " (orbit needs <" .. config.planetArrivalThreshold .. "), bearing=" .. bearing ..
+                 ", using imp " .. impulseLevel ..
+                 " (won't pass " .. config.impulseMinDistance .. ")")
+          send("imp " .. impulseLevel .. " " .. bearing)
           nav.lastCommand = os.time()
           clearNavigationPlanetScan()
           nav.state = "navpl_impulse_approach"
@@ -394,7 +409,8 @@ function navNavTick()
           nav.lastCommand = os.time()
           nav.state = "navpl_impulse_stopping"
         else
-          send("imp 99 " .. bearing)
+          local impulseLevel = chooseImpulseLevel(distance, config)
+          send("imp " .. impulseLevel .. " " .. bearing)
           nav.lastCommand = os.time()
           nav.state = "navpl_impulse_approach"
         end
